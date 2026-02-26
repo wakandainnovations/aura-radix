@@ -51,7 +51,7 @@ export default function CrisisPlanGenerator({ selectedEntity, mentions = [] }) {
         {generatedPlan && (
           <div className="bg-card border border-border rounded-xl p-6">
             <h3 className="text-lg font-semibold text-foreground mb-4">Crisis Management Plan</h3>
-            <div className="prose prose-sm max-w-none text-foreground">
+            <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap">
               {generatedPlan}
             </div>
           </div>
