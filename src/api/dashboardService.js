@@ -87,4 +87,65 @@ export const dashboardService = {
       throw error;
     }
   },
+
+  // ========== CLUSTER APIs (for multiple entities) ==========
+
+  // Get average statistics for multiple entities
+  // Path: GET /api/dashboard/cluster/stats/avg
+  // Query Params: entityIds (comma-separated list of entity IDs)
+  // Response: { totalMentions, overallSentiment, positiveRatio, netSentimentScore }
+  getClusterStats: async (entityIds = []) => {
+    try {
+      const entityIdParam = Array.isArray(entityIds) ? entityIds.join(',') : entityIds;
+      const response = await apiClient.get(
+        `/dashboard/cluster/stats/avg`,
+        { params: { entityIds: entityIdParam } }
+      );
+      return response;
+    } catch (error) {
+      console.error(`Failed to fetch cluster stats for entities ${entityIds}:`, error);
+      throw error;
+    }
+  },
+
+  // Get platform mentions for a cluster of entities
+  // Path: POST /api/dashboard/cluster/platform-mentions
+  // Request Body: [entityId1, entityId2, ...]
+  // Response: { PLATFORM: { POSITIVE: number, NEGATIVE: number, NEUTRAL: number } }
+  getClusterPlatformMentions: async (entityIds = []) => {
+    try {
+      const response = await apiClient.post(
+        `/dashboard/cluster/platform-mentions`,
+        entityIds
+      );
+      return response;
+    } catch (error) {
+      console.error(`Failed to fetch cluster platform mentions for entities ${entityIds}:`, error);
+      throw error;
+    }
+  },
+
+  // Get filtered mentions for a cluster of entities
+  // Path: GET /api/dashboard/cluster/mentions
+  // Query Params: entityIds (comma-separated), platform?, page, size
+  // Response: { content: Mention[], pageable, totalElements, totalPages, last }
+  getClusterMentions: async (entityIds = [], filters = {}) => {
+    try {
+      const entityIdParam = Array.isArray(entityIds) ? entityIds.join(',') : entityIds;
+      const params = {
+        entityIds: entityIdParam,
+        page: filters.page || 0,
+        size: filters.size || 200,
+        ...(filters.platform && { platform: filters.platform }),
+      };
+      const response = await apiClient.get(
+        `/dashboard/cluster/mentions`,
+        { params }
+      );
+      return response;
+    } catch (error) {
+      console.error(`Failed to fetch cluster mentions for entities ${entityIds}:`, error);
+      throw error;
+    }
+  },
 };

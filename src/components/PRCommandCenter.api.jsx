@@ -38,8 +38,8 @@ export default function PRCommandCenter() {
   const { isAuthenticated, setIsAuthenticated } = useAuth();
   const [selectedMention, setSelectedMention] = useState(null);
   const [activeView, setActiveView] = useState('dashboard');
-  const [entityType, setEntityType] = useState('movie');
-  const [selectedEntity, setSelectedEntity] = useState(null);
+  const [selectedMovieEntity, setSelectedMovieEntity] = useState(null);
+  const [selectedCelebrityEntity, setSelectedCelebrityEntity] = useState(null);
   const [selectedPlatforms, setSelectedPlatforms] = useState([]);
   const [selectedSentiments, setSelectedSentiments] = useState([]);
   const [selectedTimeRange, setSelectedTimeRange] = useState('24h');
@@ -49,29 +49,60 @@ export default function PRCommandCenter() {
   const [timeRange, setTimeRange] = useState('60m');
   const [competitors, setCompetitors] = useState([]);
   const [dateRange, setDateRange] = useState('DAY');
+  const [clearErrorBorder, setClearErrorBorder] = useState(null); // 'movie' or 'celebrity' or null
 
-  // Fetch all entities based on type
-  const { data: entities = [], isLoading: entitiesLoading } = useQuery({
-    queryKey: ['entities', entityType],
-    queryFn: () => entityService.getAll(entityType),
+  // Determine which entity is currently selected (prefer movie, fallback to celebrity)
+  const selectedEntity = selectedMovieEntity || selectedCelebrityEntity;
+  const entityType = selectedMovieEntity ? 'movie' : 'celebrity';
+  
+  // Determine if we're in cluster mode (both movie AND celebrity selected)
+  const clusterMode = selectedMovieEntity && selectedCelebrityEntity;
+  const clusterEntityIds = clusterMode ? [selectedMovieEntity.id, selectedCelebrityEntity.id] : [];
+
+  // Fetch all movie entities
+  const { data: movieEntities = [], isLoading: moviesLoading } = useQuery({
+    queryKey: ['entities', 'movie'],
+    queryFn: () => entityService.getAll('movie'),
     staleTime: QUERY_STALE_TIME,
     enabled: isAuthenticated,
   });
 
-  // Set default entity when entities load
-  useEffect(() => {
-    if (entities.length > 0 && !selectedEntity) {
-      setSelectedEntity(entities[0]);
-    }
-  }, [entities, selectedEntity]);
+  // Fetch all celebrity entities
+  const { data: celebrityEntities = [], isLoading: celebritiesLoading } = useQuery({
+    queryKey: ['entities', 'celebrity'],
+    queryFn: () => entityService.getAll('celebrity'),
+    staleTime: QUERY_STALE_TIME,
+    enabled: isAuthenticated,
+  });
 
-  // Fetch mentions for selected entity
+  // Set default movie entity when movies load
+  useEffect(() => {
+    if (movieEntities.length > 0 && !selectedMovieEntity) {
+      setSelectedMovieEntity(movieEntities[0]);
+    }
+  }, [movieEntities, selectedMovieEntity]);
+
+  // Set default celebrity entity when celebrities load
+  useEffect(() => {
+    if (celebrityEntities.length > 0 && !selectedCelebrityEntity) {
+      setSelectedCelebrityEntity(celebrityEntities[0]);
+    }
+  }, [celebrityEntities, selectedCelebrityEntity]);
+
+  // Fetch mentions for selected entity (or cluster)
   const { data: mentionsData = {}, refetch: refetchMentions, isLoading: mentionsLoading } = useQuery({
-    queryKey: ['mentions', selectedEntity?.id, entityType, selectedTimeRange],
-    queryFn: () => 
-      dashboardService.getMentions(selectedEntity?.id, {
-        timeRange: selectedTimeRange,
-      }),
+    queryKey: ['mentions', clusterMode ? clusterEntityIds : selectedEntity?.id, clusterMode ? 'cluster' : entityType, selectedTimeRange],
+    queryFn: () => {
+      if (clusterMode) {
+        return dashboardService.getClusterMentions(clusterEntityIds, {
+          timeRange: selectedTimeRange,
+        });
+      } else {
+        return dashboardService.getMentions(selectedEntity?.id, {
+          timeRange: selectedTimeRange,
+        });
+      }
+    },
     enabled: isAuthenticated && !!selectedEntity?.id,
     refetchInterval: REFETCH_INTERVAL,
   });
@@ -79,21 +110,30 @@ export default function PRCommandCenter() {
   // Extract mentions array from response (backend returns paginated { content: [...] })
   const mentions = Array.isArray(mentionsData?.content) ? mentionsData.content : [];
 
-  // Fetch metrics/stats for selected entity
+  // Fetch metrics/stats for selected entity (or cluster)
   const { data: metricsData = {}, isLoading: metricsLoading } = useQuery({
-    queryKey: ['stats', selectedEntity?.id, entityType, dateRange],
-    queryFn: () =>
-      dashboardService.getStats(selectedEntity?.id),
+    queryKey: ['stats', clusterMode ? clusterEntityIds : selectedEntity?.id, clusterMode ? 'cluster' : entityType, dateRange],
+    queryFn: () => {
+      if (clusterMode) {
+        return dashboardService.getClusterStats(clusterEntityIds);
+      } else {
+        return dashboardService.getStats(selectedEntity?.id);
+      }
+    },
     enabled: isAuthenticated && !!selectedEntity?.id,
     refetchInterval: REFETCH_INTERVAL,
   });
 
   // Fetch sentiment trend data
   const { data: sentimentTrendRaw = {}, isLoading: trendLoading } = useQuery({
-    queryKey: ['sentiment-trend', selectedEntity?.id, entityType, dateRange],
+    queryKey: ['sentiment-trend', clusterMode ? clusterEntityIds : selectedEntity?.id, clusterMode ? 'cluster' : entityType, dateRange],
     queryFn: () => {
       // dateRange is already in API format (DAY, WEEK, MONTH)
-      return dashboardService.getSentimentOverTime(selectedEntity?.id, dateRange);
+      if (clusterMode) {
+        return dashboardService.getSentimentOverTime(selectedMovieEntity.id, dateRange, clusterEntityIds);
+      } else {
+        return dashboardService.getSentimentOverTime(selectedEntity?.id, dateRange);
+      }
     },
     enabled: isAuthenticated && !!selectedEntity?.id,
     refetchInterval: REFETCH_INTERVAL,
@@ -115,21 +155,26 @@ export default function PRCommandCenter() {
     }));
   }, [sentimentTrendRaw]);
 
-  // Fetch platform breakdown
+  // Fetch platform breakdown (or cluster)
   const { data: platformData = [], isLoading: platformLoading } = useQuery({
-    queryKey: ['platform-mentions', selectedEntity?.id, entityType, dateRange],
-    queryFn: () =>
-      dashboardService.getPlatformMentions(selectedEntity?.id),
+    queryKey: ['platform-mentions', clusterMode ? clusterEntityIds : selectedEntity?.id, clusterMode ? 'cluster' : entityType, dateRange],
+    queryFn: () => {
+      if (clusterMode) {
+        return dashboardService.getClusterPlatformMentions(clusterEntityIds);
+      } else {
+        return dashboardService.getPlatformMentions(selectedEntity?.id);
+      }
+    },
     enabled: isAuthenticated && !!selectedEntity?.id,
     refetchInterval: REFETCH_INTERVAL,
   });
 
-  // Fetch competitive data
+  // Fetch competitive data (only for single entity mode)
   const { data: competitiveData = [], isLoading: competitiveLoading } = useQuery({
     queryKey: ['competitive-snapshot', selectedEntity?.id, entityType],
     queryFn: () =>
       dashboardService.getCompetitorSnapshot(selectedEntity?.id),
-    enabled: isAuthenticated && !!selectedEntity?.id,
+    enabled: isAuthenticated && !!selectedEntity?.id && !clusterMode,
     refetchInterval: REFETCH_INTERVAL,
   });
 
@@ -173,6 +218,15 @@ export default function PRCommandCenter() {
     queryClient.invalidateQueries({ queryKey: ['analytics'] });
   }, [queryClient]);
 
+  // Combine entities arrays for display
+  const entities = entityType === 'movie' ? movieEntities : celebrityEntities;
+  const entitiesLoading = entityType === 'movie' ? moviesLoading : celebritiesLoading;
+
+  // Derived state: hasLoadedEntities
+  const hasLoadedEntities = entities.length > 0 && !entitiesLoading;
+  const isLoadingEntities = entitiesLoading && !hasLoadedEntities;
+  const isLoading = (mentionsLoading || metricsLoading) && hasLoadedEntities;
+
   // Handle adding competitors (accepts array of entities)
   const handleAddCompetitor = useCallback(async (entitiesToAdd) => {
     try {
@@ -201,16 +255,35 @@ export default function PRCommandCenter() {
     }
   }, [queryClient, entityType, selectedEntity?.id, competitiveData]);
 
-  // Derived state: hasLoadedEntities
-  const hasLoadedEntities = entities.length > 0 && !entitiesLoading;
-  const isLoadingEntities = entitiesLoading && !hasLoadedEntities;
-  const isLoading = (mentionsLoading || metricsLoading) && hasLoadedEntities;
+  // Handle clearing movie entity
+  const handleClearMovie = useCallback(() => {
+    // Check if both would be empty (prevent clearing if celebrity is not selected)
+    if (!selectedCelebrityEntity) {
+      // Show error: red border around movie selector
+      setClearErrorBorder('movie');
+      // Reset error border after 2 seconds
+      setTimeout(() => setClearErrorBorder(null), 2000);
+      return;
+    }
+    // Safe to clear
+    setSelectedMovieEntity(null);
+    setClearErrorBorder(null);
+  }, [selectedCelebrityEntity]);
 
-  // Handle entity type change
-  const handleEntityTypeChange = useCallback((newType) => {
-    setEntityType(newType);
-    setSelectedEntity(null);
-  }, []);
+  // Handle clearing celebrity entity
+  const handleClearCelebrity = useCallback(() => {
+    // Check if both would be empty (prevent clearing if movie is not selected)
+    if (!selectedMovieEntity) {
+      // Show error: red border around celebrity selector
+      setClearErrorBorder('celebrity');
+      // Reset error border after 2 seconds
+      setTimeout(() => setClearErrorBorder(null), 2000);
+      return;
+    }
+    // Safe to clear
+    setSelectedCelebrityEntity(null);
+    setClearErrorBorder(null);
+  }, [selectedMovieEntity]);
 
   return (
     <div className="h-screen flex bg-background text-foreground">
@@ -221,44 +294,75 @@ export default function PRCommandCenter() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
-        {/* Header with Entity Selector */}
+        {/* Header with Entity Selectors */}
         <div className="border-b border-border bg-card px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold text-foreground">PR Command Center</h1>
             <div className="h-6 w-px bg-border" />
-            {selectedEntity && (
-              <EntitySelector
-                selectedEntity={selectedEntity}
-                onEntityChange={setSelectedEntity}
-                entities={entities}
-                entityType={entityType}
-              />
-            )}
+            
+            {/* Movie Entity Selector */}
+            <div className={`flex items-center gap-2 ${clearErrorBorder === 'movie' ? 'border-2 border-red-500 rounded px-2 py-1' : ''}`}>
+              {selectedMovieEntity ? (
+                <>
+                  <EntitySelector
+                    selectedEntity={selectedMovieEntity}
+                    onEntityChange={setSelectedMovieEntity}
+                    entities={movieEntities}
+                    entityType="movie"
+                  />
+                  <button
+                    onClick={handleClearMovie}
+                    className="p-1 hover:bg-red-600 hover:text-white rounded transition-colors"
+                    title="Clear movie selection"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </>
+              ) : (
+                <span className="text-muted-foreground text-sm">No movie selected</span>
+              )}
+            </div>
             <div className="h-6 w-px bg-border" />
+            
+            {/* Celebrity Entity Selector */}
+            <div className={`flex items-center gap-2 ${clearErrorBorder === 'celebrity' ? 'border-2 border-red-500 rounded px-2 py-1' : ''}`}>
+              {selectedCelebrityEntity ? (
+                <>
+                  <EntitySelector
+                    selectedEntity={selectedCelebrityEntity}
+                    onEntityChange={setSelectedCelebrityEntity}
+                    entities={celebrityEntities}
+                    entityType="celebrity"
+                  />
+                  <button
+                    onClick={handleClearCelebrity}
+                    className="p-1 hover:bg-red-600 hover:text-white rounded transition-colors"
+                    title="Clear celebrity selection"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </>
+              ) : (
+                <span className="text-muted-foreground text-sm">No celebrity selected</span>
+              )}
+            </div>
+            <div className="h-6 w-px bg-border" />
+            
+            {/* Cluster Mode Indicator */}
+            {clusterMode && (
+              <div className="px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded-full">
+                CLUSTER MODE
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleEntityTypeChange('movie')}
-              className={`px-4 py-2 h-10 text-sm font-medium rounded-lg transition-colors ${
-                entityType === 'movie'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-accent text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Movies
-            </button>
-            <button
-              onClick={() => handleEntityTypeChange('celebrity')}
-              className={`px-4 py-2 h-10 text-sm font-medium rounded-lg transition-colors ${
-                entityType === 'celebrity'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-accent text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Celebrities
-            </button>
-            <div className="h-6 w-px bg-border" />
             <button
               onClick={() => setLoginOpen(true)}
               className="px-4 py-2 h-10 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-colors"
@@ -337,6 +441,8 @@ export default function PRCommandCenter() {
                 platformData={platformData}
                 stats={metricsData}
                 sentimentData={sentimentTrend}
+                sentimentTrendRaw={sentimentTrendRaw}
+                clusterMode={clusterMode}
                 dateRange={dateRange}
                 setDateRange={setDateRange}
                 onMentionSelect={setSelectedMention}
