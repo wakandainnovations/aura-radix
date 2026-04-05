@@ -69,7 +69,7 @@ export default function PRCommandCenter() {
   const { data: mentionsData = {}, refetch: refetchMentions, isLoading: mentionsLoading } = useQuery({
     queryKey: ['mentions', selectedEntity?.id, entityType, selectedTimeRange],
     queryFn: () => 
-      dashboardService.getMentions(entityType, selectedEntity?.id, {
+      dashboardService.getMentions(selectedEntity?.id, {
         timeRange: selectedTimeRange,
       }),
     enabled: isAuthenticated && !!selectedEntity?.id,
@@ -83,7 +83,7 @@ export default function PRCommandCenter() {
   const { data: metricsData = {}, isLoading: metricsLoading } = useQuery({
     queryKey: ['stats', selectedEntity?.id, entityType, dateRange],
     queryFn: () =>
-      dashboardService.getStats(entityType, selectedEntity?.id, dateRange),
+      dashboardService.getStats(selectedEntity?.id),
     enabled: isAuthenticated && !!selectedEntity?.id,
     refetchInterval: REFETCH_INTERVAL,
   });
@@ -93,7 +93,7 @@ export default function PRCommandCenter() {
     queryKey: ['sentiment-trend', selectedEntity?.id, entityType, dateRange],
     queryFn: () => {
       // dateRange is already in API format (DAY, WEEK, MONTH)
-      return dashboardService.getSentimentOverTime(entityType, selectedEntity?.id, dateRange);
+      return dashboardService.getSentimentOverTime(selectedEntity?.id, dateRange);
     },
     enabled: isAuthenticated && !!selectedEntity?.id,
     refetchInterval: REFETCH_INTERVAL,
@@ -119,7 +119,7 @@ export default function PRCommandCenter() {
   const { data: platformData = [], isLoading: platformLoading } = useQuery({
     queryKey: ['platform-mentions', selectedEntity?.id, entityType, dateRange],
     queryFn: () =>
-      dashboardService.getPlatformMentions(entityType, selectedEntity?.id, dateRange),
+      dashboardService.getPlatformMentions(selectedEntity?.id),
     enabled: isAuthenticated && !!selectedEntity?.id,
     refetchInterval: REFETCH_INTERVAL,
   });
@@ -128,7 +128,7 @@ export default function PRCommandCenter() {
   const { data: competitiveData = [], isLoading: competitiveLoading } = useQuery({
     queryKey: ['competitive-snapshot', selectedEntity?.id, entityType],
     queryFn: () =>
-      dashboardService.getCompetitorSnapshot(entityType, selectedEntity?.id),
+      dashboardService.getCompetitorSnapshot(selectedEntity?.id),
     enabled: isAuthenticated && !!selectedEntity?.id,
     refetchInterval: REFETCH_INTERVAL,
   });

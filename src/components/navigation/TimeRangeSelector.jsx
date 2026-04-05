@@ -66,14 +66,12 @@ export default function TimeRangeSelector({
 
         if (DEBUG_MODE) {
           console.log("📡 Fetching sentiment data with:", {
-            entityType,
             entityId: selectedEntity.id,
             period: apiParam,
           });
         }
 
         const response = await dashboardService.getSentimentOverTime(
-          entityType,
           selectedEntity.id,
           apiParam,
         );

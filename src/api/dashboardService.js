@@ -2,12 +2,12 @@ import apiClient from './client';
 
 export const dashboardService = {
   // Get entity statistics (KPIs, counts, sentiment ratios)
-  // Path: GET /api/dashboard/{entityType}/{entityId}/stats
+  // Path: GET /api/dashboard/{entityId}/stats
   // Response: { totalMentions, positiveSentiment, negativeSentiment }
-  getStats: async (entityType, entityId) => {
+  getStats: async (entityId) => {
     try {
       const response = await apiClient.get(
-        `/dashboard/${entityType}/${entityId}/stats`
+        `/dashboard/${entityId}/stats`
       );
       return response;
     } catch (error) {
@@ -17,12 +17,12 @@ export const dashboardService = {
   },
 
   // Get competitor comparison snapshot (entity + competitors stats)
-  // Path: GET /api/dashboard/{entityType}/{entityId}/competitor-snapshot
+  // Path: GET /api/dashboard/{entityId}/competitor-snapshot
   // Response: Array of { entityName, totalMentions, positiveSentiment }
-  getCompetitorSnapshot: async (entityType, entityId) => {
+  getCompetitorSnapshot: async (entityId) => {
     try {
       const response = await apiClient.get(
-        `/dashboard/${entityType}/${entityId}/competitor-snapshot`
+        `/dashboard/${entityId}/competitor-snapshot`
       );
       return response;
     } catch (error) {
@@ -32,16 +32,16 @@ export const dashboardService = {
   },
 
   // Get sentiment data over time for trend analysis
-  // Path: GET /api/dashboard/{entityType}/{entityId}/sentiment-over-time
-  // Query Params: period (DAY|WEEK|MONTH), entityIds (comma-separated)
+  // Path: GET /api/dashboard/sentiment-over-time
+  // Query Params: entityIds (comma-separated), period (DAY|WEEK|MONTH)
   // Response: { entities: [{ name, sentiments: [{ date, positive, negative, neutral }] }] }
-  getSentimentOverTime: async (entityType, entityId, period = 'DAY', entityIds = []) => {
+  getSentimentOverTime: async (entityId, period = 'DAY', entityIds = []) => {
     try {
       const entityIdParam = entityIds.length > 0 
         ? (Array.isArray(entityIds) ? entityIds.join(',') : entityIds)
         : entityId;
       const response = await apiClient.get(
-        `/dashboard/${entityType}/${entityId}/sentiment-over-time`,
+        `/dashboard/sentiment-over-time`,
         { params: { period, entityIds: entityIdParam } }
       );
       return response;
@@ -52,12 +52,12 @@ export const dashboardService = {
   },
 
   // Get platform breakdown (mentions by platform)
-  // Path: GET /api/dashboard/{entityType}/{entityId}/platform-mentions
+  // Path: GET /api/dashboard/{entityId}/platform-mentions
   // Response: { X: number, REDDIT: number, YOUTUBE: number, INSTAGRAM: number }
-  getPlatformMentions: async (entityType, entityId) => {
+  getPlatformMentions: async (entityId) => {
     try {
       const response = await apiClient.get(
-        `/dashboard/${entityType}/${entityId}/platform-mentions`
+        `/dashboard/${entityId}/platform-mentions`
       );
       return response;
     } catch (error) {
@@ -67,10 +67,10 @@ export const dashboardService = {
   },
 
   // Get filtered mentions with pagination
-  // Path: GET /api/dashboard/{entityType}/{entityId}/mentions
+  // Path: GET /api/dashboard/{entityId}/mentions
   // Query Params: platform?, page (default: 0), size (default: 10)
   // Response: { content: Mention[], pageable, totalElements, totalPages, last }
-  getMentions: async (entityType, entityId, filters = {}) => {
+  getMentions: async (entityId, filters = {}) => {
     try {
       const params = {
         page: filters.page || 0,
@@ -78,7 +78,7 @@ export const dashboardService = {
         ...(filters.platform && { platform: filters.platform }),
       };
       const response = await apiClient.get(
-        `/dashboard/${entityType}/${entityId}/mentions`,
+        `/dashboard/${entityId}/mentions`,
         { params }
       );
       return response;
