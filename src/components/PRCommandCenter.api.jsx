@@ -75,19 +75,7 @@ export default function PRCommandCenter() {
     enabled: isAuthenticated,
   });
 
-  // Set default movie entity when movies load
-  useEffect(() => {
-    if (movieEntities.length > 0 && !selectedMovieEntity) {
-      setSelectedMovieEntity(movieEntities[0]);
-    }
-  }, [movieEntities, selectedMovieEntity]);
-
-  // Set default celebrity entity when celebrities load
-  useEffect(() => {
-    if (celebrityEntities.length > 0 && !selectedCelebrityEntity) {
-      setSelectedCelebrityEntity(celebrityEntities[0]);
-    }
-  }, [celebrityEntities, selectedCelebrityEntity]);
+  // No default selection - user must manually select Movie and Celebrity entities
 
   // Fetch mentions for selected entity (or cluster)
   const { data: mentionsData = {}, refetch: refetchMentions, isLoading: mentionsLoading } = useQuery({
@@ -156,7 +144,8 @@ export default function PRCommandCenter() {
   }, [sentimentTrendRaw]);
 
   // Fetch platform breakdown (or cluster)
-  const { data: platformData = [], isLoading: platformLoading } = useQuery({
+  // Response format: { PLATFORM: { POSITIVE: number, NEGATIVE: number, NEUTRAL: number } }
+  const { data: platformData = {}, isLoading: platformLoading } = useQuery({
     queryKey: ['platform-mentions', clusterMode ? clusterEntityIds : selectedEntity?.id, clusterMode ? 'cluster' : entityType, dateRange],
     queryFn: () => {
       if (clusterMode) {
@@ -257,33 +246,15 @@ export default function PRCommandCenter() {
 
   // Handle clearing movie entity
   const handleClearMovie = useCallback(() => {
-    // Check if both would be empty (prevent clearing if celebrity is not selected)
-    if (!selectedCelebrityEntity) {
-      // Show error: red border around movie selector
-      setClearErrorBorder('movie');
-      // Reset error border after 2 seconds
-      setTimeout(() => setClearErrorBorder(null), 2000);
-      return;
-    }
-    // Safe to clear
     setSelectedMovieEntity(null);
     setClearErrorBorder(null);
-  }, [selectedCelebrityEntity]);
+  }, []);
 
   // Handle clearing celebrity entity
   const handleClearCelebrity = useCallback(() => {
-    // Check if both would be empty (prevent clearing if movie is not selected)
-    if (!selectedMovieEntity) {
-      // Show error: red border around celebrity selector
-      setClearErrorBorder('celebrity');
-      // Reset error border after 2 seconds
-      setTimeout(() => setClearErrorBorder(null), 2000);
-      return;
-    }
-    // Safe to clear
     setSelectedCelebrityEntity(null);
     setClearErrorBorder(null);
-  }, [selectedMovieEntity]);
+  }, []);
 
   return (
     <div className="h-screen flex bg-background text-foreground">
@@ -302,64 +273,49 @@ export default function PRCommandCenter() {
             
             {/* Movie Entity Selector */}
             <div className={`flex items-center gap-2 ${clearErrorBorder === 'movie' ? 'border-2 border-red-500 rounded px-2 py-1' : ''}`}>
-              {selectedMovieEntity ? (
-                <>
-                  <EntitySelector
-                    selectedEntity={selectedMovieEntity}
-                    onEntityChange={setSelectedMovieEntity}
-                    entities={movieEntities}
-                    entityType="movie"
-                  />
-                  <button
-                    onClick={handleClearMovie}
-                    className="p-1 hover:bg-red-600 hover:text-white rounded transition-colors"
-                    title="Clear movie selection"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                  </button>
-                </>
-              ) : (
-                <span className="text-muted-foreground text-sm">No movie selected</span>
+              <EntitySelector
+                selectedEntity={selectedMovieEntity}
+                onEntityChange={setSelectedMovieEntity}
+                entities={movieEntities}
+                entityType="movie"
+              />
+              {selectedMovieEntity && (
+                <button
+                  onClick={handleClearMovie}
+                  className="p-1 hover:bg-red-600 hover:text-white rounded transition-colors"
+                  title="Clear movie selection"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
               )}
             </div>
             <div className="h-6 w-px bg-border" />
             
             {/* Celebrity Entity Selector */}
             <div className={`flex items-center gap-2 ${clearErrorBorder === 'celebrity' ? 'border-2 border-red-500 rounded px-2 py-1' : ''}`}>
-              {selectedCelebrityEntity ? (
-                <>
-                  <EntitySelector
-                    selectedEntity={selectedCelebrityEntity}
-                    onEntityChange={setSelectedCelebrityEntity}
-                    entities={celebrityEntities}
-                    entityType="celebrity"
-                  />
-                  <button
-                    onClick={handleClearCelebrity}
-                    className="p-1 hover:bg-red-600 hover:text-white rounded transition-colors"
-                    title="Clear celebrity selection"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                  </button>
-                </>
-              ) : (
-                <span className="text-muted-foreground text-sm">No celebrity selected</span>
+              <EntitySelector
+                selectedEntity={selectedCelebrityEntity}
+                onEntityChange={setSelectedCelebrityEntity}
+                entities={celebrityEntities}
+                entityType="celebrity"
+              />
+              {selectedCelebrityEntity && (
+                <button
+                  onClick={handleClearCelebrity}
+                  className="p-1 hover:bg-red-600 hover:text-white rounded transition-colors"
+                  title="Clear celebrity selection"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
               )}
             </div>
             <div className="h-6 w-px bg-border" />
-            
-            {/* Cluster Mode Indicator */}
-            {clusterMode && (
-              <div className="px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded-full">
-                CLUSTER MODE
-              </div>
-            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -412,7 +368,7 @@ export default function PRCommandCenter() {
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <h2 className="text-5xl font-bold text-foreground mb-4">Welcome to Project Aura</h2>
-              <p className="text-muted-foreground">Select an entity to get started</p>
+              <p className="text-muted-foreground">Select a movie/celebrity to show statistics</p>
             </div>
           </div>
         )}

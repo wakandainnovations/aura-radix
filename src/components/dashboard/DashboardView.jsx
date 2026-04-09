@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { celebrityAnalytics, movies } from "../../dummydata";
 import { transformStatsToCards, calculateStatsFromMentions } from "../../utils/statsTransformer";
+import { formatCurrency } from "../../utils/helpers";
 import CelebrityAnalytics from "./CelebrityAnalytics";
 import CompetitivePositioning from "./CompetitivePositioning";
 import SocialMediaFeed from "./SocialMediaFeed";
@@ -349,7 +350,7 @@ export default function DashboardView({
 
         {/* Celebrity-Specific Analytics - Only rendered for celebrity entities */}
         {/* Includes social reach, brand value, fan engagement, and controversy metrics */}
-        {isCelebrity && <CelebrityAnalytics celebrityData={celebrityData} />}
+        {isCelebrity && <CelebrityAnalytics celebrityData={celebrityData} formatCurrency={formatCurrency} />}
       </div>
     </div>
   );

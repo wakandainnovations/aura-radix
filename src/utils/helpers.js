@@ -36,6 +36,23 @@ export function formatTimestamp(date) {
   return `${date.toLocaleDateString()} (${exactTime})`;
 }
 
+export function formatCurrency(value) {
+  // Handle undefined or null
+  if (value === undefined || value === null) return '$0';
+  
+  // Convert to number if string
+  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  
+  // Handle invalid numbers
+  if (isNaN(numValue)) return '$0';
+  
+  // Format with commas and 0 decimal places for large numbers
+  return `$${numValue.toLocaleString('en-US', { 
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0 
+  })}`;
+}
+
 export function getThreatColor(score) {
   if (score >= 80) return 'text-threat-critical';
   if (score >= 60) return 'text-threat-high';
