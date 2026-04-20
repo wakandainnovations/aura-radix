@@ -12,9 +12,13 @@ export default function EntitySelector({ selectedEntity, onEntityChange, entitie
   const Icon = entityType === 'celebrity' ? Star : Film;
 
   return (
-    <Select.Root value={selectedEntity?.id} onValueChange={(id) => {
-      const entity = entities.find(e => e.id === id);
-      onEntityChange(entity);
+    <Select.Root value={selectedEntity?.id || ''} onValueChange={(id) => {
+      if (id === 'none') {
+        onEntityChange(null);
+      } else {
+        const entity = entities.find(e => e.id === id);
+        onEntityChange(entity);
+      }
     }}>
       <Select.Trigger className="inline-flex items-center gap-2 px-4 py-2 h-10 bg-card border border-border rounded-lg hover:bg-accent transition-colors min-w-[180px]">
         <Icon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
@@ -55,6 +59,19 @@ export default function EntitySelector({ selectedEntity, onEntityChange, entitie
           </div>
 
           <Select.Viewport className="p-1 max-h-[300px] overflow-y-auto">
+            {/* None Option */}
+            <Select.Item
+              value="none"
+              className="relative flex items-center gap-2 px-3 py-2 pr-8 rounded cursor-pointer outline-none hover:bg-accent data-[highlighted]:bg-accent"
+            >
+              <Select.ItemText>
+                <div className="font-medium text-foreground">None</div>
+              </Select.ItemText>
+              <Select.ItemIndicator className="absolute right-2">
+                <Check className="w-4 h-4 text-green-500" />
+              </Select.ItemIndicator>
+            </Select.Item>
+
             {filteredEntities.map((entity) => (
               <Select.Item
                 key={entity.id}

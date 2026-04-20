@@ -101,13 +101,13 @@ export default function PRCommandCenter() {
   // Fetch metrics/stats for selected entity - ALWAYS use movie stats for KPIs
   // Do not override with cluster stats when celebrity is selected
   const { data: metricsData = {}, isLoading: metricsLoading } = useQuery({
-    queryKey: ['stats', selectedMovieEntity?.id || selectedEntity?.id, 'movie', dateRange],
+    queryKey: ['stats', selectedMovieEntity?.id, selectedCelebrityEntity?.id, dateRange],
     queryFn: () => {
       // Always prioritize movie stats for KPIs, even if celebrity is also selected
       if (selectedMovieEntity) {
-        return dashboardService.getStats(selectedMovieEntity.id);
+        return dashboardService.getStats([selectedMovieEntity.id]);
       } else if (selectedCelebrityEntity) {
-        return dashboardService.getStats(selectedCelebrityEntity.id);
+        return dashboardService.getStats([selectedCelebrityEntity.id]);
       }
     },
     enabled: isAuthenticated && !!selectedEntity?.id,
@@ -177,7 +177,7 @@ export default function PRCommandCenter() {
         // Generate ISO format date (today)
         const today = new Date().toISOString().split('T')[0];
         return {
-          topBoxOffice: await analyticsService.getTopBoxOffice(today),
+          // topBoxOffice: await analyticsService.getTopBoxOffice(today), // DISABLED
           genreTrends: await analyticsService.getTrendingGenre(today),
           hitGenres: await analyticsService.getHitGenrePrediction(),
         };
@@ -321,18 +321,12 @@ export default function PRCommandCenter() {
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setLoginOpen(true)}
-              className="px-4 py-2 h-10 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-colors"
-            >
-              Login
-            </button>
-            {isAuthenticated && (
+            {!isAuthenticated && (
               <button
-                onClick={handleFetchData}
-                className="px-4 py-2 h-10 text-sm font-medium rounded-lg bg-green-600 text-white hover:opacity-90 transition-colors"
+                onClick={() => setLoginOpen(true)}
+                className="px-4 py-2 h-10 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-colors"
               >
-                Fetch Data
+                Login
               </button>
             )}
           </div>

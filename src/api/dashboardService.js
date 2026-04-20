@@ -2,16 +2,21 @@ import apiClient from './client';
 
 export const dashboardService = {
   // Get entity statistics (KPIs, counts, sentiment ratios)
-  // Path: GET /api/dashboard/{entityId}/stats
+  // Path: GET /api/dashboard/cluster/stats/avg
+  // Query Params: entityIds (comma-separated list of entity IDs)
   // Response: { totalMentions, positiveSentiment, negativeSentiment }
-  getStats: async (entityId) => {
+  getStats: async (entityIds = []) => {
     try {
+      // Convert single ID to array if needed
+      const ids = Array.isArray(entityIds) ? entityIds : [entityIds];
+      const entityIdParam = ids.join(',');
       const response = await apiClient.get(
-        `/dashboard/${entityId}/stats`
+        `/dashboard/cluster/stats/avg`,
+        { params: { entityIds: entityIdParam } }
       );
       return response;
     } catch (error) {
-      console.error(`Failed to fetch stats for entity ${entityId}:`, error);
+      console.error(`Failed to fetch stats for entities ${entityIds}:`, error);
       throw error;
     }
   },

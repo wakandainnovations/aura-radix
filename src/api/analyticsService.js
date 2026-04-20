@@ -65,6 +65,8 @@ export const analyticsService = {
   // Path: GET /api/analytics/top-box-office
   // Query Params: date (ISO format, e.g., 2025-11-08)
   // Response: { date: string, topBoxOfficeMovie: string }
+  // DISABLED - Retained for future use
+  /*
   getTopBoxOffice: async (date) => {
     try {
       const isoDate = date instanceof Date ? date.toISOString() : date;
@@ -77,4 +79,5 @@ export const analyticsService = {
       throw error;
     }
   },
+  */
 };
