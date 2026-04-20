@@ -222,19 +222,30 @@ export default function PRCommandCenter() {
   const handleAddCompetitor = useCallback(async (entitiesToAdd) => {
     try {
       // Ensure entitiesToAdd is an array
-      const entities = Array.isArray(entitiesToAdd) ? entitiesToAdd : [entitiesToAdd];
+      const newEntities = Array.isArray(entitiesToAdd) ? entitiesToAdd : [entitiesToAdd];
+      
+      // Extract new competitor IDs from the entities being added
+      const newCompetitorIds = newEntities
+        .map(e => e.id)
+        .filter(id => id !== undefined && id !== null);
       
       // Extract existing competitor IDs from competitiveData array
       // competitiveData is an array: [mainEntity, competitor1, competitor2, ...]
-      // We exclude the first item (main entity) and get IDs of competitors
+      // Try id field first, then entityId, then look up by name
       const competitorIds = competitiveData
         .slice(1) // Skip the main entity (first item)
-        .map(c => c.id)
+        .map(c => {
+          // Try different possible ID field names
+          if (c.id !== undefined) return c.id;
+          if (c.entityId !== undefined) return c.entityId;
+          // If no ID found, return undefined (will be filtered out)
+          return undefined;
+        })
         .filter(id => id !== undefined && id !== null);
       
-      // Add all new competitor IDs
-      const newCompetitorIds = entities.map(e => e.id).filter(id => id !== undefined && id !== null);
-      const updatedCompetitorIds = [...competitorIds, ...newCompetitorIds];
+      // Combine existing and new competitor IDs (avoid duplicates)
+      const allCompetitorIds = new Set([...competitorIds, ...newCompetitorIds]);
+      const updatedCompetitorIds = Array.from(allCompetitorIds);
       
       // Make a SINGLE API call with all competitor IDs
       await entityService.updateCompetitors(entityType, selectedEntity.id, updatedCompetitorIds);
