@@ -2,5 +2,6 @@
     "totalMentions": 1898,
     "positiveSentiment": 0.4636459430979979,
     "negativeSentiment": 0.41412012644889357,
-    "neutralSentiment": 0.12223393045310854
+    "neutralSentiment": 0.12223393045310854,
+    "netSentimentScore": 1.110000,
 }

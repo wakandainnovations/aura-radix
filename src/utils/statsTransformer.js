@@ -18,23 +18,20 @@ export function transformStatsToCards(statsResponse) {
     neutralSentiment = 0,
   } = statsResponse;
 
-  // If we got the API format with positiveSentiment/negativeSentiment, calculate the missing fields
-  const hasApiFormat = (positiveSentiment || negativeSentiment || neutralSentiment) && !overallSentiment;
-  
+
   let finalOverallSentiment = overallSentiment;
   let finalPositiveRatio = positiveRatio;
   let finalNetSentimentScore = netSentimentScore;
 
-  if (hasApiFormat) {
-    // Calculate overallSentiment: (positive - negative) * 50 + 50 (normalized to 0-100)
-    finalOverallSentiment = (positiveSentiment - negativeSentiment) * 50 + 50;
+    // Use overallSentiment value provided by backend (already normalized to 0-100)
+    finalOverallSentiment = overallSentiment;
     
-    // Positive ratio is just the positive sentiment percentage
+    // Positive ratio is the positive sentiment fraction (will be multiplied by 100 for display)
     finalPositiveRatio = positiveSentiment;
     
-    // Net sentiment score: (positive - negative) ratio
-    finalNetSentimentScore = positiveSentiment - negativeSentiment;
-  }
+    // Net sentiment score is provided directly from backend
+    finalNetSentimentScore = netSentimentScore;
+
 
   return [
     {
