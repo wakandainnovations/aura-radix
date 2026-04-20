@@ -13,7 +13,28 @@ export function transformStatsToCards(statsResponse) {
     overallSentiment = 0,
     positiveRatio = 0,
     netSentimentScore = 0,
+    positiveSentiment = 0,
+    negativeSentiment = 0,
+    neutralSentiment = 0,
   } = statsResponse;
+
+  // If we got the API format with positiveSentiment/negativeSentiment, calculate the missing fields
+  const hasApiFormat = (positiveSentiment || negativeSentiment || neutralSentiment) && !overallSentiment;
+  
+  let finalOverallSentiment = overallSentiment;
+  let finalPositiveRatio = positiveRatio;
+  let finalNetSentimentScore = netSentimentScore;
+
+  if (hasApiFormat) {
+    // Calculate overallSentiment: (positive - negative) * 50 + 50 (normalized to 0-100)
+    finalOverallSentiment = (positiveSentiment - negativeSentiment) * 50 + 50;
+    
+    // Positive ratio is just the positive sentiment percentage
+    finalPositiveRatio = positiveSentiment;
+    
+    // Net sentiment score: (positive - negative) ratio
+    finalNetSentimentScore = positiveSentiment - negativeSentiment;
+  }
 
   return [
     {
@@ -26,14 +47,14 @@ export function transformStatsToCards(statsResponse) {
     {
       icon: Smile,
       label: "Overall Sentiment",
-      value: `${overallSentiment.toFixed(1)}%`,
+      value: `${Math.max(0, Math.min(100, finalOverallSentiment)).toFixed(1)}%`,
       color: "green",
       tooltip: "Overall sentiment score across all mentions",
     },
     {
       icon: TrendingUp,
       label: "Positive Ratio",
-      value: `${(positiveRatio * 100).toFixed(1)}%`,
+      value: `${(finalPositiveRatio * 100).toFixed(1)}%`,
       color: "purple",
       tooltip:
         "Percentage of positive comments from total mentions. Higher is better.",
@@ -41,17 +62,15 @@ export function transformStatsToCards(statsResponse) {
     {
       icon: Zap,
       label: "Net Sentiment Score",
-      value: netSentimentScore.toFixed(2),
+      value: finalNetSentimentScore.toFixed(2),
       color:
-        netSentimentScore > 0
+        finalNetSentimentScore > 0
           ? "green"
-          : netSentimentScore < 0
+          : finalNetSentimentScore < 0
             ? "red"
             : "orange",
       tooltip:
-        "Net sentiment score indicates that there are " +
-        netSentimentScore.toFixed(2) +
-        " positive posts for one negative post. Higher is better.",
+        "Net sentiment score indicates the difference between positive and negative sentiment. Higher is better.",
     },
   ];
 }
