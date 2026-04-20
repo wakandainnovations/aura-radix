@@ -278,7 +278,7 @@ export default function PRCommandCenter() {
         {/* Header with Entity Selectors */}
         <div className="border-b border-border bg-card px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-foreground">PR Command Center</h1>
+            <h1 className="text-xl font-bold text-foreground">Command Center</h1>
             <div className="h-6 w-px bg-border" />
             
             {/* Movie Entity Selector */}
