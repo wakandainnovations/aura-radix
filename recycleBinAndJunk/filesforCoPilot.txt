@@ -1,102 +1,170 @@
-[
-    {
-        "id": 1312,
-        "managedEntityId": 6,
-        "platform": "X",
-        "postId": "2018277487122567611",
-        "content": "RT @kingslyhemanth: #DMK spokesperson got cooked ☠️🤣 \n\n#Congress #Parasakthi https://t.co/rd0nurQire",
-        "author": null,
-        "postDate": "2026-02-02T16:27:05Z",
-        "sentiment": "NEGATIVE"
-    },
-    {
-        "id": 1313,
-        "managedEntityId": 6,
-        "platform": "X",
-        "postId": "2018277424228929801",
-        "content": "The Raja Saab to Parasakthi: 4 latest OTT releases in Telugu, Tamil to watch in first week of February 2026\n#TheRajaSaab #Parasakthi #Telugu #Tamil \nhttps://t.co/tcsZQiwHxL",
-        "author": null,
-        "postDate": "2026-02-02T16:26:50Z",
-        "sentiment": "NEUTRAL"
-    },
-    {
-        "id": 1314,
-        "managedEntityId": 6,
-        "platform": "X",
-        "postId": "2018277404876411365",
-        "content": "RT @MalaimurasuTv: பராசக்தி படத்தை எனது மகனுடன் பார்த்தேன் - நீதிபதி\n#Malaimurasu #NewsUpdate #Parasakthi #madrashc #Justicevenkatesh https…",
-        "author": null,
-        "postDate": "2026-02-02T16:26:45Z",
-        "sentiment": "POSITIVE"
-    },
-    {
-        "id": 1315,
-        "managedEntityId": 6,
-        "platform": "X",
-        "postId": "2018277307031638084",
-        "content": "RT @kingslyhemanth: #DMK spokesperson got cooked ☠️🤣 \n\n#Congress #Parasakthi https://t.co/rd0nurQire",
-        "author": null,
-        "postDate": "2026-02-02T16:26:22Z",
-        "sentiment": "NEGATIVE"
-    },
-    {
-        "id": 1316,
-        "managedEntityId": 6,
-        "platform": "X",
-        "postId": "2018277302124335128",
-        "content": "RT @karthikgnath: D stocks made a propoganda film named ParaSakthi!\nMovie bombs at the box office !\nEven worse,the  same movie is used to e…",
-        "author": null,
-        "postDate": "2026-02-02T16:26:21Z",
-        "sentiment": "NEGATIVE"
-    },
-    {
-        "id": 1317,
-        "managedEntityId": 6,
-        "platform": "X",
-        "postId": "2018277273934373071",
-        "content": "RT @ActorVijayTeam: BJP: Parasakthi move based on what?\n\nDMK: Hindi imposition and language war.\n\nBJP: Whose tenure was it?\n\nDMK: Congress.…",
-        "author": null,
-        "postDate": "2026-02-02T16:26:14Z",
-        "sentiment": "NEGATIVE"
-    },
-    {
-        "id": 1318,
-        "managedEntityId": 6,
-        "platform": "X",
-        "postId": "2018277204145381781",
-        "content": "RT @kingslyhemanth: #DMK spokesperson got cooked ☠️🤣 \n\n#Congress #Parasakthi https://t.co/rd0nurQire",
-        "author": null,
-        "postDate": "2026-02-02T16:25:57Z",
-        "sentiment": "NEGATIVE"
-    },
-    {
-        "id": 1319,
-        "managedEntityId": 6,
-        "platform": "X",
-        "postId": "2018276981444608370",
-        "content": "RT @kingslyhemanth: #DMK spokesperson got cooked ☠️🤣 \n\n#Congress #Parasakthi https://t.co/rd0nurQire",
-        "author": null,
-        "postDate": "2026-02-02T16:25:04Z",
-        "sentiment": "NEGATIVE"
-    },
-    {
-        "id": 1320,
-        "managedEntityId": 6,
-        "platform": "X",
-        "postId": "2018276946044735651",
-        "content": "RT @TFU_Kannan: TN Box-office Top films from Jan 30th to Feb 1st (Weekend - Verdict)\n\n1. #TTTMovie (3rd - Super Hit)\n2. #Mankatha (2nd - Bl…",
-        "author": null,
-        "postDate": "2026-02-02T16:24:56Z",
-        "sentiment": "POSITIVE"
-    },
-    {
-        "id": 1321,
-        "managedEntityId": 6,
-        "platform": "X",
-        "postId": "2018276879963451560",
-        "content": "RT @vimalraj9524: From theatres to timelines 🔥🍿\n#Parasakthi streaming from Feb 7 on Z5 💥\nHere we go 🚀 https://t.co/MQUUsvVoKh",
-        "author": null,
-        "postDate": "2026-02-02T16:24:40Z",
-        "sentiment": "POSITIVE"
-    }
-]
+{
+    "entities": [
+        {
+            "name": "Parasakthi",
+            "sentiments": [
+                {
+                    "date": "2026-W05",
+                    "positive": 93,
+                    "negative": 57,
+                    "neutral": 4
+                },
+                {
+                    "date": "2026-W06",
+                    "positive": 121,
+                    "negative": 162,
+                    "neutral": 27
+                },
+                {
+                    "date": "2026-W07",
+                    "positive": 162,
+                    "negative": 109,
+                    "neutral": 34
+                },
+                {
+                    "date": "2026-W08",
+                    "positive": 166,
+                    "negative": 101,
+                    "neutral": 30
+                },
+                {
+                    "date": "2026-W09",
+                    "positive": 77,
+                    "negative": 106,
+                    "neutral": 11
+                },
+                {
+                    "date": "2026-W10",
+                    "positive": 31,
+                    "negative": 121,
+                    "neutral": 34
+                },
+                {
+                    "date": "2026-W11",
+                    "positive": 58,
+                    "negative": 38,
+                    "neutral": 11
+                },
+                {
+                    "date": "2026-W12",
+                    "positive": 21,
+                    "negative": 14,
+                    "neutral": 5
+                },
+                {
+                    "date": "2026-W13",
+                    "positive": 10,
+                    "negative": 13,
+                    "neutral": 3
+                },
+                {
+                    "date": "2026-W14",
+                    "positive": 4,
+                    "negative": 2,
+                    "neutral": 2
+                },
+                {
+                    "date": "2026-W15",
+                    "positive": 1,
+                    "negative": 0,
+                    "neutral": 0
+                },
+                {
+                    "date": "2026-W16",
+                    "positive": 0,
+                    "negative": 0,
+                    "neutral": 0
+                },
+                {
+                    "date": "2026-W17",
+                    "positive": 0,
+                    "negative": 0,
+                    "neutral": 0
+                }
+            ]
+        },
+        {
+            "name": "Madhavan",
+            "sentiments": [
+                {
+                    "date": "2026-W05",
+                    "positive": 2,
+                    "negative": 0,
+                    "neutral": 0
+                },
+                {
+                    "date": "2026-W06",
+                    "positive": 1,
+                    "negative": 0,
+                    "neutral": 0
+                },
+                {
+                    "date": "2026-W07",
+                    "positive": 3,
+                    "negative": 0,
+                    "neutral": 2
+                },
+                {
+                    "date": "2026-W08",
+                    "positive": 1,
+                    "negative": 0,
+                    "neutral": 1
+                },
+                {
+                    "date": "2026-W09",
+                    "positive": 1,
+                    "negative": 2,
+                    "neutral": 1
+                },
+                {
+                    "date": "2026-W10",
+                    "positive": 0,
+                    "negative": 0,
+                    "neutral": 2
+                },
+                {
+                    "date": "2026-W11",
+                    "positive": 3,
+                    "negative": 1,
+                    "neutral": 0
+                },
+                {
+                    "date": "2026-W12",
+                    "positive": 4,
+                    "negative": 1,
+                    "neutral": 1
+                },
+                {
+                    "date": "2026-W13",
+                    "positive": 11,
+                    "negative": 0,
+                    "neutral": 2
+                },
+                {
+                    "date": "2026-W14",
+                    "positive": 35,
+                    "negative": 10,
+                    "neutral": 4
+                },
+                {
+                    "date": "2026-W15",
+                    "positive": 150,
+                    "negative": 61,
+                    "neutral": 32
+                },
+                {
+                    "date": "2026-W16",
+                    "positive": 0,
+                    "negative": 0,
+                    "neutral": 0
+                },
+                {
+                    "date": "2026-W17",
+                    "positive": 0,
+                    "negative": 0,
+                    "neutral": 0
+                }
+            ]
+        }
+    ]
+}

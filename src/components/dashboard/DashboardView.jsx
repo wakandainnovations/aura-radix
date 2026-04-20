@@ -8,6 +8,7 @@ import CompetitivePositioning from "./CompetitivePositioning";
 import SocialMediaFeed from "./SocialMediaFeed";
 import KPICardsSection from "../analytics/KPICardsSection";
 import SentimentTrendChart from "../analytics/SentimentTrendChart";
+import OverlaySentimentComparison from "../analytics/OverlaySentimentComparison";
 import SentimentDistributionChart from "../analytics/SentimentDistributionChart";
 import PlatformBreakdownChart from "../analytics/PlatformBreakdownChart";
 import TimeRangeSelector from "../navigation/TimeRangeSelector";
@@ -41,6 +42,8 @@ export default function DashboardView({
   platformData,
   stats,
   sentimentData,
+  sentimentTrendRaw,
+  clusterMode,
   dateRange,
   setDateRange,
   onMentionSelect,
@@ -320,8 +323,12 @@ export default function DashboardView({
         <KPICardsSection analytics={transformStatsToCards(stats) || transformStatsToCards(calculateStatsFromMentions(mentions))} />
 
         {/* Sentiment Trend Chart - Full Width */}
-        {/* Shows sentiment progression over time with stacked area chart */}
-        <SentimentTrendChart sentimentData={sentimentData} />
+        {/* Shows sentiment progression over time */}
+        {clusterMode ? (
+          <OverlaySentimentComparison clusterData={sentimentTrendRaw} onRefresh={onRefresh} />
+        ) : (
+          <SentimentTrendChart sentimentData={sentimentData} />
+        )}
 
         {/* 
           Sentiment Distribution Chart (Disabled)
