@@ -23,19 +23,14 @@ export default function OverlaySentimentComparison({ clusterData = null, onRefre
     }
   };
 
-  if (!clusterData?.entities || clusterData.entities.length < 2) {
-    return (
-      <div className="bg-card border border-border rounded-lg p-5 flex items-center justify-center h-96">
-        <p className="text-muted-foreground">
-          Select both a movie and celebrity to compare sentiment
-        </p>
-      </div>
-    );
-  }
-
   // Transform data for overlay comparison
   // Group by date and combine sentiment scores from both entities
-  const transformedData = useMemo(() => {
+  // Define this BEFORE the conditional check to maintain consistent hook order
+  const { transformedData, maxValue } = useMemo(() => {
+    if (!clusterData?.entities || clusterData.entities.length < 2) {
+      return { transformedData: [], maxValue: 0 };
+    }
+
     const dateMap = new Map();
 
     // Process each entity
@@ -53,8 +48,31 @@ export default function OverlaySentimentComparison({ clusterData = null, onRefre
       });
     });
 
-    return Array.from(dateMap.values());
+    const data = Array.from(dateMap.values());
+
+    // Calculate max value across all sentiment data
+    let max = 0;
+    data.forEach((row) => {
+      Object.entries(row).forEach(([key, value]) => {
+        if (key !== "date" && typeof value === "number") {
+          max = Math.max(max, value);
+        }
+      });
+    });
+
+    return { transformedData: data, maxValue: max };
   }, [clusterData]);
+
+  // Check if we should show empty state
+  if (!clusterData?.entities || clusterData.entities.length < 2) {
+    return (
+      <div className="bg-card border border-border rounded-lg p-5 flex items-center justify-center h-96">
+        <p className="text-muted-foreground">
+          Select both a movie and celebrity to compare sentiment
+        </p>
+      </div>
+    );
+  }
 
   // Define colors for each entity
   const entityColors = [
@@ -67,7 +85,7 @@ export default function OverlaySentimentComparison({ clusterData = null, onRefre
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h3 className="text-sm font-semibold text-foreground">
-            Sentiment Comparison: {clusterData.entities.map(e => e.name).join(" vs ")}
+            Sentiment Comparison: {clusterData.entities.map(e => e.name).join(" , ")}
           </h3>
           <p className="text-xs text-muted-foreground mt-1">
             Overlaid sentiment trends for both entities
@@ -95,7 +113,11 @@ export default function OverlaySentimentComparison({ clusterData = null, onRefre
             tick={{ fill: "#888", fontSize: 12 }}
             tickFormatter={(value) => value}
           />
-          <YAxis tick={{ fill: "#888", fontSize: 12 }} label={{ value: 'Mentions', angle: -90, position: 'insideLeft' }} />
+          <YAxis 
+            tick={{ fill: "#888", fontSize: 12 }} 
+            label={{ value: 'Mentions', angle: -90, position: 'insideLeft' }}
+            domain={[0, Math.ceil(maxValue * 1.1)]}
+          />
           <Tooltip
             contentStyle={{
               backgroundColor: "#1a1a1a",

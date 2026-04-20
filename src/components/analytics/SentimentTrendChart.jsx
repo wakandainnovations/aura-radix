@@ -1,7 +1,7 @@
 import React from "react";
 import {
-  AreaChart,
-  Area,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   ResponsiveContainer,
@@ -23,24 +23,10 @@ function SentimentChart({ data = [], title, description, chartId }) {
         </p>
       </div>
       <ResponsiveContainer width="100%" height={300}>
-        <AreaChart
+        <LineChart
           data={data}
           margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
         >
-          <defs>
-            <linearGradient id={`colorPositive-${chartId}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="#22c55e" stopOpacity={0.1} />
-            </linearGradient>
-            <linearGradient id={`colorNeutral-${chartId}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#a78bfa" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="#a78bfa" stopOpacity={0.1} />
-            </linearGradient>
-            <linearGradient id={`colorNegative-${chartId}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1} />
-            </linearGradient>
-          </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#333" />
           <XAxis
             dataKey="date"
@@ -59,34 +45,31 @@ function SentimentChart({ data = [], title, description, chartId }) {
             labelFormatter={(label) => `Date: ${label}`}
           />
           <Legend />
-          <Area
+          <Line
             type="monotone"
             dataKey="positive"
-            stackId="1"
             stroke="#22c55e"
-            fillOpacity={1}
-            fill={`url(#colorPositive-${chartId})`}
+            strokeWidth={2}
+            dot={false}
             name="Positive"
           />
-          <Area
+          <Line
             type="monotone"
             dataKey="neutral"
-            stackId="1"
             stroke="#a78bfa"
-            fillOpacity={1}
-            fill={`url(#colorNeutral-${chartId})`}
+            strokeWidth={2}
+            dot={false}
             name="Neutral"
           />
-          <Area
+          <Line
             type="monotone"
             dataKey="negative"
-            stackId="1"
             stroke="#ef4444"
-            fillOpacity={1}
-            fill={`url(#colorNegative-${chartId})`}
+            strokeWidth={2}
+            dot={false}
             name="Negative"
           />
-        </AreaChart>
+        </LineChart>
       </ResponsiveContainer>
     </div>
   );
@@ -115,24 +98,10 @@ export default function SentimentTrendChart({
                 </p>
               </div>
               <ResponsiveContainer width="100%" height={300}>
-                <AreaChart
+                <LineChart
                   data={entity.sentiments || []}
                   margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
                 >
-                  <defs>
-                    <linearGradient id={`colorPositive-${idx}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8} />
-                      <stop offset="95%" stopColor="#22c55e" stopOpacity={0.1} />
-                    </linearGradient>
-                    <linearGradient id={`colorNeutral-${idx}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#a78bfa" stopOpacity={0.8} />
-                      <stop offset="95%" stopColor="#a78bfa" stopOpacity={0.1} />
-                    </linearGradient>
-                    <linearGradient id={`colorNegative-${idx}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
-                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1} />
-                    </linearGradient>
-                  </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                   <XAxis
                     dataKey="date"
@@ -151,34 +120,31 @@ export default function SentimentTrendChart({
                     labelFormatter={(label) => `Date: ${label}`}
                   />
                   <Legend />
-                  <Area
+                  <Line
                     type="monotone"
                     dataKey="positive"
-                    stackId="1"
                     stroke="#22c55e"
-                    fillOpacity={1}
-                    fill={`url(#colorPositive-${idx})`}
+                    strokeWidth={2}
+                    dot={false}
                     name="Positive"
                   />
-                  <Area
+                  <Line
                     type="monotone"
                     dataKey="neutral"
-                    stackId="1"
                     stroke="#a78bfa"
-                    fillOpacity={1}
-                    fill={`url(#colorNeutral-${idx})`}
+                    strokeWidth={2}
+                    dot={false}
                     name="Neutral"
                   />
-                  <Area
+                  <Line
                     type="monotone"
                     dataKey="negative"
-                    stackId="1"
                     stroke="#ef4444"
-                    fillOpacity={1}
-                    fill={`url(#colorNegative-${idx})`}
+                    strokeWidth={2}
+                    dot={false}
                     name="Negative"
                   />
-                </AreaChart>
+                </LineChart>
               </ResponsiveContainer>
             </div>
           ))}

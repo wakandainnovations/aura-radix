@@ -5,9 +5,10 @@ import BoxOfficePrediction from './BoxOfficePrediction';
 import HitGenrePrediction from './HitGenrePrediction';
 import BestGenreChart from './BestGenreChart';
 import TopBoxOfficeMovies from './TopBoxOfficeMovies';
+import { transformStatsToCards, calculateStatsFromMentions } from '../../utils/statsTransformer';
 import { movies } from '../../dummydata';
 
-export default function AnalyticsView({ mentions, metricsData, selectedEntity, entityType }) {
+export default function AnalyticsView({ mentions, metricsData, stats, selectedEntity, entityType }) {
   const [dateRange, setDateRange] = useState('DAY');
   
   // Safety check for mentions
@@ -197,8 +198,7 @@ export default function AnalyticsView({ mentions, metricsData, selectedEntity, e
 
       {/* KPI Cards - Matching Reference Image */}
       <KPICardsSection 
-        analytics={analytics}
-        sentimentScore={sentimentScore}
+        analytics={stats ? transformStatsToCards(stats) : transformStatsToCards(calculateStatsFromMentions(mentions))}
       />
 
       {/* Analytics Sections Grid */}

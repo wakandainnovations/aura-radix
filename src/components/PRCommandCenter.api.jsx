@@ -98,14 +98,16 @@ export default function PRCommandCenter() {
   // Extract mentions array from response (backend returns paginated { content: [...] })
   const mentions = Array.isArray(mentionsData?.content) ? mentionsData.content : [];
 
-  // Fetch metrics/stats for selected entity (or cluster)
+  // Fetch metrics/stats for selected entity - ALWAYS use movie stats for KPIs
+  // Do not override with cluster stats when celebrity is selected
   const { data: metricsData = {}, isLoading: metricsLoading } = useQuery({
-    queryKey: ['stats', clusterMode ? clusterEntityIds : selectedEntity?.id, clusterMode ? 'cluster' : entityType, dateRange],
+    queryKey: ['stats', selectedMovieEntity?.id || selectedEntity?.id, 'movie', dateRange],
     queryFn: () => {
-      if (clusterMode) {
-        return dashboardService.getClusterStats(clusterEntityIds);
-      } else {
-        return dashboardService.getStats(selectedEntity?.id);
+      // Always prioritize movie stats for KPIs, even if celebrity is also selected
+      if (selectedMovieEntity) {
+        return dashboardService.getStats(selectedMovieEntity.id);
+      } else if (selectedCelebrityEntity) {
+        return dashboardService.getStats(selectedCelebrityEntity.id);
       }
     },
     enabled: isAuthenticated && !!selectedEntity?.id,
@@ -410,6 +412,7 @@ export default function PRCommandCenter() {
                 selectedEntity={selectedEntity}
                 entityType={entityType}
                 mentions={filteredMentions}
+                stats={metricsData}
                 sentimentData={sentimentTrend}
                 platformData={platformData}
                 dateRange={dateRange}
