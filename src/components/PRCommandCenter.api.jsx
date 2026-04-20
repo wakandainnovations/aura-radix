@@ -115,7 +115,7 @@ export default function PRCommandCenter() {
   });
 
   // Fetch sentiment trend data
-  const { data: sentimentTrendRaw = {}, isLoading: trendLoading } = useQuery({
+  const { data: sentimentTrendRaw = {}, isLoading: trendLoading, refetch: refetchSentimentTrend } = useQuery({
     queryKey: ['sentiment-trend', clusterMode ? clusterEntityIds : selectedEntity?.id, clusterMode ? 'cluster' : entityType, dateRange],
     queryFn: () => {
       // dateRange is already in API format (DAY, WEEK, MONTH)
@@ -398,7 +398,7 @@ export default function PRCommandCenter() {
                 dateRange={dateRange}
                 setDateRange={setDateRange}
                 onMentionSelect={setSelectedMention}
-                onRefresh={refetchMentions}
+                onRefresh={refetchSentimentTrend}
               />
             )}
             {activeView === 'analytics' && (

@@ -26,8 +26,8 @@ export function transformStatsToCards(statsResponse) {
     // Use overallSentiment value provided by backend (already normalized to 0-100)
     finalOverallSentiment = overallSentiment;
     
-    // Positive ratio is the positive sentiment fraction (will be multiplied by 100 for display)
-    finalPositiveRatio = positiveSentiment;
+    // Positive ratio is provided directly by backend (already a decimal, will be multiplied by 100 for display)
+    finalPositiveRatio = positiveRatio;
     
     // Net sentiment score is provided directly from backend
     finalNetSentimentScore = netSentimentScore;
