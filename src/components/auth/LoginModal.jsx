@@ -4,10 +4,6 @@ import * as Label from '@radix-ui/react-label';
 import { X, CheckCircle } from 'lucide-react';
 import { authService } from '../../api';
 
-const clearJWTToken = () => {
-  localStorage.removeItem('jwtToken');
-};
-
 export default function LoginModal({ open, onOpenChange, onLoginSuccess }) {
   const [username, setUsername] = useState('newuser');
   const [password, setPassword] = useState('password123');
@@ -50,7 +46,7 @@ export default function LoginModal({ open, onOpenChange, onLoginSuccess }) {
     } catch (error) {
       // Handle 403 Forbidden - token is invalid/expired
       if (error.response?.status === 403) {
-        clearJWTToken();
+        authService.logout();
         setStatus('error');
         setErrorMessage('Your session has expired. Please login again.');
       } else {

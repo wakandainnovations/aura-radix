@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   LineChart,
   Line,
@@ -12,6 +12,15 @@ import {
 
 // Reusable chart component
 function SentimentChart({ data = [], title, description, chartId }) {
+  // Calculate max value for Y-axis with 10% padding
+  const maxValue = useMemo(() => {
+    if (!data || data.length === 0) return 100;
+    const max = Math.max(
+      ...data.map(d => Math.max(d.positive || 0, d.neutral || 0, d.negative || 0))
+    );
+    return max || 100;
+  }, [data]);
+
   return (
     <div className="bg-card border border-border rounded-lg p-5">
       <div className="mb-4">
@@ -33,7 +42,10 @@ function SentimentChart({ data = [], title, description, chartId }) {
             tick={{ fill: "#888", fontSize: 12 }}
             tickFormatter={(value) => value}
           />
-          <YAxis tick={{ fill: "#888", fontSize: 12 }} />
+          <YAxis 
+            tick={{ fill: "#888", fontSize: 12 }} 
+            domain={[0, Math.ceil(maxValue * 1.1)]}
+          />
           <Tooltip
             contentStyle={{
               backgroundColor: "#1a1a1a",
@@ -87,17 +99,25 @@ export default function SentimentTrendChart({
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-2 gap-6">
-          {clusterData.entities.map((entity, idx) => (
-            <div key={idx} className="bg-card border border-border rounded-lg p-5">
-              <div className="mb-4">
-                <h3 className="text-sm font-semibold text-foreground">
-                  {entity.name} - Sentiment Trend
-                </h3>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Sentiment distribution over time
-                </p>
-              </div>
-              <ResponsiveContainer width="100%" height={300}>
+          {clusterData.entities.map((entity, idx) => {
+            // Calculate max value for Y-axis with 10% padding for each entity
+            const maxValue = Math.max(
+              ...((entity.sentiments || []).map(d => 
+                Math.max(d.positive || 0, d.neutral || 0, d.negative || 0)
+              ) || [100])
+            ) || 100;
+
+            return (
+              <div key={idx} className="bg-card border border-border rounded-lg p-5">
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold text-foreground">
+                    {entity.name} - Sentiment Trend
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Sentiment distribution over time
+                  </p>
+                </div>
+                <ResponsiveContainer width="100%" height={300}>
                 <LineChart
                   data={entity.sentiments || []}
                   margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
@@ -108,7 +128,10 @@ export default function SentimentTrendChart({
                     tick={{ fill: "#888", fontSize: 12 }}
                     tickFormatter={(value) => value}
                   />
-                  <YAxis tick={{ fill: "#888", fontSize: 12 }} />
+                  <YAxis 
+                    tick={{ fill: "#888", fontSize: 12 }} 
+                    domain={[0, Math.ceil(maxValue * 1.1)]}
+                  />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "#1a1a1a",
@@ -147,7 +170,8 @@ export default function SentimentTrendChart({
                 </LineChart>
               </ResponsiveContainer>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     );

@@ -22,7 +22,7 @@ export default function PRCommandCenter() {
   const [selectedMention, setSelectedMention] = useState(null);
   const [activeView, setActiveView] = useState('dashboard'); // 'dashboard', 'analytics', 'crisis-center', 'negative-analysis'
   const [entityType, setEntityType] = useState('movie'); // 'movie' or 'celebrity'
-  const [selectedEntity, setSelectedEntity] = useState(movies[0]); // Default to first movie
+  const [selectedEntity, setSelectedEntity] = useState(null); // No default selection
   const [selectedPlatforms, setSelectedPlatforms] = useState([]); // Empty = all platforms
   const [selectedSentiments, setSelectedSentiments] = useState([]); // Empty = all sentiments
   const [selectedTimeRange, setSelectedTimeRange] = useState('24h'); // Default to 24 hours
@@ -38,18 +38,21 @@ export default function PRCommandCenter() {
     queryKey: ['mentions', selectedEntity?.id],
     queryFn: () => generateMentions(100, selectedEntity?.id),
     refetchInterval: 300000, // Refetch every 5 minutes
+    enabled: !!selectedEntity?.id,
   });
 
   const { data: metricsData = [] } = useQuery({
     queryKey: ['metrics', selectedEntity?.id, timeRange],
     queryFn: () => generateMetricsData(timeRange),
     refetchInterval: 300000, // Refetch every 5 minutes
+    enabled: !!selectedEntity?.id,
   });
 
   const { data: competitiveData = [] } = useQuery({
     queryKey: ['competitive'],
     queryFn: generateCompetitiveData,
     refetchInterval: 300000, // Refetch every 5 minutes
+    enabled: !!selectedEntity?.id,
   });
 
   // Get current entities list based on type
@@ -130,7 +133,7 @@ export default function PRCommandCenter() {
           <button
             onClick={() => {
               setEntityType('celebrity');
-              setSelectedEntity(celebrities[0]);
+              setSelectedEntity(null);
             }}
             className={`px-4 py-2 h-10 text-sm font-medium rounded-lg transition-colors ${
               entityType === 'celebrity'
@@ -151,7 +154,16 @@ export default function PRCommandCenter() {
       </div>
 
       {/* Dashboard View */}
-      {activeView === 'dashboard' && (
+      {activeView === 'dashboard' && !selectedEntity && (
+        <div className="h-full flex items-center justify-center bg-background">
+          <div className="text-center space-y-4">
+            <p className="text-lg font-semibold text-foreground">Select an entity to view the dashboard</p>
+            <p className="text-sm text-muted-foreground">Choose a movie or celebrity using the selectors above</p>
+          </div>
+        </div>
+      )}
+
+      {activeView === 'dashboard' && selectedEntity && (
         <DashboardView 
           selectedEntity={selectedEntity}
           entityType={entityType}
@@ -166,7 +178,16 @@ export default function PRCommandCenter() {
 
       {/* Sentiment Analysis View */}
       {/* AI Analytics View */}
-      {activeView === 'ai-analytics' && (
+      {activeView === 'ai-analytics' && !selectedEntity && (
+        <div className="h-full flex items-center justify-center bg-background">
+          <div className="text-center space-y-4">
+            <p className="text-lg font-semibold text-foreground">Select an entity to view analytics</p>
+            <p className="text-sm text-muted-foreground">Choose a movie or celebrity using the selectors above</p>
+          </div>
+        </div>
+      )}
+
+      {activeView === 'ai-analytics' && selectedEntity && (
         <AIAnalyticsView 
           selectedEntity={selectedEntity}
           entityType={entityType}
@@ -174,7 +195,16 @@ export default function PRCommandCenter() {
       )}
 
       {/* Trending Genre Analysis View */}
-      {activeView === 'trending-genre' && (
+      {activeView === 'trending-genre' && !selectedEntity && (
+        <div className="h-full flex items-center justify-center bg-background">
+          <div className="text-center space-y-4">
+            <p className="text-lg font-semibold text-foreground">Select an entity to view analysis</p>
+            <p className="text-sm text-muted-foreground">Choose a movie or celebrity using the selectors above</p>
+          </div>
+        </div>
+      )}
+
+      {activeView === 'trending-genre' && selectedEntity && (
         <AnalyticsView 
           mentions={filteredMentions}
           metricsData={metricsData}
@@ -184,7 +214,16 @@ export default function PRCommandCenter() {
       )}
 
       {/* Historical Data Analysis View */}
-      {activeView === 'historical-data' && (
+      {activeView === 'historical-data' && !selectedEntity && (
+        <div className="h-full flex items-center justify-center bg-background">
+          <div className="text-center space-y-4">
+            <p className="text-lg font-semibold text-foreground">Select an entity to view historical data</p>
+            <p className="text-sm text-muted-foreground">Choose a movie or celebrity using the selectors above</p>
+          </div>
+        </div>
+      )}
+
+      {activeView === 'historical-data' && selectedEntity && (
         <AnalyticsView 
           mentions={filteredMentions}
           metricsData={metricsData}
@@ -194,17 +233,44 @@ export default function PRCommandCenter() {
       )}
 
       {/* Crisis Management Center View */}
-      {activeView === 'crisis-center' && (
+      {activeView === 'crisis-center' && !selectedEntity && (
+        <div className="h-full flex items-center justify-center bg-background">
+          <div className="text-center space-y-4">
+            <p className="text-lg font-semibold text-foreground">Select an entity to view crisis center</p>
+            <p className="text-sm text-muted-foreground">Choose a movie or celebrity using the selectors above</p>
+          </div>
+        </div>
+      )}
+
+      {activeView === 'crisis-center' && selectedEntity && (
         <CrisisPlanGenerator selectedEntity={selectedEntity} mentions={filteredMentions} />
       )}
 
       {/* Negative Sentiment Analysis View */}
-      {activeView === 'negative-analysis' && (
+      {activeView === 'negative-analysis' && !selectedEntity && (
+        <div className="h-full flex items-center justify-center bg-background">
+          <div className="text-center space-y-4">
+            <p className="text-lg font-semibold text-foreground">Select an entity to view analysis</p>
+            <p className="text-sm text-muted-foreground">Choose a movie or celebrity using the selectors above</p>
+          </div>
+        </div>
+      )}
+
+      {activeView === 'negative-analysis' && selectedEntity && (
         <NegativeCommentSummary mentions={filteredMentions} selectedEntity={selectedEntity} />
       )}
 
       {/* Metrics Dashboard View */}
-      {activeView === 'metrics' && (
+      {activeView === 'metrics' && !selectedEntity && (
+        <div className="h-full flex items-center justify-center bg-background">
+          <div className="text-center space-y-4">
+            <p className="text-lg font-semibold text-foreground">Select an entity to view metrics</p>
+            <p className="text-sm text-muted-foreground">Choose a movie or celebrity using the selectors above</p>
+          </div>
+        </div>
+      )}
+
+      {activeView === 'metrics' && selectedEntity && (
         <EnhancedMetricsDashboard 
           mentions={filteredMentions}
           metricsData={metricsData}
@@ -215,7 +281,16 @@ export default function PRCommandCenter() {
       )}
 
       {/* Legacy crisis view - kept for backwards compatibility */}
-      {activeView === 'crisis' && (
+      {activeView === 'crisis' && !selectedEntity && (
+        <div className="h-full flex items-center justify-center bg-background">
+          <div className="text-center space-y-4">
+            <p className="text-lg font-semibold text-foreground">Select an entity to view crisis management</p>
+            <p className="text-sm text-muted-foreground">Choose a movie or celebrity using the selectors above</p>
+          </div>
+        </div>
+      )}
+
+      {activeView === 'crisis' && selectedEntity && (
         <PanelGroup direction="horizontal" className="flex-1">
           <Panel defaultSize={35} minSize={30} maxSize={45}>
             <CrisisPlanGenerator selectedEntity={selectedEntity} mentions={filteredMentions} />

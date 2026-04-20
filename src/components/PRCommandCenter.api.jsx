@@ -12,7 +12,7 @@ import EnhancedMetricsDashboard from './metrics/EnhancedMetricsDashboard';
 import CommandPalette from './navigation/CommandPalette';
 import LoginModal from './auth/LoginModal';
 // Import API services
-import { entityService, dashboardService, analyticsService } from '../api';
+import { entityService, dashboardService, analyticsService, authService } from '../api';
 // Import utilities and hooks
 import { filterMentions } from '../utils/filterMentions';
 import { useAuth } from '../hooks/useAuth';
@@ -77,21 +77,18 @@ export default function PRCommandCenter() {
 
   // No default selection - user must manually select Movie and Celebrity entities
 
-  // Fetch mentions for selected entity (or cluster)
+  // Determine entity IDs for mentions query (single entity as array or cluster)
+  const entityIdsForMentions = clusterMode ? clusterEntityIds : (selectedEntity?.id ? [selectedEntity.id] : []);
+
+  // Fetch mentions using cluster endpoint for both single and multiple entities
   const { data: mentionsData = {}, refetch: refetchMentions, isLoading: mentionsLoading } = useQuery({
-    queryKey: ['mentions', clusterMode ? clusterEntityIds : selectedEntity?.id, clusterMode ? 'cluster' : entityType, selectedTimeRange],
+    queryKey: ['mentions', entityIdsForMentions.join(','), selectedTimeRange],
     queryFn: () => {
-      if (clusterMode) {
-        return dashboardService.getClusterMentions(clusterEntityIds, {
-          timeRange: selectedTimeRange,
-        });
-      } else {
-        return dashboardService.getMentions(selectedEntity?.id, {
-          timeRange: selectedTimeRange,
-        });
-      }
+      return dashboardService.getClusterMentions(entityIdsForMentions, {
+        timeRange: selectedTimeRange,
+      });
     },
-    enabled: isAuthenticated && !!selectedEntity?.id,
+    enabled: isAuthenticated && entityIdsForMentions.length > 0,
     refetchInterval: REFETCH_INTERVAL,
   });
 
@@ -332,13 +329,28 @@ export default function PRCommandCenter() {
           </div>
 
           <div className="flex items-center gap-2">
-            {!isAuthenticated && (
+            {!isAuthenticated ? (
               <button
                 onClick={() => setLoginOpen(true)}
                 className="px-4 py-2 h-10 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-colors"
               >
                 Login
               </button>
+            ) : (
+              <>
+                <span className="text-sm text-muted-foreground">Logged in</span>
+                <button
+                  onClick={() => {
+                    authService.logout();
+                    setIsAuthenticated(false);
+                    setSelectedMovieEntity(null);
+                    setSelectedCelebrityEntity(null);
+                  }}
+                  className="px-4 py-2 h-10 text-sm font-medium rounded-lg bg-red-600 text-white hover:opacity-90 transition-colors"
+                >
+                  Logout
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -393,7 +405,15 @@ export default function PRCommandCenter() {
         {/* Views Router */}
         {isAuthenticated && !isLoading && selectedEntity && (
           <>
-            {activeView === 'dashboard' && (
+            {activeView === 'dashboard' && !selectedEntity && (
+              <div className="h-full flex items-center justify-center bg-background">
+                <div className="text-center space-y-4">
+                  <p className="text-lg font-semibold text-foreground">Select an entity to view the dashboard</p>
+                  <p className="text-sm text-muted-foreground">Choose a movie or celebrity using the selectors above</p>
+                </div>
+              </div>
+            )}
+            {activeView === 'dashboard' && selectedEntity && (
               <DashboardView
                 selectedEntity={selectedEntity}
                 entityType={entityType}
@@ -412,7 +432,15 @@ export default function PRCommandCenter() {
                 onRefresh={refetchSentimentTrend}
               />
             )}
-            {activeView === 'analytics' && (
+            {activeView === 'analytics' && !selectedEntity && (
+              <div className="h-full flex items-center justify-center bg-background">
+                <div className="text-center space-y-4">
+                  <p className="text-lg font-semibold text-foreground">Select an entity to view analytics</p>
+                  <p className="text-sm text-muted-foreground">Choose a movie or celebrity using the selectors above</p>
+                </div>
+              </div>
+            )}
+            {activeView === 'analytics' && selectedEntity && (
               <AnalyticsView
                 selectedEntity={selectedEntity}
                 entityType={entityType}
@@ -424,14 +452,30 @@ export default function PRCommandCenter() {
                 onDateRangeChange={setDateRange}
               />
             )}
-            {activeView === 'ai-analytics' && (
+            {activeView === 'ai-analytics' && !selectedEntity && (
+              <div className="h-full flex items-center justify-center bg-background">
+                <div className="text-center space-y-4">
+                  <p className="text-lg font-semibold text-foreground">Select an entity to view analytics</p>
+                  <p className="text-sm text-muted-foreground">Choose a movie or celebrity using the selectors above</p>
+                </div>
+              </div>
+            )}
+            {activeView === 'ai-analytics' && selectedEntity && (
               <AIAnalyticsView
                 selectedEntity={selectedEntity}
                 entityType={entityType}
                 analyticsData={analyticsData}
               />
             )}
-            {activeView === 'crisis-center' && (
+            {activeView === 'crisis-center' && !selectedEntity && (
+              <div className="h-full flex items-center justify-center bg-background">
+                <div className="text-center space-y-4">
+                  <p className="text-lg font-semibold text-foreground">Select an entity to view crisis center</p>
+                  <p className="text-sm text-muted-foreground">Choose a movie or celebrity using the selectors above</p>
+                </div>
+              </div>
+            )}
+            {activeView === 'crisis-center' && selectedEntity && (
               <CrisisFocusView
                 selectedEntity={selectedEntity}
                 entityType={entityType}
@@ -439,21 +483,45 @@ export default function PRCommandCenter() {
                 onMentionSelect={setSelectedMention}
               />
             )}
-            {activeView === 'crisis-management' && (
+            {activeView === 'crisis-management' && !selectedEntity && (
+              <div className="h-full flex items-center justify-center bg-background">
+                <div className="text-center space-y-4">
+                  <p className="text-lg font-semibold text-foreground">Select an entity to view crisis management</p>
+                  <p className="text-sm text-muted-foreground">Choose a movie or celebrity using the selectors above</p>
+                </div>
+              </div>
+            )}
+            {activeView === 'crisis-management' && selectedEntity && (
               <CrisisManagementCenter
                 selectedEntity={selectedEntity}
                 entityType={entityType}
                 mentions={filteredMentions}
               />
             )}
-            {activeView === 'negative-analysis' && (
+            {activeView === 'negative-analysis' && !selectedEntity && (
+              <div className="h-full flex items-center justify-center bg-background">
+                <div className="text-center space-y-4">
+                  <p className="text-lg font-semibold text-foreground">Select an entity to view analysis</p>
+                  <p className="text-sm text-muted-foreground">Choose a movie or celebrity using the selectors above</p>
+                </div>
+              </div>
+            )}
+            {activeView === 'negative-analysis' && selectedEntity && (
               <NegativeCommentSummary
                 selectedEntity={selectedEntity}
                 entityType={entityType}
                 mentions={filteredMentions}
               />
             )}
-            {activeView === 'metrics' && (
+            {activeView === 'metrics' && !selectedEntity && (
+              <div className="h-full flex items-center justify-center bg-background">
+                <div className="text-center space-y-4">
+                  <p className="text-lg font-semibold text-foreground">Select an entity to view metrics</p>
+                  <p className="text-sm text-muted-foreground">Choose a movie or celebrity using the selectors above</p>
+                </div>
+              </div>
+            )}
+            {activeView === 'metrics' && selectedEntity && (
               <EnhancedMetricsDashboard
                 selectedEntity={selectedEntity}
                 entityType={entityType}
@@ -482,10 +550,8 @@ export default function PRCommandCenter() {
           // Set authenticated state
           setIsAuthenticated(true);
           
-          // Invalidate all queries to trigger fresh fetches with JWT token
-          setTimeout(() => {
-            handleFetchData();
-          }, 100); // Small delay to ensure localStorage is synced
+          // Refetch entities and other queries now that we're authenticated
+          handleFetchData();
         }}
       />
     </div>
