@@ -104,7 +104,7 @@ export default function CommandPalette({ open, onOpenChange, mentions = [], onSe
                           <MessageSquare className="w-4 h-4 text-muted-foreground mt-0.5" />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-sm font-medium">{mention.author}</span>
+                              <span className="text-sm font-medium">{mention.author || 'Unknown Author'}</span>
                               <span className="text-xs text-threat-high font-mono">
                                 {mention.aiThreatScore}
                               </span>
@@ -124,7 +124,7 @@ export default function CommandPalette({ open, onOpenChange, mentions = [], onSe
                 <Command.Group heading="Search Results" className="text-xs text-muted-foreground uppercase tracking-wider mb-2 px-2 mt-4">
                   {mentions
                     .filter(m => 
-                      m.author.toLowerCase().includes(search.toLowerCase()) ||
+                      (m.author || 'Unknown Author').toLowerCase().includes(search.toLowerCase()) ||
                       m.textSnippet.toLowerCase().includes(search.toLowerCase())
                     )
                     .slice(0, 20)
@@ -138,7 +138,7 @@ export default function CommandPalette({ open, onOpenChange, mentions = [], onSe
                           <MessageSquare className="w-4 h-4 text-muted-foreground mt-0.5" />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-sm font-medium">{mention.author}</span>
+                              <span className="text-sm font-medium">{mention.author || 'Unknown Author'}</span>
                               <span className="text-xs text-muted-foreground">
                                 {mention.platform}
                               </span>

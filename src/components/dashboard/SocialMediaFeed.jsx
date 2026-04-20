@@ -33,7 +33,7 @@ export default function SocialMediaFeed({ mentions, selectedEntity }) {
     return mentions.map(mention => ({
       id: mention.id,
       text: mention.content,
-      author: mention.author,
+      author: mention.author || mention.username || mention.userId || 'Anonymous User',
       platform: mention.platform.toLowerCase(),
       timestamp: formatSmartTime(mention.postDate),
       originalDate: mention.postDate,
@@ -254,11 +254,11 @@ export default function SocialMediaFeed({ mentions, selectedEntity }) {
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold">
-                    {mention.author?.charAt(0)?.toUpperCase() || 'U'}
+                    {mention.author?.charAt(0)?.toUpperCase() || 'A'}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-foreground">{mention.author || 'Anonymous'}</p>
+                      <p className="text-sm font-medium text-foreground">{mention.author}</p>
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {mention.platform.toUpperCase()} • {mention.timestamp}

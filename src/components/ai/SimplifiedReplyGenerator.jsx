@@ -44,7 +44,7 @@ export default function SimplifiedReplyGenerator({ mention, open, onOpenChange }
                   Quick Reply
                 </Dialog.Title>
                 <Dialog.Description className="text-sm text-muted-foreground mt-1">
-                  Respond to {mention.author} • {mention.platform}
+                  Respond to {mention.author || 'Unknown Author'} • {mention.platform}
                 </Dialog.Description>
               </div>
               <Dialog.Close className="text-muted-foreground hover:text-foreground transition-colors">

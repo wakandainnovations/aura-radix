@@ -105,7 +105,7 @@ export default function Inspector({ mention }) {
                     <HoverCard.Trigger asChild>
                       <button className="flex items-center gap-2 text-sm hover:text-primary transition-colors">
                         <User className="w-4 h-4" />
-                        <span className="font-medium">{mention.author}</span>
+                        <span className="font-medium">{mention.author || 'Unknown Author'}</span>
                       </button>
                     </HoverCard.Trigger>
                     <UserProfileCard mention={mention} />
@@ -218,11 +218,11 @@ function UserProfileCard({ mention }) {
         <div className="space-y-3">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/50 rounded-full flex items-center justify-center text-lg font-bold">
-              {mention.author[0]}
+              {(mention.author || 'A')[0]}
             </div>
             <div>
-              <div className="font-semibold">{mention.author}</div>
-              <div className="text-xs text-muted-foreground">{mention.authorId}</div>
+              <div className="font-semibold">{mention.author || 'Unknown Author'}</div>
+              <div className="text-xs text-muted-foreground">{mention.authorId || 'N/A'}</div>
             </div>
           </div>
 

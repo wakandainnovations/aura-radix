@@ -116,7 +116,7 @@ export default function AIReplyGenerator({ mention, open, onOpenChange }) {
               Original Mention
             </div>
             <div className="flex items-start gap-3">
-              <div className="font-medium text-sm">{mention.author}</div>
+              <div className="font-medium text-sm">{mention.author || 'Unknown Author'}</div>
               <div className="flex-1">
                 <p className="text-sm">{mention.textSnippet}</p>
                 <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">

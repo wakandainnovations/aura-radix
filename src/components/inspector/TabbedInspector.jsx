@@ -174,7 +174,7 @@ export default function TabbedInspector({ mention }) {
                         <HoverCard.Trigger asChild>
                           <button className="flex items-center gap-2 text-xs hover:text-primary transition-colors">
                             <User className="w-3 h-3" />
-                            <span className="font-medium">{mention.author}</span>
+                            <span className="font-medium">{mention.author || 'Unknown Author'}</span>
                           </button>
                         </HoverCard.Trigger>
                         <UserProfileCard mention={mention} />
@@ -305,11 +305,11 @@ function UserProfileCard({ mention }) {
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/50 rounded-full flex items-center justify-center text-sm font-bold">
-              {mention.author[0]}
+              {(mention.author || 'A')[0]}
             </div>
             <div>
-              <div className="font-semibold text-xs">{mention.author}</div>
-              <div className="text-xs text-muted-foreground">{mention.authorId}</div>
+              <div className="font-semibold text-xs">{mention.author || 'Unknown Author'}</div>
+              <div className="text-xs text-muted-foreground">{mention.authorId || 'N/A'}</div>
             </div>
           </div>
 

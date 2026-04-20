@@ -123,7 +123,7 @@ export default function MentionFeed({
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
                               <span className="font-medium text-sm">
-                                {mention.author?.name || mention.author || "Unknown Author"}
+                                {mention.author?.name || mention.author || mention.username || mention.userId || "Unknown Author"}
                               </span>
                               <span className="text-xs text-muted-foreground">
                                 {formatTimestamp(mention.timestamp || mention.postDate)}
