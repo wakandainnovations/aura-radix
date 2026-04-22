@@ -58,6 +58,16 @@ export default function SentimentTrendGraph({
 
   // Get the color for this sentiment type
   const sentimentColor = SENTIMENT_COLORS[sentiment] || SENTIMENT_COLORS.positive;
+  const graphBackgroundStyle =
+    sentiment === "positive"
+      ? {
+          background: "linear-gradient(180deg, rgba(16, 185, 129, 0.16) 0%, rgba(16, 185, 129, 0.03) 100%)",
+        }
+      : sentiment === "negative"
+        ? {
+            background: "linear-gradient(180deg, rgba(239, 68, 68, 0.16) 0%, rgba(239, 68, 68, 0.03) 100%)",
+          }
+        : {};
 
   // Prepare chart data with overlaid X-axis (use unique dates from all graphs)
   let chartData;
@@ -137,64 +147,66 @@ export default function SentimentTrendGraph({
         </button> */}
       </div>
 
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart
-          data={chartData}
-          margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
-          syncId="sentiment-chart"
-        >
-          <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-          <XAxis
-            dataKey="date"
-            tick={{ fill: "#888", fontSize: 12 }}
-            height={40}
-          />
-          <YAxis
-            tick={{ fill: "#888", fontSize: 12 }}
-            label={{ value: 'Total Mentions', angle: -90, position: 'insideLeft' }}
-          />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "#1a1a1a",
-              border: "1px solid #333",
-              borderRadius: "8px",
-            }}
-            labelStyle={{ color: "#fff" }}
-            formatter={(value, name) => [value, name]}
-            labelFormatter={(label) => `Date: ${label}`}
-          />
-          <Legend />
+      <div className="rounded-md px-1 py-2" style={graphBackgroundStyle}>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart
+            data={chartData}
+            margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+            syncId="sentiment-chart"
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+            <XAxis
+              dataKey="date"
+              tick={{ fill: "#888", fontSize: 12 }}
+              height={40}
+            />
+            <YAxis
+              tick={{ fill: "#888", fontSize: 12 }}
+              label={{ value: 'Total Mentions', angle: -90, position: 'insideLeft' }}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "#1a1a1a",
+                border: "1px solid #333",
+                borderRadius: "8px",
+              }}
+              labelStyle={{ color: "#fff" }}
+              formatter={(value, name) => [value, name]}
+              labelFormatter={(label) => `Date: ${label}`}
+            />
+            <Legend />
 
           {/* Single entity - simple line */}
-          {!clusterMode && (
-            <Line
-              type="monotone"
-              dataKey="value"
-              stroke={sentimentColor}
-              strokeWidth={2}
-              dot={{ fill: sentimentColor, r: 4 }}
-              activeDot={{ r: 6 }}
-              name={`${sentiment.charAt(0).toUpperCase() + sentiment.slice(1)} Mentions`}
-              isAnimationActive={true}
-            />
-          )}
+            {!clusterMode && (
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke={sentimentColor}
+                strokeWidth={2}
+                dot={{ fill: sentimentColor, r: 4 }}
+                activeDot={{ r: 6 }}
+                name={`${sentiment.charAt(0).toUpperCase() + sentiment.slice(1)} Mentions`}
+                isAnimationActive={true}
+              />
+            )}
 
           {/* Cluster mode - lines per entity */}
-          {clusterMode && clusterEntities.map((entity, idx) => (
-            <Line
-              key={entity.id}
-              type="monotone"
-              dataKey={entity.name}
-              stroke={ENTITY_COLORS[idx % ENTITY_COLORS.length]}
-              strokeWidth={2}
-              dot={{ r: 3 }}
-              name={entity.name}
-              isAnimationActive={true}
-              connectNulls={true}
-            />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
+            {clusterMode && clusterEntities.map((entity, idx) => (
+              <Line
+                key={entity.id}
+                type="monotone"
+                dataKey={entity.name}
+                stroke={ENTITY_COLORS[idx % ENTITY_COLORS.length]}
+                strokeWidth={2}
+                dot={{ r: 3 }}
+                name={entity.name}
+                isAnimationActive={true}
+                connectNulls={true}
+              />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }
