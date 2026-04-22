@@ -126,7 +126,7 @@ export default function SentimentTrendGraph({
             {clusterMode ? `${clusterEntities.length} entities` : 'Single entity'} over time
           </p>
         </div>
-        <button
+        {/* <button
           onClick={handleRefresh}
           disabled={isRefreshing}
           className="px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-all flex items-center gap-2 text-sm font-medium"
@@ -134,7 +134,7 @@ export default function SentimentTrendGraph({
         >
           <RotateCcw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           Refresh
-        </button>
+        </button> */}
       </div>
 
       <ResponsiveContainer width="100%" height={300}>
