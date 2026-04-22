@@ -422,19 +422,21 @@ export default function PRCommandCenter() {
               )}
             </div>
 
-            {/* Add Entity Button - disabled when max 5 entities reached */}
-            <button
-              onClick={() => setAddEntityModalOpen(true)}
-              disabled={selectedEntities.length >= 5}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 transition-colors text-sm font-medium border border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
-              title={selectedEntities.length >= 5 ? 'Maximum 5 entities allowed' : 'Add entity'}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-              Add Entity
-            </button>
+            {/* Add Entity Button - only shown when authenticated */}
+            {isAuthenticated && (
+              <button
+                onClick={() => setAddEntityModalOpen(true)}
+                disabled={selectedEntities.length >= 5}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 transition-colors text-sm font-medium border border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                title={selectedEntities.length >= 5 ? 'Maximum 5 entities allowed' : 'Add entity'}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Add Entity
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -462,6 +464,7 @@ export default function PRCommandCenter() {
                     authService.logout();
                     setIsAuthenticated(false);
                     setSelectedEntities([]);
+                    setAddEntityModalOpen(false);
                   }}
                   className="px-4 py-2 h-10 text-sm font-medium rounded-lg bg-red-600 text-white hover:opacity-90 transition-colors"
                 >
@@ -665,14 +668,16 @@ export default function PRCommandCenter() {
       />
 
       {/* Add Entity Modal - REWORKED */}
-      <AddEntityModal
-        open={addEntityModalOpen}
-        onOpenChange={setAddEntityModalOpen}
-        onEntitySelect={handleAddEntity}
-        movieEntities={movieEntities}
-        celebrityEntities={celebrityEntities}
-        currentEntityIds={selectedEntities.map(e => e.id)}
-      />
+      {isAuthenticated && (
+        <AddEntityModal
+          open={addEntityModalOpen}
+          onOpenChange={setAddEntityModalOpen}
+          onEntitySelect={handleAddEntity}
+          movieEntities={movieEntities}
+          celebrityEntities={celebrityEntities}
+          currentEntityIds={selectedEntities.map(e => e.id)}
+        />
+      )}
 
       {/* Login Modal */}
       <LoginModal 
