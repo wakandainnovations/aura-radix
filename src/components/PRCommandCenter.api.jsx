@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { RotateCcw } from 'lucide-react';
 import LeftNavbar from './navigation/LeftNavbar';
 // COMMENTED OUT: Old entity selection approach
 // import EntitySelector from './navigation/EntitySelector';
@@ -232,7 +233,7 @@ export default function PRCommandCenter() {
         const today = new Date().toISOString().split('T')[0];
         return {
           // topBoxOffice: await analyticsService.getTopBoxOffice(today), // DISABLED
-          genreTrends: await analyticsService.getTrendingGenre(today),
+          // genreTrends: await analyticsService.getTrendingGenre(today), // DISABLED
           hitGenres: await analyticsService.getHitGenrePrediction(),
         };
       }
@@ -262,6 +263,35 @@ export default function PRCommandCenter() {
     queryClient.invalidateQueries({ queryKey: ['competitive-snapshot'] });
     queryClient.invalidateQueries({ queryKey: ['analytics'] });
   }, [queryClient]);
+
+  const handleRefreshCurrentEntities = useCallback(async () => {
+    if (!primaryEntity?.id || entityIdsForQueries.length === 0) return;
+
+    const mentionsKey = ['mentions', entityIdsForQueries.join(','), selectedTimeRange];
+    const statsKey = ['stats', clusterMode ? clusterEntityIds.join(',') : primaryEntity.id, dateRange];
+    const trendKey = ['sentiment-trend', clusterMode ? clusterEntityIds : primaryEntity.id, clusterMode ? 'cluster' : entityType, dateRange];
+    const platformKey = ['platform-mentions', clusterMode ? clusterEntityIds : primaryEntity.id, clusterMode ? 'cluster' : entityType, dateRange];
+    const competitiveKey = ['competitive-snapshot', primaryEntity.id, entityType];
+    const analyticsKey = ['analytics', entityType];
+
+    await Promise.all([
+      queryClient.refetchQueries({ queryKey: mentionsKey, type: 'active' }),
+      queryClient.refetchQueries({ queryKey: statsKey, type: 'active' }),
+      queryClient.refetchQueries({ queryKey: trendKey, type: 'active' }),
+      queryClient.refetchQueries({ queryKey: platformKey, type: 'active' }),
+      queryClient.refetchQueries({ queryKey: competitiveKey, type: 'active' }),
+      queryClient.refetchQueries({ queryKey: analyticsKey, type: 'active' }),
+    ]);
+  }, [
+    queryClient,
+    primaryEntity?.id,
+    entityIdsForQueries,
+    selectedTimeRange,
+    clusterMode,
+    clusterEntityIds,
+    dateRange,
+    entityType,
+  ]);
 
   // Get current entity types from selectedEntities
   const movieEntitiesSelected = selectedEntities.filter(e => e.entityType === 'movie');
@@ -417,6 +447,15 @@ export default function PRCommandCenter() {
               </button>
             ) : (
               <>
+                <button
+                  onClick={handleRefreshCurrentEntities}
+                  disabled={!primaryEntity?.id}
+                  className="px-3 py-2 h-10 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  title={primaryEntity?.id ? 'Refresh all data for selected entities' : 'Select an entity to refresh data'}
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Refresh
+                </button>
                 <span className="text-sm text-muted-foreground">Logged in</span>
                 <button
                   onClick={() => {

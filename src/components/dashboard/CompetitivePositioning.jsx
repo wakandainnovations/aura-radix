@@ -1,15 +1,20 @@
 import React, { useState, useMemo } from 'react';
 import { Target, MessageSquare, TrendingUp, Zap, Plus, X } from 'lucide-react';
 
-export default function CompetitivePositioning({ competitiveData = [], entities = [], onAddCompetitor = null }) {
+export default function CompetitivePositioning({ competitiveData = [], entities = [], onAddCompetitor = null, entityType = 'movie' }) {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedEntities, setSelectedEntities] = useState([]);
 
   // Filter entities to exclude already added competitors
   const availableEntities = useMemo(() => {
     const competitorIds = new Set(competitiveData.map(c => c.id));
-    return entities.filter(entity => !competitorIds.has(entity.id));
-  }, [entities, competitiveData]);
+    return entities.filter(entity => {
+      const notAlreadyAdded = !competitorIds.has(entity.id);
+      // Business rule: if primary entity is a movie, only movies can be added as competitors
+      const matchesPrimaryType = entityType === 'movie' ? entity.entityType === 'movie' : true;
+      return notAlreadyAdded && matchesPrimaryType;
+    });
+  }, [entities, competitiveData, entityType]);
 
   // Handle tag selection for multi-select
   const handleSelectEntity = (entity) => {

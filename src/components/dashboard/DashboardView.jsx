@@ -350,6 +350,7 @@ export default function DashboardView({
             competitiveData={competitiveData} 
             entities={entities}
             onAddCompetitor={onAddCompetitor}
+            entityType={entityType}
           />
           {/* Platform Breakdown Chart - Stacked bar chart showing sentiment distribution per platform */}
           <PlatformBreakdownChart platformData={platformData} />
