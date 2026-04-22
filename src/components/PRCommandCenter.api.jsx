@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import LeftNavbar from './navigation/LeftNavbar';
-import EntitySelector from './navigation/EntitySelector';
+// COMMENTED OUT: Old entity selection approach
+// import EntitySelector from './navigation/EntitySelector';
+import AddEntityModal from './navigation/AddEntityModal';
 import DashboardView from './dashboard/DashboardView';
 import AnalyticsView from './analytics/AnalyticsView';
 import AIAnalyticsView from './analytics/AIAnalyticsView';
@@ -38,26 +40,29 @@ export default function PRCommandCenter() {
   const { isAuthenticated, setIsAuthenticated } = useAuth();
   const [selectedMention, setSelectedMention] = useState(null);
   const [activeView, setActiveView] = useState('dashboard');
-  const [selectedMovieEntity, setSelectedMovieEntity] = useState(null);
-  const [selectedCelebrityEntity, setSelectedCelebrityEntity] = useState(null);
+  // REWORKED: New entity selection using array of entities
+  const [selectedEntities, setSelectedEntities] = useState([]); // Array of selected entities
   const [selectedPlatforms, setSelectedPlatforms] = useState([]);
   const [selectedSentiments, setSelectedSentiments] = useState([]);
   const [selectedTimeRange, setSelectedTimeRange] = useState('24h');
   const [selectedStatuses, setSelectedStatuses] = useState([]);
   const [commandOpen, setCommandOpen] = useState(false);
+  const [addEntityModalOpen, setAddEntityModalOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [timeRange, setTimeRange] = useState('60m');
   const [competitors, setCompetitors] = useState([]);
   const [dateRange, setDateRange] = useState('DAY');
-  const [clearErrorBorder, setClearErrorBorder] = useState(null); // 'movie' or 'celebrity' or null
 
-  // Determine which entity is currently selected (prefer movie, fallback to celebrity)
-  const selectedEntity = selectedMovieEntity || selectedCelebrityEntity;
-  const entityType = selectedMovieEntity ? 'movie' : 'celebrity';
+  // Primary entity is the first selected entity
+  const primaryEntity = selectedEntities.length > 0 ? selectedEntities[0] : null;
+  const entityType = primaryEntity?.entityType || 'movie';
   
-  // Determine if we're in cluster mode (both movie AND celebrity selected)
-  const clusterMode = selectedMovieEntity && selectedCelebrityEntity;
-  const clusterEntityIds = clusterMode ? [selectedMovieEntity.id, selectedCelebrityEntity.id] : [];
+  // Cluster mode is activated when 2 or more entities are selected
+  const clusterMode = selectedEntities.length >= 2;
+  const clusterEntityIds = clusterMode ? selectedEntities.map(e => e.id) : [];
+
+  // For queries: use cluster IDs if in cluster mode, otherwise use primary entity ID
+  const entityIdsForQueries = clusterMode ? clusterEntityIds : (primaryEntity?.id ? [primaryEntity.id] : []);
 
   // Fetch all movie entities
   const { data: movieEntities = [], isLoading: moviesLoading } = useQuery({
@@ -65,6 +70,7 @@ export default function PRCommandCenter() {
     queryFn: () => entityService.getAll('movie'),
     staleTime: QUERY_STALE_TIME,
     enabled: isAuthenticated,
+    select: (data) => data.map(entity => ({ ...entity, entityType: 'movie' })),
   });
 
   // Fetch all celebrity entities
@@ -73,96 +79,146 @@ export default function PRCommandCenter() {
     queryFn: () => entityService.getAll('celebrity'),
     staleTime: QUERY_STALE_TIME,
     enabled: isAuthenticated,
+    select: (data) => data.map(entity => ({ ...entity, entityType: 'celebrity' })),
   });
 
-  // No default selection - user must manually select Movie and Celebrity entities
-
-  // Determine entity IDs for mentions query (single entity as array or cluster)
-  const entityIdsForMentions = clusterMode ? clusterEntityIds : (selectedEntity?.id ? [selectedEntity.id] : []);
-
-  // Fetch mentions using cluster endpoint for both single and multiple entities
+  // Fetch mentions for primary or cluster - supports cluster mode
   const { data: mentionsData = {}, refetch: refetchMentions, isLoading: mentionsLoading } = useQuery({
-    queryKey: ['mentions', entityIdsForMentions.join(','), selectedTimeRange],
+    queryKey: ['mentions', entityIdsForQueries.join(','), selectedTimeRange],
     queryFn: () => {
-      return dashboardService.getClusterMentions(entityIdsForMentions, {
+      return dashboardService.getClusterMentions(entityIdsForQueries, {
         timeRange: selectedTimeRange,
       });
     },
-    enabled: isAuthenticated && entityIdsForMentions.length > 0,
+    enabled: isAuthenticated && entityIdsForQueries.length > 0,
     refetchInterval: REFETCH_INTERVAL,
   });
 
   // Extract mentions array from response (backend returns paginated { content: [...] })
   const mentions = Array.isArray(mentionsData?.content) ? mentionsData.content : [];
 
-  // Fetch metrics/stats for selected entity - ALWAYS use movie stats for KPIs
-  // Do not override with cluster stats when celebrity is selected
+  // Fetch metrics/stats - in cluster mode, aggregates all entities; in single mode, uses primary entity
   const { data: metricsData = {}, isLoading: metricsLoading } = useQuery({
-    queryKey: ['stats', selectedMovieEntity?.id, selectedCelebrityEntity?.id, dateRange],
+    queryKey: ['stats', clusterMode ? clusterEntityIds.join(',') : primaryEntity?.id, dateRange],
     queryFn: () => {
-      // Always prioritize movie stats for KPIs, even if celebrity is also selected
-      if (selectedMovieEntity) {
-        return dashboardService.getStats([selectedMovieEntity.id]);
-      } else if (selectedCelebrityEntity) {
-        return dashboardService.getStats([selectedCelebrityEntity.id]);
-      }
-    },
-    enabled: isAuthenticated && !!selectedEntity?.id,
-    refetchInterval: REFETCH_INTERVAL,
-  });
-
-  // Fetch sentiment trend data
-  const { data: sentimentTrendRaw = {}, isLoading: trendLoading, refetch: refetchSentimentTrend } = useQuery({
-    queryKey: ['sentiment-trend', clusterMode ? clusterEntityIds : selectedEntity?.id, clusterMode ? 'cluster' : entityType, dateRange],
-    queryFn: () => {
-      // dateRange is already in API format (DAY, WEEK, MONTH)
       if (clusterMode) {
-        return dashboardService.getSentimentOverTime(selectedMovieEntity.id, dateRange, clusterEntityIds);
-      } else {
-        return dashboardService.getSentimentOverTime(selectedEntity?.id, dateRange);
+        // In cluster mode, fetch stats for all entities
+        return dashboardService.getStats(clusterEntityIds);
+      } else if (primaryEntity) {
+        return dashboardService.getStats([primaryEntity.id]);
       }
     },
-    enabled: isAuthenticated && !!selectedEntity?.id,
+    enabled: isAuthenticated && !!primaryEntity?.id,
     refetchInterval: REFETCH_INTERVAL,
   });
 
-  // Transform sentiment trend data for chart
+  // Fetch sentiment trend data - supports cluster mode
+  const { data: sentimentTrendRaw = {}, isLoading: trendLoading, refetch: refetchSentimentTrend } = useQuery({
+    queryKey: ['sentiment-trend', clusterMode ? clusterEntityIds : primaryEntity?.id, clusterMode ? 'cluster' : entityType, dateRange],
+    queryFn: () => {
+      if (clusterMode) {
+        // Use cluster endpoint for multiple entities
+        return dashboardService.getSentimentOverTime(primaryEntity.id, dateRange, clusterEntityIds);
+      } else if (primaryEntity) {
+        // Use regular endpoint for single entity
+        return dashboardService.getSentimentOverTime(primaryEntity.id, dateRange);
+      }
+    },
+    enabled: isAuthenticated && !!primaryEntity?.id,
+    refetchInterval: REFETCH_INTERVAL,
+  });
+
+  // Transform sentiment trend data for 3 separate graphs (positive, neutral, negative)
+  // Backend now supplies .total attribute for each sentiment type per day/week/month
+  const sentimentGraphs = useMemo(() => {
+    if (!sentimentTrendRaw?.entities || sentimentTrendRaw.entities.length === 0) {
+      return { positive: [], neutral: [], negative: [] };
+    }
+    
+    // In cluster mode, merge data from all entities; in single mode, use first entity
+    const entitiesToProcess = clusterMode ? sentimentTrendRaw.entities : [sentimentTrendRaw.entities[0]];
+    
+    // Transform data - create separate arrays for each sentiment type
+    const positiveData = [];
+    const neutralData = [];
+    const negativeData = [];
+    
+    entitiesToProcess.forEach((entity, entityIndex) => {
+      entity.sentiments?.forEach((item) => {
+        // Handle both old format (direct values) and new format (with .total)
+        const positiveTotal = item.positive?.total ?? item.positive ?? 0;
+        const neutralTotal = item.neutral?.total ?? item.neutral ?? 0;
+        const negativeTotal = item.negative?.total ?? item.negative ?? 0;
+        
+        if (clusterMode) {
+          // In cluster mode, include entity name for multi-line charts
+          positiveData.push({ 
+            date: item.date, 
+            entity: entity.name || `Entity ${entityIndex + 1}`,
+            value: positiveTotal,
+            total: positiveTotal 
+          });
+          neutralData.push({ 
+            date: item.date, 
+            entity: entity.name || `Entity ${entityIndex + 1}`,
+            value: neutralTotal,
+            total: neutralTotal 
+          });
+          negativeData.push({ 
+            date: item.date, 
+            entity: entity.name || `Entity ${entityIndex + 1}`,
+            value: negativeTotal,
+            total: negativeTotal 
+          });
+        } else {
+          // In single mode, simple date + value format
+          positiveData.push({ date: item.date, value: positiveTotal, total: positiveTotal });
+          neutralData.push({ date: item.date, value: neutralTotal, total: neutralTotal });
+          negativeData.push({ date: item.date, value: negativeTotal, total: negativeTotal });
+        }
+      });
+    });
+    
+    return { positive: positiveData, neutral: neutralData, negative: negativeData };
+  }, [sentimentTrendRaw, clusterMode]);
+
+  // Legacy sentimentTrend for backward compatibility
   const sentimentTrend = useMemo(() => {
     if (!sentimentTrendRaw?.entities || sentimentTrendRaw.entities.length === 0) {
       return [];
     }
-    
-    // Extract first entity's sentiments
     const firstEntity = sentimentTrendRaw.entities[0];
     return firstEntity.sentiments.map(item => ({
-      date: item.date, // Use date as label (not parsed as date)
+      date: item.date,
       positive: item.positive || 0,
       negative: item.negative || 0,
       neutral: item.neutral || 0,
     }));
   }, [sentimentTrendRaw]);
 
-  // Fetch platform breakdown (or cluster)
+  // Fetch platform breakdown - supports cluster mode
   // Response format: { PLATFORM: { POSITIVE: number, NEGATIVE: number, NEUTRAL: number } }
   const { data: platformData = {}, isLoading: platformLoading } = useQuery({
-    queryKey: ['platform-mentions', clusterMode ? clusterEntityIds : selectedEntity?.id, clusterMode ? 'cluster' : entityType, dateRange],
+    queryKey: ['platform-mentions', clusterMode ? clusterEntityIds : primaryEntity?.id, clusterMode ? 'cluster' : entityType, dateRange],
     queryFn: () => {
       if (clusterMode) {
+        // Use cluster endpoint for multiple entities
         return dashboardService.getClusterPlatformMentions(clusterEntityIds);
-      } else {
-        return dashboardService.getPlatformMentions(selectedEntity?.id);
+      } else if (primaryEntity) {
+        // Use regular endpoint for single entity
+        return dashboardService.getPlatformMentions(primaryEntity.id);
       }
     },
-    enabled: isAuthenticated && !!selectedEntity?.id,
+    enabled: isAuthenticated && !!primaryEntity?.id,
     refetchInterval: REFETCH_INTERVAL,
   });
 
-  // Fetch competitive data (only for single entity mode)
+  // Fetch competitive data (for primary entity)
   const { data: competitiveData = [], isLoading: competitiveLoading } = useQuery({
-    queryKey: ['competitive-snapshot', selectedEntity?.id, entityType],
+    queryKey: ['competitive-snapshot', primaryEntity?.id, entityType],
     queryFn: () =>
-      dashboardService.getCompetitorSnapshot(selectedEntity?.id),
-    enabled: isAuthenticated && !!selectedEntity?.id && !clusterMode,
+      dashboardService.getCompetitorSnapshot(primaryEntity?.id),
+    enabled: isAuthenticated && !!primaryEntity?.id,
     refetchInterval: REFETCH_INTERVAL,
   });
 
@@ -206,13 +262,16 @@ export default function PRCommandCenter() {
     queryClient.invalidateQueries({ queryKey: ['analytics'] });
   }, [queryClient]);
 
+  // Get current entity types from selectedEntities
+  const movieEntitiesSelected = selectedEntities.filter(e => e.entityType === 'movie');
+  const celebrityEntitiesSelected = selectedEntities.filter(e => e.entityType === 'celebrity');
+
   // Combine entities arrays for display
-  const entities = entityType === 'movie' ? movieEntities : celebrityEntities;
-  const entitiesLoading = entityType === 'movie' ? moviesLoading : celebritiesLoading;
+  const combinedEntities = [...movieEntities, ...celebrityEntities];
 
   // Derived state: hasLoadedEntities
-  const hasLoadedEntities = entities.length > 0 && !entitiesLoading;
-  const isLoadingEntities = entitiesLoading && !hasLoadedEntities;
+  const hasLoadedEntities = (movieEntities.length > 0 || celebrityEntities.length > 0) && (!moviesLoading && !celebritiesLoading);
+  const isLoadingEntities = (moviesLoading || celebritiesLoading) && !hasLoadedEntities;
   const isLoading = (mentionsLoading || metricsLoading) && hasLoadedEntities;
 
   // Handle adding competitors (accepts array of entities)
@@ -228,14 +287,11 @@ export default function PRCommandCenter() {
       
       // Extract existing competitor IDs from competitiveData array
       // competitiveData is an array: [mainEntity, competitor1, competitor2, ...]
-      // Try id field first, then entityId, then look up by name
       const competitorIds = competitiveData
         .slice(1) // Skip the main entity (first item)
         .map(c => {
-          // Try different possible ID field names
           if (c.id !== undefined) return c.id;
           if (c.entityId !== undefined) return c.entityId;
-          // If no ID found, return undefined (will be filtered out)
           return undefined;
         })
         .filter(id => id !== undefined && id !== null);
@@ -245,25 +301,34 @@ export default function PRCommandCenter() {
       const updatedCompetitorIds = Array.from(allCompetitorIds);
       
       // Make a SINGLE API call with all competitor IDs
-      await entityService.updateCompetitors(entityType, selectedEntity.id, updatedCompetitorIds);
+      await entityService.updateCompetitors(entityType, primaryEntity.id, updatedCompetitorIds);
       
       // Invalidate the competitive snapshot query to refetch fresh data
-      queryClient.invalidateQueries({ queryKey: ['competitive-snapshot', selectedEntity?.id, entityType] });
+      queryClient.invalidateQueries({ queryKey: ['competitive-snapshot', primaryEntity?.id, entityType] });
     } catch (error) {
       console.error('Error adding competitors:', error);
     }
-  }, [queryClient, entityType, selectedEntity?.id, competitiveData]);
+  }, [queryClient, entityType, primaryEntity?.id, competitiveData]);
 
-  // Handle clearing movie entity
-  const handleClearMovie = useCallback(() => {
-    setSelectedMovieEntity(null);
-    setClearErrorBorder(null);
+  // Handle adding a new entity to the selected entities (max 5)
+  const handleAddEntity = useCallback((entity) => {
+    setSelectedEntities(prev => {
+      // Check if entity is already selected
+      if (prev.some(e => e.id === entity.id)) {
+        return prev;
+      }
+      // Check if max entities reached (5)
+      if (prev.length >= 5) {
+        alert('Maximum 5 entities can be selected');
+        return prev;
+      }
+      return [...prev, entity];
+    });
   }, []);
 
-  // Handle clearing celebrity entity
-  const handleClearCelebrity = useCallback(() => {
-    setSelectedCelebrityEntity(null);
-    setClearErrorBorder(null);
+  // Handle removing an entity from selection
+  const handleRemoveEntity = useCallback((entityId) => {
+    setSelectedEntities(prev => prev.filter(e => e.id !== entityId));
   }, []);
 
   return (
@@ -275,57 +340,70 @@ export default function PRCommandCenter() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
-        {/* Header with Entity Selectors */}
+      {/* Header with Entity Selection - REWORKED */}
         <div className="border-b border-border bg-card px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-xl font-bold text-foreground">Command Center</h1>
             <div className="h-6 w-px bg-border" />
             
-            {/* Movie Entity Selector */}
-            <div className={`flex items-center gap-2 ${clearErrorBorder === 'movie' ? 'border-2 border-red-500 rounded px-2 py-1' : ''}`}>
-              <EntitySelector
-                selectedEntity={selectedMovieEntity}
-                onEntityChange={setSelectedMovieEntity}
-                entities={movieEntities}
-                entityType="movie"
-              />
-              {selectedMovieEntity && (
-                <button
-                  onClick={handleClearMovie}
-                  className="p-1 hover:bg-red-600 hover:text-white rounded transition-colors"
-                  title="Clear movie selection"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                </button>
+            {/* Display Selected Entities */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {selectedEntities.length === 0 ? (
+                <span className="text-sm text-muted-foreground italic">No entities selected</span>
+              ) : (
+                <>
+                  {clusterMode && (
+                    <span className="inline-flex items-center gap-2 px-2 py-1 rounded-lg bg-yellow-500/20 border border-yellow-500/50 text-xs font-semibold text-yellow-600">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                        <circle cx="12" cy="12" r="2" />
+                      </svg>
+                      Cluster Mode
+                    </span>
+                  )}
+                  {selectedEntities.map((entity, index) => (
+                    <div
+                      key={entity.id}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${
+                        index === 0
+                          ? 'bg-primary/10 border-primary bg-gradient-to-r from-primary/20 to-primary/5'
+                          : 'bg-accent border-border'
+                      }`}
+                    >
+                      {index === 0 && (
+                        <span className="text-xs font-semibold text-primary uppercase">Primary</span>
+                      )}
+                      <span className="text-sm font-medium text-foreground">
+                        {entity.name}
+                      </span>
+                      <button
+                        onClick={() => handleRemoveEntity(entity.id)}
+                        className="ml-1 p-0.5 hover:bg-red-600/20 hover:text-red-600 rounded transition-colors"
+                        title="Remove entity"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </>
               )}
             </div>
-            <div className="h-6 w-px bg-border" />
-            
-            {/* Celebrity Entity Selector */}
-            <div className={`flex items-center gap-2 ${clearErrorBorder === 'celebrity' ? 'border-2 border-red-500 rounded px-2 py-1' : ''}`}>
-              <EntitySelector
-                selectedEntity={selectedCelebrityEntity}
-                onEntityChange={setSelectedCelebrityEntity}
-                entities={celebrityEntities}
-                entityType="celebrity"
-              />
-              {selectedCelebrityEntity && (
-                <button
-                  onClick={handleClearCelebrity}
-                  className="p-1 hover:bg-red-600 hover:text-white rounded transition-colors"
-                  title="Clear celebrity selection"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                </button>
-              )}
-            </div>
-            <div className="h-6 w-px bg-border" />
+
+            {/* Add Entity Button - disabled when max 5 entities reached */}
+            <button
+              onClick={() => setAddEntityModalOpen(true)}
+              disabled={selectedEntities.length >= 5}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 transition-colors text-sm font-medium border border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
+              title={selectedEntities.length >= 5 ? 'Maximum 5 entities allowed' : 'Add entity'}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Add Entity
+            </button>
           </div>
 
           <div className="flex items-center gap-2">
@@ -343,8 +421,7 @@ export default function PRCommandCenter() {
                   onClick={() => {
                     authService.logout();
                     setIsAuthenticated(false);
-                    setSelectedMovieEntity(null);
-                    setSelectedCelebrityEntity(null);
+                    setSelectedEntities([]);
                   }}
                   className="px-4 py-2 h-10 text-sm font-medium rounded-lg bg-red-600 text-white hover:opacity-90 transition-colors"
                 >
@@ -383,17 +460,17 @@ export default function PRCommandCenter() {
         )}
 
         {/* Welcome Screen - Show when no entity is selected yet */}
-        {isAuthenticated && hasLoadedEntities && !selectedEntity && !isLoadingEntities && (
+        {isAuthenticated && hasLoadedEntities && selectedEntities.length === 0 && !isLoadingEntities && (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <h2 className="text-5xl font-bold text-foreground mb-4">Welcome to Project Aura</h2>
-              <p className="text-muted-foreground">Select a movie/celebrity to show statistics</p>
+              <p className="text-muted-foreground">Click "Add Entity" above to select a movie or celebrity to get started</p>
             </div>
           </div>
         )}
 
         {/* Loading state for data after entity is selected */}
-        {isLoading && selectedEntity && (
+        {isLoading && selectedEntities.length > 0 && (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
@@ -403,127 +480,132 @@ export default function PRCommandCenter() {
         )}
 
         {/* Views Router */}
-        {isAuthenticated && !isLoading && selectedEntity && (
+        {isAuthenticated && !isLoading && selectedEntities.length > 0 && (
           <>
-            {activeView === 'dashboard' && !selectedEntity && (
+            {activeView === 'dashboard' && !primaryEntity && (
               <div className="h-full flex items-center justify-center bg-background">
                 <div className="text-center space-y-4">
                   <p className="text-lg font-semibold text-foreground">Select an entity to view the dashboard</p>
-                  <p className="text-sm text-muted-foreground">Choose a movie or celebrity using the selectors above</p>
+                  <p className="text-sm text-muted-foreground">Click "Add Entity" in the header to select</p>
                 </div>
               </div>
             )}
-            {activeView === 'dashboard' && selectedEntity && (
+            {activeView === 'dashboard' && primaryEntity && (
               <DashboardView
-                selectedEntity={selectedEntity}
+                selectedEntity={primaryEntity}
                 entityType={entityType}
                 competitiveData={competitiveData}
-                entities={entities}
+                entities={combinedEntities}
                 onAddCompetitor={handleAddCompetitor}
                 mentions={filteredMentions}
                 platformData={platformData}
                 stats={metricsData}
                 sentimentData={sentimentTrend}
+                sentimentGraphs={sentimentGraphs}
                 sentimentTrendRaw={sentimentTrendRaw}
                 clusterMode={clusterMode}
+                clusterEntities={selectedEntities}
                 dateRange={dateRange}
                 setDateRange={setDateRange}
                 onMentionSelect={setSelectedMention}
                 onRefresh={refetchSentimentTrend}
               />
             )}
-            {activeView === 'analytics' && !selectedEntity && (
+            {activeView === 'analytics' && !primaryEntity && (
               <div className="h-full flex items-center justify-center bg-background">
                 <div className="text-center space-y-4">
                   <p className="text-lg font-semibold text-foreground">Select an entity to view analytics</p>
-                  <p className="text-sm text-muted-foreground">Choose a movie or celebrity using the selectors above</p>
+                  <p className="text-sm text-muted-foreground">Click "Add Entity" in the header to select</p>
                 </div>
               </div>
             )}
-            {activeView === 'analytics' && selectedEntity && (
+            {activeView === 'analytics' && primaryEntity && (
               <AnalyticsView
-                selectedEntity={selectedEntity}
+                selectedEntity={primaryEntity}
                 entityType={entityType}
                 mentions={filteredMentions}
                 stats={metricsData}
                 sentimentData={sentimentTrend}
+                sentimentGraphs={sentimentGraphs}
                 platformData={platformData}
+                clusterMode={clusterMode}
+                clusterEntities={selectedEntities}
                 dateRange={dateRange}
                 onDateRangeChange={setDateRange}
               />
             )}
-            {activeView === 'ai-analytics' && !selectedEntity && (
+            {activeView === 'ai-analytics' && !primaryEntity && (
               <div className="h-full flex items-center justify-center bg-background">
                 <div className="text-center space-y-4">
                   <p className="text-lg font-semibold text-foreground">Select an entity to view analytics</p>
-                  <p className="text-sm text-muted-foreground">Choose a movie or celebrity using the selectors above</p>
+                  <p className="text-sm text-muted-foreground">Click "Add Entity" in the header to select</p>
                 </div>
               </div>
             )}
-            {activeView === 'ai-analytics' && selectedEntity && (
+            {activeView === 'ai-analytics' && primaryEntity && (
               <AIAnalyticsView
-                selectedEntity={selectedEntity}
+                selectedEntity={primaryEntity}
                 entityType={entityType}
                 analyticsData={analyticsData}
               />
             )}
-            {activeView === 'crisis-center' && !selectedEntity && (
+            {activeView === 'crisis-center' && !primaryEntity && (
               <div className="h-full flex items-center justify-center bg-background">
                 <div className="text-center space-y-4">
                   <p className="text-lg font-semibold text-foreground">Select an entity to view crisis center</p>
-                  <p className="text-sm text-muted-foreground">Choose a movie or celebrity using the selectors above</p>
+                  <p className="text-sm text-muted-foreground">Click "Add Entity" in the header to select</p>
                 </div>
               </div>
             )}
-            {activeView === 'crisis-center' && selectedEntity && (
+            {activeView === 'crisis-center' && primaryEntity && (
               <CrisisFocusView
-                selectedEntity={selectedEntity}
+                selectedEntity={primaryEntity}
                 entityType={entityType}
                 mentions={filteredMentions}
                 onMentionSelect={setSelectedMention}
               />
             )}
-            {activeView === 'crisis-management' && !selectedEntity && (
+            {activeView === 'crisis-management' && !primaryEntity && (
               <div className="h-full flex items-center justify-center bg-background">
                 <div className="text-center space-y-4">
                   <p className="text-lg font-semibold text-foreground">Select an entity to view crisis management</p>
-                  <p className="text-sm text-muted-foreground">Choose a movie or celebrity using the selectors above</p>
+                  <p className="text-sm text-muted-foreground">Click "Add Entity" in the header to select</p>
                 </div>
               </div>
             )}
-            {activeView === 'crisis-management' && selectedEntity && (
+            {activeView === 'crisis-management' && primaryEntity && (
               <CrisisManagementCenter
-                selectedEntity={selectedEntity}
+                selectedEntity={primaryEntity}
                 entityType={entityType}
                 mentions={filteredMentions}
               />
             )}
-            {activeView === 'negative-analysis' && !selectedEntity && (
+            {activeView === 'negative-analysis' && !primaryEntity && (
               <div className="h-full flex items-center justify-center bg-background">
                 <div className="text-center space-y-4">
                   <p className="text-lg font-semibold text-foreground">Select an entity to view analysis</p>
-                  <p className="text-sm text-muted-foreground">Choose a movie or celebrity using the selectors above</p>
+                  <p className="text-sm text-muted-foreground">Click "Add Entity" in the header to select</p>
                 </div>
               </div>
             )}
-            {activeView === 'negative-analysis' && selectedEntity && (
+            {activeView === 'negative-analysis' && primaryEntity && (
               <NegativeCommentSummary
-                selectedEntity={selectedEntity}
+                selectedEntity={primaryEntity}
                 entityType={entityType}
                 mentions={filteredMentions}
               />
             )}
-            {activeView === 'metrics' && !selectedEntity && (
+            {activeView === 'metrics' && !primaryEntity && (
               <div className="h-full flex items-center justify-center bg-background">
                 <div className="text-center space-y-4">
                   <p className="text-lg font-semibold text-foreground">Select an entity to view metrics</p>
-                  <p className="text-sm text-muted-foreground">Choose a movie or celebrity using the selectors above</p>
+                  <p className="text-sm text-muted-foreground">Click "Add Entity" in the header to select</p>
                 </div>
               </div>
             )}
-            {activeView === 'metrics' && selectedEntity && (
+            {activeView === 'metrics' && primaryEntity && (
               <EnhancedMetricsDashboard
-                selectedEntity={selectedEntity}
+                selectedEntity={primaryEntity}
                 entityType={entityType}
                 stats={metricsData}
                 mentions={filteredMentions}
@@ -540,6 +622,16 @@ export default function PRCommandCenter() {
         mentions={filteredMentions}
         onSelectMention={setSelectedMention}
         onRefresh={refetchMentions}
+      />
+
+      {/* Add Entity Modal - REWORKED */}
+      <AddEntityModal
+        open={addEntityModalOpen}
+        onOpenChange={setAddEntityModalOpen}
+        onEntitySelect={handleAddEntity}
+        movieEntities={movieEntities}
+        celebrityEntities={celebrityEntities}
+        currentEntityIds={selectedEntities.map(e => e.id)}
       />
 
       {/* Login Modal */}

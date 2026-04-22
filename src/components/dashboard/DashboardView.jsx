@@ -10,6 +10,7 @@ import KPICardsSection from "../analytics/KPICardsSection";
 import SentimentTrendChart from "../analytics/SentimentTrendChart";
 import OverlaySentimentComparison from "../analytics/OverlaySentimentComparison";
 import SentimentDistributionChart from "../analytics/SentimentDistributionChart";
+import SentimentGraphsGrid from "../analytics/SentimentGraphsGrid";
 import PlatformBreakdownChart from "../analytics/PlatformBreakdownChart";
 import TimeRangeSelector from "../navigation/TimeRangeSelector";
 
@@ -42,8 +43,10 @@ export default function DashboardView({
   platformData,
   stats,
   sentimentData,
+  sentimentGraphs = { positive: [], neutral: [], negative: [] },
   sentimentTrendRaw,
   clusterMode,
+  clusterEntities = [],
   dateRange,
   setDateRange,
   onMentionSelect,
@@ -322,13 +325,14 @@ export default function DashboardView({
         {/* KPI Cards */}
         <KPICardsSection analytics={transformStatsToCards(stats) || transformStatsToCards(calculateStatsFromMentions(mentions))} />
 
-        {/* Sentiment Trend Chart - Full Width */}
-        {/* Shows sentiment progression over time */}
-        {clusterMode ? (
-          <OverlaySentimentComparison clusterData={sentimentTrendRaw} onRefresh={onRefresh} />
-        ) : (
-          <SentimentTrendChart sentimentData={sentimentData} />
-        )}
+        {/* Sentiment Graphs Grid - NEW: 3 Individual Graphs (Positive, Neutral, Negative) */}
+        {/* Shows each sentiment type separately with .total attribute support */}
+        <SentimentGraphsGrid
+          sentimentGraphs={sentimentGraphs}
+          clusterMode={clusterMode}
+          clusterEntities={clusterEntities}
+          onRefresh={onRefresh}
+        />
 
         {/* 
           Sentiment Distribution Chart (Disabled)

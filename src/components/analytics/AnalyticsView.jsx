@@ -5,10 +5,21 @@ import BoxOfficePrediction from './BoxOfficePrediction';
 import HitGenrePrediction from './HitGenrePrediction';
 import BestGenreChart from './BestGenreChart';
 import TopBoxOfficeMovies from './TopBoxOfficeMovies';
+import SentimentGraphsGrid from './SentimentGraphsGrid';
 import { transformStatsToCards, calculateStatsFromMentions } from '../../utils/statsTransformer';
 import { movies } from '../../dummydata';
 
-export default function AnalyticsView({ mentions, metricsData, stats, selectedEntity, entityType }) {
+export default function AnalyticsView({ 
+  mentions, 
+  metricsData, 
+  stats, 
+  selectedEntity, 
+  entityType,
+  sentimentGraphs = { positive: [], neutral: [], negative: [] },
+  clusterMode = false,
+  clusterEntities = [],
+  onDateRangeChange,
+}) {
   const [dateRange, setDateRange] = useState('DAY');
   
   // Safety check for mentions
@@ -200,6 +211,16 @@ export default function AnalyticsView({ mentions, metricsData, stats, selectedEn
       <KPICardsSection 
         analytics={stats ? transformStatsToCards(stats) : transformStatsToCards(calculateStatsFromMentions(mentions))}
       />
+
+      {/* Sentiment Graphs - 3 Individual Graphs (Positive, Neutral, Negative) */}
+      <div className="px-6 pt-6">
+        <SentimentGraphsGrid
+          sentimentGraphs={sentimentGraphs}
+          clusterMode={clusterMode}
+          clusterEntities={clusterEntities}
+          onRefresh={() => console.log('Refresh sentiment data')}
+        />
+      </div>
 
       {/* Analytics Sections Grid */}
       <div className="p-6 space-y-6">
