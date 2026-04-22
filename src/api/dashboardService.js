@@ -114,14 +114,15 @@ export const dashboardService = {
   },
 
   // Get platform mentions for a cluster of entities
-  // Path: POST /api/dashboard/cluster/platform-mentions
-  // Request Body: [entityId1, entityId2, ...]
+  // Path: GET /api/dashboard/cluster/platform-mentions
+  // Query Params: entityIds (comma-separated list of entity IDs)
   // Response: { PLATFORM: { POSITIVE: number, NEGATIVE: number, NEUTRAL: number } }
   getClusterPlatformMentions: async (entityIds = []) => {
     try {
-      const response = await apiClient.post(
+      const entityIdParam = Array.isArray(entityIds) ? entityIds.join(',') : entityIds;
+      const response = await apiClient.get(
         `/dashboard/cluster/platform-mentions`,
-        entityIds
+        { params: { entityIds: entityIdParam } }
       );
       return response;
     } catch (error) {

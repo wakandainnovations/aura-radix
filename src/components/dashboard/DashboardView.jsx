@@ -43,7 +43,7 @@ export default function DashboardView({
   platformData,
   stats,
   sentimentData,
-  sentimentGraphs = { positive: [], neutral: [], negative: [] },
+  sentimentGraphs = { positive: [], total: [], negative: [] },
   sentimentTrendRaw,
   clusterMode,
   clusterEntities = [],

@@ -15,7 +15,7 @@ export default function AnalyticsView({
   stats, 
   selectedEntity, 
   entityType,
-  sentimentGraphs = { positive: [], neutral: [], negative: [] },
+  sentimentGraphs = { positive: [], total: [], negative: [] },
   clusterMode = false,
   clusterEntities = [],
   onDateRangeChange,

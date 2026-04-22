@@ -99,11 +99,6 @@ export default function LeftNavbar({ activeTab, onTabChange }) {
           );
         })}
       </nav>
-
-      {/* Footer info */}
-      <div className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
-        <p>v1.0.0</p>
-      </div>
     </div>
   );
 }

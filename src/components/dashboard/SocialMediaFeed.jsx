@@ -3,6 +3,7 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { MessageSquare, Heart, MessageCircle, Share2, AlertTriangle, Star, Send, X, Sparkles, RotateCcw, Check, Loader } from 'lucide-react';
 import { interactionService } from '../../api/interactionService';
 import InlineReplyBox from '../feed/InlineReplyBox';
+import { PLATFORM_LOGOS } from '../../constants/platformLogos';
 
 export default function SocialMediaFeed({ mentions, selectedEntity }) {
   const [selectedPlatform, setSelectedPlatform] = useState('all');
@@ -87,11 +88,63 @@ export default function SocialMediaFeed({ mentions, selectedEntity }) {
   const displayMentions = platformMentions[selectedPlatform] || platformMentions.all;
 
   const platformInfo = {
-    reddit: { icon: '🔴', name: 'Reddit', color: 'text-primary', bg: 'bg-primary/10' },
-    instagram: { icon: '📷', name: 'Instagram', color: 'text-primary', bg: 'bg-primary/10' },
-    youtube: { icon: '▶️', name: 'YouTube', color: 'text-primary', bg: 'bg-primary/10' },
-    x: { icon: '𝕏', name: 'X', color: 'text-primary', bg: 'bg-primary/10' },
-    all: { icon: '🌐', name: 'All Platforms', color: 'text-primary', bg: 'bg-primary/10' }
+    reddit: { name: 'Reddit', color: 'text-primary', bg: 'bg-primary/10' },
+    instagram: { name: 'Instagram', color: 'text-primary', bg: 'bg-primary/10' },
+    youtube: { name: 'YouTube', color: 'text-primary', bg: 'bg-primary/10' },
+    x: { name: 'X', color: 'text-primary', bg: 'bg-primary/10' },
+    all: { name: 'All Platforms', color: 'text-primary', bg: 'bg-primary/10' }
+  };
+
+  const getPlatformLogoStyle = (platform) => {
+    const normalizedPlatform = platform?.toLowerCase();
+    if (normalizedPlatform === 'reddit') {
+      return {
+        filter:
+          'invert(42%) sepia(93%) saturate(6449%) hue-rotate(2deg) brightness(103%) contrast(101%)',
+      };
+    }
+    if (normalizedPlatform === 'instagram') {
+      return {
+        filter:
+          'invert(35%) sepia(95%) saturate(5844%) hue-rotate(317deg) brightness(89%) contrast(92%)',
+      };
+    }
+    return { filter: 'invert(100%)' };
+  };
+
+  const getPlatformIcon = (platform) => {
+    const normalizedPlatform = platform?.toLowerCase();
+    const logo = PLATFORM_LOGOS[normalizedPlatform];
+    if (!logo) return '🌐';
+
+    return (
+      <img
+        src={logo}
+        alt={platform}
+        className="w-4 h-4"
+        style={getPlatformLogoStyle(normalizedPlatform)}
+      />
+    );
+  };
+
+  const getHeaderPlatformIcon = (platform) => {
+    if (platform === 'all') {
+      return <span className="mr-1">🌐</span>;
+    }
+
+    const logo = PLATFORM_LOGOS[platform];
+    if (!logo) {
+      return <span className="mr-1">🌐</span>;
+    }
+
+    return (
+      <img
+        src={logo}
+        alt={platform}
+        className="w-3.5 h-3.5 inline-block mr-1"
+        style={getPlatformLogoStyle(platform)}
+      />
+    );
   };
 
   const getSentimentColor = (sentiment) => {
@@ -201,7 +254,7 @@ export default function SocialMediaFeed({ mentions, selectedEntity }) {
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent'
               }`}
             >
-              <span className="mr-1">{info.icon}</span>
+              {getHeaderPlatformIcon(platform)}
               {info.name}
               {count > 0 && <span className="ml-2 text-xs opacity-70">({count})</span>}
             </button>
@@ -254,7 +307,7 @@ export default function SocialMediaFeed({ mentions, selectedEntity }) {
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold">
-                    {mention.author?.charAt(0)?.toUpperCase() || 'A'}
+                    {getPlatformIcon(mention.platform)}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">

@@ -132,7 +132,7 @@ export default function PRCommandCenter() {
   // Backend now supplies .total attribute for each sentiment type per day/week/month
   const sentimentGraphs = useMemo(() => {
     if (!sentimentTrendRaw?.entities || sentimentTrendRaw.entities.length === 0) {
-      return { positive: [], neutral: [], negative: [] };
+      return { positive: [], total: [], negative: [] };
     }
     
     // In cluster mode, merge data from all entities; in single mode, use first entity
@@ -140,7 +140,7 @@ export default function PRCommandCenter() {
     
     // Transform data - create separate arrays for each sentiment type
     const positiveData = [];
-    const neutralData = [];
+    const totalData = [];
     const negativeData = [];
     
     entitiesToProcess.forEach((entity, entityIndex) => {
@@ -149,6 +149,7 @@ export default function PRCommandCenter() {
         const positiveTotal = item.positive?.total ?? item.positive ?? 0;
         const neutralTotal = item.neutral?.total ?? item.neutral ?? 0;
         const negativeTotal = item.negative?.total ?? item.negative ?? 0;
+        const aggregateTotal = item.total?.total ?? item.total ?? (positiveTotal + neutralTotal + negativeTotal);
         
         if (clusterMode) {
           // In cluster mode, include entity name for multi-line charts
@@ -158,11 +159,11 @@ export default function PRCommandCenter() {
             value: positiveTotal,
             total: positiveTotal 
           });
-          neutralData.push({ 
+          totalData.push({ 
             date: item.date, 
             entity: entity.name || `Entity ${entityIndex + 1}`,
-            value: neutralTotal,
-            total: neutralTotal 
+            value: aggregateTotal,
+            total: aggregateTotal 
           });
           negativeData.push({ 
             date: item.date, 
@@ -173,13 +174,13 @@ export default function PRCommandCenter() {
         } else {
           // In single mode, simple date + value format
           positiveData.push({ date: item.date, value: positiveTotal, total: positiveTotal });
-          neutralData.push({ date: item.date, value: neutralTotal, total: neutralTotal });
+          totalData.push({ date: item.date, value: aggregateTotal, total: aggregateTotal });
           negativeData.push({ date: item.date, value: negativeTotal, total: negativeTotal });
         }
       });
     });
     
-    return { positive: positiveData, neutral: neutralData, negative: negativeData };
+    return { positive: positiveData, total: totalData, negative: negativeData };
   }, [sentimentTrendRaw, clusterMode]);
 
   // Legacy sentimentTrend for backward compatibility

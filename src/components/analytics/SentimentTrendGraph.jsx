@@ -160,7 +160,7 @@ export default function SentimentTrendGraph({
               borderRadius: "8px",
             }}
             labelStyle={{ color: "#fff" }}
-            formatter={(value) => [value, 'Total']}
+            formatter={(value, name) => [value, name]}
             labelFormatter={(label) => `Date: ${label}`}
           />
           <Legend />
@@ -195,33 +195,6 @@ export default function SentimentTrendGraph({
           ))}
         </LineChart>
       </ResponsiveContainer>
-
-      {/* Stats Footer */}
-      <div className="mt-4 pt-4 border-t border-border">
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <p className="text-xs text-muted-foreground">Total</p>
-            <p className="text-lg font-semibold text-foreground">
-              {chartData.reduce((sum, item) => sum + (item.value || 0), 0)}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Average</p>
-            <p className="text-lg font-semibold text-foreground">
-              {chartData.length > 0 
-                ? Math.round(chartData.reduce((sum, item) => sum + (item.value || 0), 0) / chartData.length)
-                : 0
-              }
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Peak</p>
-            <p className="text-lg font-semibold text-foreground">
-              {Math.max(...chartData.map(item => item.value || 0))}
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
