@@ -12,6 +12,9 @@ import CrisisFocusView from './feed/CrisisFocusView';
 import CrisisManagementCenter from './crisis/CrisisManagementCenter';
 import NegativeCommentSummary from './crisis/NegativeCommentSummary';
 import EnhancedMetricsDashboard from './metrics/EnhancedMetricsDashboard';
+import AIDashboardView from './ai-dashboard/AIDashboardView';
+import AudienceIntelView from './ai-dashboard/AudienceIntelView';
+import MarketingIntelView from './ai-dashboard/MarketingIntelView';
 import CommandPalette from './navigation/CommandPalette';
 import LoginModal from './auth/LoginModal';
 // Import API services
@@ -34,6 +37,9 @@ const VIEW_REGISTRY = {
   'crisis-management': CrisisManagementCenter,
   'negative-analysis': NegativeCommentSummary,
   metrics: EnhancedMetricsDashboard,
+  'ai-dashboard': AIDashboardView,
+  'audience-intel': AudienceIntelView,
+  'marketing-intel': MarketingIntelView,
 };
 
 export default function PRCommandCenter() {
@@ -653,6 +659,39 @@ export default function PRCommandCenter() {
                 stats={metricsData}
                 mentions={filteredMentions}
               />
+            )}
+            {activeView === 'ai-dashboard' && !primaryEntity && (
+              <div className="h-full flex items-center justify-center bg-background">
+                <div className="text-center space-y-4">
+                  <p className="text-lg font-semibold text-foreground">Select an entity to view AI Dashboard</p>
+                  <p className="text-sm text-muted-foreground">Click "Add Entity" in the header to select</p>
+                </div>
+              </div>
+            )}
+            {activeView === 'ai-dashboard' && primaryEntity && (
+              <AIDashboardView selectedEntity={primaryEntity} />
+            )}
+            {activeView === 'audience-intel' && !primaryEntity && (
+              <div className="h-full flex items-center justify-center bg-background">
+                <div className="text-center space-y-4">
+                  <p className="text-lg font-semibold text-foreground">Select an entity to view Audience Intel</p>
+                  <p className="text-sm text-muted-foreground">Click "Add Entity" in the header to select</p>
+                </div>
+              </div>
+            )}
+            {activeView === 'audience-intel' && primaryEntity && (
+              <AudienceIntelView selectedEntity={primaryEntity} />
+            )}
+            {activeView === 'marketing-intel' && !primaryEntity && (
+              <div className="h-full flex items-center justify-center bg-background">
+                <div className="text-center space-y-4">
+                  <p className="text-lg font-semibold text-foreground">Select an entity to view Marketing Intel</p>
+                  <p className="text-sm text-muted-foreground">Click "Add Entity" in the header to select</p>
+                </div>
+              </div>
+            )}
+            {activeView === 'marketing-intel' && primaryEntity && (
+              <MarketingIntelView selectedEntity={primaryEntity} />
             )}
           </>
         )}
