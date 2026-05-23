@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Bell, Check, X, ChevronLeft, ChevronRight, Loader2, AlertTriangle, Zap, Plus } from 'lucide-react';
+import { Bell, Check, X, ChevronLeft, ChevronRight, Loader2, AlertTriangle, Zap, Plus, ExternalLink } from 'lucide-react';
 import { alertService } from '../../api/alertService';
 import CreateAlertModal from './CreateAlertModal';
 
@@ -9,7 +9,7 @@ const KIND_CONFIG = {
 };
 
 const STATUS_COLORS = {
-  ACTIVE: 'bg-red-500/20 text-red-400 border-red-500/30',
+  OPEN: 'bg-red-500/20 text-red-400 border-red-500/30',
   ACKNOWLEDGED: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
   DISMISSED: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
 };
@@ -29,7 +29,7 @@ export default function AlertsPanel({ entityId }) {
     setLoading(true);
     try {
       const result = await alertService.getAlerts({
-        entityId,
+        managedEntityId: entityId,
         status: statusFilter || undefined,
         page,
         size: 10,
@@ -79,7 +79,7 @@ export default function AlertsPanel({ entityId }) {
         </div>
         <div className="flex items-center gap-2">
           <div className="flex gap-1">
-            {['', 'ACTIVE', 'ACKNOWLEDGED', 'DISMISSED'].map((s) => (
+            {['', 'OPEN', 'ACKNOWLEDGED', 'DISMISSED'].map((s) => (
               <button
                 key={s}
                 onClick={() => { setStatusFilter(s); setPage(0); }}
@@ -141,9 +141,20 @@ export default function AlertsPanel({ entityId }) {
                         {alert.currentValue.toFixed(1)} vs baseline {alert.baselineValue.toFixed(1)}
                       </span>
                     )}
+                    {alert.permalink && (
+                      <a
+                        href={alert.permalink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-primary hover:underline"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        Source
+                      </a>
+                    )}
                   </div>
                 </div>
-                {alert.status === 'ACTIVE' && (
+                {alert.status === 'OPEN' && (
                   <div className="flex gap-1 flex-shrink-0">
                     <button
                       onClick={() => handleAck(alert.id)}

@@ -5,7 +5,7 @@ export const alertService = {
     const params = {
       page: filters.page || 0,
       size: filters.size || 20,
-      ...(filters.entityId && { entityId: filters.entityId }),
+      ...(filters.managedEntityId && { managedEntityId: filters.managedEntityId }),
       ...(filters.status && { status: filters.status }),
     };
     const response = await apiClient.get('/alerts', { params });

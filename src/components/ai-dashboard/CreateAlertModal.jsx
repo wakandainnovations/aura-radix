@@ -3,39 +3,51 @@ import { X, Loader2 } from 'lucide-react';
 import { alertService } from '../../api/alertService';
 import FormInput from '../ui/FormInput';
 
-const METRICS = [
-  { value: 'SENTIMENT_SCORE', label: 'Sentiment Score' },
-  { value: 'MENTION_VOLUME', label: 'Mention Volume' },
-  { value: 'NEGATIVE_RATIO', label: 'Negative Ratio' },
+const KINDS = [
+  { value: 'SPIKE', label: 'Sentiment Spike' },
+  { value: 'INFLUENCER_NEGATIVE', label: 'Influencer Negative' },
 ];
 
 export default function CreateAlertModal({ entityId, onClose, onCreated }) {
-  const [name, setName] = useState('');
-  const [metric, setMetric] = useState(METRICS[0].value);
-  const [direction, setDirection] = useState('ABOVE');
-  const [threshold, setThreshold] = useState('');
+  const [kind, setKind] = useState('SPIKE');
+  const [currentValue, setCurrentValue] = useState('');
+  const [baselineValue, setBaselineValue] = useState('');
+  const [sourceMentionId, setSourceMentionId] = useState('');
+  const [matchedAuthor, setMatchedAuthor] = useState('');
+  const [permalink, setPermalink] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  const canSubmit = name.trim() && threshold !== '' && !submitting;
+  const canSubmit = !submitting && entityId;
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
     setSubmitting(true);
     setError(null);
     try {
-      await alertService.create({
-        entityId,
-        kind: 'SPIKE',
-        name: name.trim(),
-        metric,
-        direction,
-        threshold: parseFloat(threshold),
-      });
+      const payload = {
+        managedEntityId: entityId,
+        kind,
+      };
+      if (kind === 'SPIKE') {
+        if (currentValue !== '') payload.currentValue = parseFloat(currentValue);
+        if (baselineValue !== '') payload.baselineValue = parseFloat(baselineValue);
+      } else {
+        if (sourceMentionId !== '') payload.sourceMentionId = parseInt(sourceMentionId, 10);
+        if (matchedAuthor.trim()) payload.matchedAuthor = matchedAuthor.trim();
+        if (permalink.trim()) payload.permalink = permalink.trim();
+      }
+      await alertService.create(payload);
       onCreated();
       onClose();
-    } catch {
-      setError('Failed to create alert. Please try again.');
+    } catch (err) {
+      if (err.status === 409) {
+        setError('An open alert of this type already exists for this entity.');
+      } else if (err.status === 400) {
+        setError(err.message || 'Validation failed. Please check the fields.');
+      } else {
+        setError('Failed to create alert. Please try again.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -45,7 +57,7 @@ export default function CreateAlertModal({ entityId, onClose, onCreated }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
       <div className="bg-card border border-border rounded-xl p-6 w-full max-w-md shadow-2xl">
         <div className="flex items-center justify-between mb-4">
-          <h4 className="text-foreground font-semibold">Create Sentiment Spike Alert</h4>
+          <h4 className="text-foreground font-semibold">Create Alert</h4>
           <button
             onClick={onClose}
             className="p-1 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
@@ -55,63 +67,72 @@ export default function CreateAlertModal({ entityId, onClose, onCreated }) {
         </div>
 
         <div className="space-y-4">
-          <FormInput
-            id="alert-name"
-            label="Alert Name"
-            placeholder="e.g., High negative sentiment"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-
           <div className="space-y-2">
-            <label htmlFor="alert-metric" className="text-sm font-medium text-foreground">
-              Metric<span className="text-red-500 ml-1">*</span>
+            <label htmlFor="alert-kind" className="text-sm font-medium text-foreground">
+              Alert Type<span className="text-red-500 ml-1">*</span>
             </label>
             <select
-              id="alert-metric"
-              value={metric}
-              onChange={(e) => setMetric(e.target.value)}
+              id="alert-kind"
+              value={kind}
+              onChange={(e) => setKind(e.target.value)}
               className="w-full px-3 py-2 bg-card border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
             >
-              {METRICS.map((m) => (
-                <option key={m.value} value={m.value}>{m.label}</option>
+              {KINDS.map((k) => (
+                <option key={k.value} value={k.value}>{k.label}</option>
               ))}
             </select>
           </div>
 
-          <div className="space-y-2">
-            <span className="text-sm font-medium text-foreground">
-              Direction<span className="text-red-500 ml-1">*</span>
-            </span>
-            <div className="flex gap-2">
-              {['ABOVE', 'BELOW'].map((dir) => (
-                <button
-                  key={dir}
-                  type="button"
-                  onClick={() => setDirection(dir)}
-                  className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
-                    direction === dir
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-card border-border text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {dir === 'ABOVE' ? 'Goes above' : 'Drops below'}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <FormInput
-            id="alert-threshold"
-            label="Threshold"
-            placeholder="e.g., 0.8"
-            type="number"
-            value={threshold}
-            onChange={(e) => setThreshold(e.target.value)}
-            required
-            helpText="The value at which the alert should trigger"
-          />
+          {kind === 'SPIKE' ? (
+            <>
+              <FormInput
+                id="alert-current-value"
+                label="Current Value"
+                placeholder="e.g., 0.45"
+                type="number"
+                value={currentValue}
+                onChange={(e) => setCurrentValue(e.target.value)}
+                helpText="Current negative-sentiment ratio"
+              />
+              <FormInput
+                id="alert-baseline-value"
+                label="Baseline Value"
+                placeholder="e.g., 0.20"
+                type="number"
+                value={baselineValue}
+                onChange={(e) => setBaselineValue(e.target.value)}
+                helpText="Baseline negative-sentiment ratio"
+              />
+            </>
+          ) : (
+            <>
+              <FormInput
+                id="alert-mention-id"
+                label="Source Mention ID"
+                placeholder="e.g., 123"
+                type="number"
+                value={sourceMentionId}
+                onChange={(e) => setSourceMentionId(e.target.value)}
+                helpText="ID of the triggering mention"
+              />
+              <FormInput
+                id="alert-author"
+                label="Author"
+                placeholder="e.g., @influencer_handle"
+                value={matchedAuthor}
+                onChange={(e) => setMatchedAuthor(e.target.value)}
+                helpText="Name of the matched influencer"
+              />
+              <FormInput
+                id="alert-permalink"
+                label="Permalink"
+                placeholder="https://example.com/post/123"
+                value={permalink}
+                onChange={(e) => setPermalink(e.target.value)}
+                helpText="URL to the source post"
+              />
+            </>
+          )}
 
           {error && (
             <p className="text-xs text-red-500">{error}</p>

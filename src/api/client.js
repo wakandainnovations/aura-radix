@@ -171,6 +171,15 @@ apiClient.interceptors.response.use(
       });
     }
 
+    // 409 - Conflict
+    if (status === 409) {
+      return Promise.reject({
+        status,
+        message: errorData?.message || 'A conflicting resource already exists',
+        data: errorData,
+      });
+    }
+
     // 422 - Unprocessable Entity (validation errors)
     if (status === 422) {
       return Promise.reject({
