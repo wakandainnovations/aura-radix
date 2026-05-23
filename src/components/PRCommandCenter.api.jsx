@@ -508,14 +508,22 @@ export default function PRCommandCenter() {
           </div>
         )}
 
-        {/* Welcome Screen - Show when no entity is selected yet */}
-        {isAuthenticated && hasLoadedEntities && selectedEntities.length === 0 && !isLoadingEntities && (
+        {/* Welcome Screen - Show when no entity is selected yet (except standalone views) */}
+        {isAuthenticated && hasLoadedEntities && selectedEntities.length === 0 && !isLoadingEntities && activeView !== 'audience-intel' && activeView !== 'marketing-intel' && (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <h2 className="text-5xl font-bold text-foreground mb-4">Welcome to Project Aura</h2>
               <p className="text-muted-foreground">Click "Add Entity" above to select a movie or celebrity to get started</p>
             </div>
           </div>
+        )}
+
+        {/* Standalone views that don't require entity selection */}
+        {isAuthenticated && activeView === 'audience-intel' && (
+          <AudienceIntelView />
+        )}
+        {isAuthenticated && activeView === 'marketing-intel' && (
+          <MarketingIntelView />
         )}
 
         {/* Loading state for data after entity is selected */}
@@ -670,28 +678,6 @@ export default function PRCommandCenter() {
             )}
             {activeView === 'ai-dashboard' && primaryEntity && (
               <AIDashboardView selectedEntity={primaryEntity} />
-            )}
-            {activeView === 'audience-intel' && !primaryEntity && (
-              <div className="h-full flex items-center justify-center bg-background">
-                <div className="text-center space-y-4">
-                  <p className="text-lg font-semibold text-foreground">Select an entity to view Audience Intel</p>
-                  <p className="text-sm text-muted-foreground">Click "Add Entity" in the header to select</p>
-                </div>
-              </div>
-            )}
-            {activeView === 'audience-intel' && primaryEntity && (
-              <AudienceIntelView selectedEntity={primaryEntity} />
-            )}
-            {activeView === 'marketing-intel' && !primaryEntity && (
-              <div className="h-full flex items-center justify-center bg-background">
-                <div className="text-center space-y-4">
-                  <p className="text-lg font-semibold text-foreground">Select an entity to view Marketing Intel</p>
-                  <p className="text-sm text-muted-foreground">Click "Add Entity" in the header to select</p>
-                </div>
-              </div>
-            )}
-            {activeView === 'marketing-intel' && primaryEntity && (
-              <MarketingIntelView selectedEntity={primaryEntity} />
             )}
           </>
         )}
