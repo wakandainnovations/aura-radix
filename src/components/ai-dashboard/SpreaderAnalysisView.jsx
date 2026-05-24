@@ -63,37 +63,37 @@ function TopSpreadersTable({ data }) {
           <tr className="border-b border-border">
             <th className="text-left py-2 px-3 text-muted-foreground font-medium">#</th>
             <th className="text-left py-2 px-3 text-muted-foreground font-medium">Author</th>
-            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Hawkes Alpha</th>
-            <th className="text-left py-2 px-3 text-muted-foreground font-medium">MOI</th>
-            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Platform</th>
-            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Tribe</th>
-            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Reach</th>
-            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Link</th>
+            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Viral Score</th>
+            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Alpha</th>
+            <th className="text-right py-2 px-3 text-muted-foreground font-medium">Views</th>
+            <th className="text-right py-2 px-3 text-muted-foreground font-medium">Likes</th>
+            <th className="text-right py-2 px-3 text-muted-foreground font-medium">Comments</th>
+            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Eng. Rate</th>
+            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Sentiment</th>
           </tr>
         </thead>
         <tbody>
-          {rows.slice(0, 50).map((row, i) => {
-            const reach = getDominantReach(row.reachSignals);
-            const profileUrl = row.outreachHandle?.profile_url;
-            return (
-              <tr key={i} className="border-b border-border/50 hover:bg-accent/20">
-                <td className="py-2 px-3 text-foreground font-mono">{row.rank ?? i + 1}</td>
-                <td className="py-2 px-3 text-foreground font-medium">{row.author || '—'}</td>
-                <td className="py-2 px-3"><ScoreBar value={row.hawkesAlpha} max={1} color="bg-purple-400" /></td>
-                <td className="py-2 px-3 font-mono text-foreground">{fmt(row.moiScore, 4)}</td>
-                <td className="py-2 px-3"><PlatformBadge platform={row.primaryPlatform || row.outreachHandle?.platform} /></td>
-                <td className="py-2 px-3"><span className="px-2 py-0.5 rounded bg-violet-500/20 text-violet-400 text-[10px] font-medium">{row.tribe || '—'}</span></td>
-                <td className="py-2 px-3 text-foreground">{reach.label}</td>
-                <td className="py-2 px-3">
-                  {profileUrl ? (
-                    <a href={profileUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
-                      <ExternalLinkIcon className="w-3 h-3" />
-                    </a>
-                  ) : '—'}
-                </td>
-              </tr>
-            );
-          })}
+          {rows.slice(0, 50).map((row, i) => (
+            <tr key={i} className="border-b border-border/50 hover:bg-accent/20">
+              <td className="py-2 px-3 text-foreground font-mono">{i + 1}</td>
+              <td className="py-2 px-3 text-foreground font-medium">{row.author || '—'}</td>
+              <td className="py-2 px-3 font-mono text-foreground">{fmt(row.viral_potential_score, 1)}</td>
+              <td className="py-2 px-3"><ScoreBar value={row.alpha} max={1} color="bg-purple-400" /></td>
+              <td className="py-2 px-3 text-right text-foreground font-mono">{row.total_views?.toLocaleString() ?? '—'}</td>
+              <td className="py-2 px-3 text-right text-foreground font-mono">{row.total_likes?.toLocaleString() ?? '—'}</td>
+              <td className="py-2 px-3 text-right text-foreground font-mono">{row.total_comments?.toLocaleString() ?? '—'}</td>
+              <td className="py-2 px-3"><ScoreBar value={row.engagement_rate} max={1} color="bg-cyan-400" /></td>
+              <td className="py-2 px-3">
+                <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${
+                  (row.average_sentiment_score ?? 0) >= 70 ? 'bg-emerald-500/20 text-emerald-400' :
+                  (row.average_sentiment_score ?? 0) >= 40 ? 'bg-amber-500/20 text-amber-400' :
+                  'bg-red-500/20 text-red-400'
+                }`}>
+                  {fmt(row.average_sentiment_score, 1)}
+                </span>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
       {rows.length > 50 && <p className="text-xs text-muted-foreground mt-1">Showing 50 of {rows.length} results</p>}
