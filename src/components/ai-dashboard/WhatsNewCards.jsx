@@ -22,14 +22,20 @@ export default function WhatsNewCards({ entityId }) {
 
   useEffect(() => {
     if (!entityId) return;
+    const controller = new AbortController();
     setLoading(true);
-    dashboardService.getWhatsNew(entityId)
+    dashboardService.getWhatsNew(entityId, { signal: controller.signal })
       .then((result) => {
         const items = Array.isArray(result) ? result : (result?.cards || result?.items || []);
         setCards(items);
       })
-      .catch(() => setCards([]))
-      .finally(() => setLoading(false));
+      .catch((err) => {
+        if (!controller.signal.aborted) setCards([]);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
   }, [entityId]);
 
   if (loading) {

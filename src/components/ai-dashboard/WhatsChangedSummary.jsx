@@ -32,14 +32,20 @@ export default function WhatsChangedSummary({ entityId }) {
 
   useEffect(() => {
     if (!entityId) return;
+    const controller = new AbortController();
     setLoading(true);
-    dashboardService.getWhatsChanged(entityId)
+    dashboardService.getWhatsChanged(entityId, { signal: controller.signal })
       .then((result) => {
         const payload = result?.changes || result?.summary || result;
         setData(payload);
       })
-      .catch(() => setData(null))
-      .finally(() => setLoading(false));
+      .catch((err) => {
+        if (!controller.signal.aborted) setData(null);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
+    return () => controller.abort();
   }, [entityId]);
 
   if (loading) {

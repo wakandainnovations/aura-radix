@@ -111,13 +111,13 @@ export const dashboardService = {
     return response;
   },
 
-  getWhatsChanged: async (entityId) => {
-    const response = await apiClient.get(`/dashboard/${entityId}/whats-changed`);
+  getWhatsChanged: async (entityId, { signal } = {}) => {
+    const response = await apiClient.get(`/dashboard/${entityId}/whats-changed`, { signal });
     return response;
   },
 
-  getWhatsNew: async (entityId) => {
-    const response = await apiClient.get(`/dashboard/${entityId}/whats-new`);
+  getWhatsNew: async (entityId, { signal } = {}) => {
+    const response = await apiClient.get(`/dashboard/${entityId}/whats-new`, { signal });
     return response;
   },
 
