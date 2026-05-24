@@ -2,14 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { ArrowUpRight, ArrowDownRight, Minus, Activity, Loader2 } from 'lucide-react';
 import { dashboardService } from '../../api/dashboardService';
 
-function DeltaChip({ label, value, suffix = '' }) {
+function DeltaChip({ label, value, suffix = '', invertColor = false }) {
   if (value == null) return null;
   const isPositive = value > 0;
   const isNeutral = value === 0;
   const Icon = isNeutral ? Minus : isPositive ? ArrowUpRight : ArrowDownRight;
+  const isGood = invertColor ? !isPositive : isPositive;
   const color = isNeutral
     ? 'text-slate-400'
-    : isPositive
+    : isGood
       ? 'text-emerald-400'
       : 'text-red-400';
 
@@ -79,7 +80,7 @@ export default function WhatsChangedSummary({ entityId }) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <DeltaChip label="Sentiment Score" value={data.sentiment_score_delta} />
         <DeltaChip label="New Mentions" value={data.new_mentions_count} />
-        <DeltaChip label="Negative Mentions" value={data.new_negative_count} />
+        <DeltaChip label="Negative Mentions" value={data.new_negative_count} invertColor />
         <DeltaChip label="Super Spreader Posts" value={data.new_super_spreader_count} />
       </div>
       {data.competitor_delta && Object.keys(data.competitor_delta).length > 0 && (
