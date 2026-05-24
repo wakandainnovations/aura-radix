@@ -140,7 +140,7 @@ export default function UserIntelligenceView() {
           </div>
         </div>
 
-        <Section icon={User} title="User Lookup" color="text-sky-400">
+        <Section icon={User} title="User Lookup" subtitle="Search for a specific user's profile or detailed influence report" color="text-sky-400">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
             <div>
               <p className="text-xs text-muted-foreground mb-1">Profile by Global User ID</p>
@@ -163,7 +163,7 @@ export default function UserIntelligenceView() {
           </div>
         </Section>
 
-        <Section icon={Users} title="User Directory" color="text-indigo-400">
+        <Section icon={Users} title="User Directory" subtitle="Browse and filter all tracked users by classification, tier, tone, or platform" color="text-indigo-400">
           <div className="flex flex-wrap gap-2 mt-3 items-end">
             <div className="space-y-1">
               <label className="text-[10px] text-muted-foreground uppercase tracking-wider">Classification</label>

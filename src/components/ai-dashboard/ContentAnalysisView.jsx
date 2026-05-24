@@ -88,7 +88,7 @@ export default function ContentAnalysisView() {
           </div>
         </div>
 
-        <Section icon={Search} title="Aspect Drivers" color="text-blue-400">
+        <Section icon={Search} title="Aspect Drivers" subtitle="Strengths and weaknesses driving audience sentiment across platforms" color="text-blue-400">
           <KeywordSearch
             label="Enter keyword for aspect drivers..."
             loading={loading.aspectDrivers}

@@ -236,7 +236,7 @@ export default function SpreaderAnalysisView() {
           <TopSpreadersTable data={topSpreaders} />
         </Section>
 
-        <Section icon={Users} title="Find Lookalikes" color="text-emerald-400">
+        <Section icon={Users} title="Find Lookalikes" subtitle="Discover new audiences that behave like your best-performing seed authors" color="text-emerald-400">
           <KeywordSearch
             label="Enter seed author ID..."
             loading={loading.lookalikes}

@@ -69,7 +69,7 @@ export default function TargetingView() {
           </div>
         </div>
 
-        <Section icon={Target} title="Targets" color="text-orange-400">
+        <Section icon={Target} title="Targets" subtitle="Filter high-value outreach targets by genre, influence score, and platform" color="text-orange-400">
           <div className="flex flex-wrap gap-2 mt-3 items-end">
             <div className="space-y-1">
               <label className="text-[10px] text-muted-foreground uppercase tracking-wider">Genre</label>
@@ -112,7 +112,7 @@ export default function TargetingView() {
           <TargetsDisplay data={targets} />
         </Section>
 
-        <Section icon={Search} title="Diagnostics" color="text-slate-400">
+        <Section icon={Search} title="Diagnostics" subtitle="Debug raw mappings, temporal audits, and user processing pipelines" color="text-slate-400">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
             <div>
               <p className="text-xs text-muted-foreground mb-1">Raw Mapping</p>

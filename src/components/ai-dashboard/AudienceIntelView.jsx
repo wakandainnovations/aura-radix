@@ -741,7 +741,7 @@ export default function AudienceIntelView() {
           <ViralSeedsTable data={viralSeeds} />
         </Section>
 
-        <Section icon={Search} title="Aspect Drivers" color="text-blue-400">
+        <Section icon={Search} title="Aspect Drivers" subtitle="Strengths and weaknesses driving audience sentiment across platforms" color="text-blue-400">
           <KeywordSearch
             label="Enter keyword for aspect drivers..."
             loading={loading.aspectDrivers}
@@ -759,7 +759,7 @@ export default function AudienceIntelView() {
           <TopSpreadersTable data={topSpreaders} />
         </Section>
 
-        <Section icon={Users} title="Find Lookalikes" color="text-emerald-400">
+        <Section icon={Users} title="Find Lookalikes" subtitle="Discover new audiences that behave like your best-performing seed authors" color="text-emerald-400">
           <KeywordSearch
             label="Enter seed author ID..."
             loading={loading.lookalikes}
@@ -768,7 +768,7 @@ export default function AudienceIntelView() {
           <LookalikesDisplay data={lookalikes} />
         </Section>
 
-        <Section icon={User} title="User Lookup" color="text-sky-400">
+        <Section icon={User} title="User Lookup" subtitle="Search for a specific user's profile or detailed influence report" color="text-sky-400">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
             <div>
               <p className="text-xs text-muted-foreground mb-1">Profile by Global User ID</p>
@@ -791,7 +791,7 @@ export default function AudienceIntelView() {
           </div>
         </Section>
 
-        <Section icon={Users} title="User Directory" color="text-indigo-400">
+        <Section icon={Users} title="User Directory" subtitle="Browse and filter all tracked users by classification, tier, tone, or platform" color="text-indigo-400">
           <div className="flex flex-wrap gap-2 mt-3">
             {['audienceClassification', 'influenceTier', 'postingStyle', 'dominantTone', 'primaryPlatform'].map((f) => (
               <input
@@ -836,7 +836,7 @@ export default function AudienceIntelView() {
           <CategoriesDisplay data={categories} />
         </Section>
 
-        <Section icon={Target} title="Genre Intelligence" color="text-rose-400">
+        <Section icon={Target} title="Genre Intelligence" subtitle="Discover potential viewers, super spreaders, and channel strategies by genre" color="text-rose-400">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
             <div>
               <p className="text-xs text-muted-foreground mb-1">Potential Viewers</p>
@@ -868,7 +868,7 @@ export default function AudienceIntelView() {
           </div>
         </Section>
 
-        <Section icon={Target} title="Targets" color="text-orange-400">
+        <Section icon={Target} title="Targets" subtitle="Filter high-value outreach targets by genre, influence score, and platform" color="text-orange-400">
           <div className="flex flex-wrap gap-2 mt-3">
             <input
               type="text"
@@ -903,7 +903,7 @@ export default function AudienceIntelView() {
           <TargetsDisplay data={targets} />
         </Section>
 
-        <Section icon={Search} title="Diagnostics" color="text-slate-400">
+        <Section icon={Search} title="Diagnostics" subtitle="Debug raw mappings, temporal audits, and user processing pipelines" color="text-slate-400">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
             <div>
               <p className="text-xs text-muted-foreground mb-1">Raw Mapping</p>

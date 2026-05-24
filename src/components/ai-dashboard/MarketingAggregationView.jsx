@@ -257,7 +257,7 @@ function TopSpreadersResults({ data }) {
   );
 }
 
-function AggregationSection({ icon, title, color, description, serviceFn, groupLabel = 'keyword', ResultComponent = GenericTable }) {
+function AggregationSection({ icon, title, subtitle, color, description, serviceFn, groupLabel = 'keyword', ResultComponent = GenericTable }) {
   const [filters, setFilters] = useState({});
   const [groupBy, setGroupBy] = useState(null);
   const [data, setData] = useState(null);
@@ -279,7 +279,7 @@ function AggregationSection({ icon, title, color, description, serviceFn, groupL
   }, [filters, groupBy, serviceFn]);
 
   return (
-    <Section icon={icon} title={title} color={color}>
+    <Section icon={icon} title={title} subtitle={subtitle} color={color}>
       <p className="text-xs text-muted-foreground mt-1">{description}</p>
       <FilterBar
         filters={filters}
@@ -322,7 +322,7 @@ function GenreAggregationSection() {
   }, [filters, groupBy, subType]);
 
   return (
-    <Section icon={Film} title="Genre Aggregation" color="text-rose-400">
+    <Section icon={Film} title="Genre Aggregation" subtitle="Aggregate viewers, spreaders, and channel data across genres" color="text-rose-400">
       <p className="text-xs text-muted-foreground mt-1">
         Aggregate genre-level data (viewers, spreaders, channel strategy) across all genres matching your filters.
       </p>
@@ -376,6 +376,7 @@ export default function MarketingAggregationView() {
         <AggregationSection
           icon={Network}
           title="Aggregated Top Spreaders"
+          subtitle="Cross-keyword top spreaders deduplicated by author"
           color="text-purple-400"
           description="Union of top spreaders across all keywords matching your filters, deduplicated by author."
           serviceFn={marketingAggregationService.getTopSpreaders}
@@ -385,6 +386,7 @@ export default function MarketingAggregationView() {
         <AggregationSection
           icon={Zap}
           title="Aggregated Viral Seeds"
+          subtitle="Cross-keyword early adopters who spark viral cascades"
           color="text-amber-400"
           description="Union of viral seed authors across all matching keywords."
           serviceFn={marketingAggregationService.getViralSeeds}
@@ -393,6 +395,7 @@ export default function MarketingAggregationView() {
         <AggregationSection
           icon={Search}
           title="Aggregated Aspect Drivers"
+          subtitle="Combined sentiment strengths and weaknesses across keywords"
           color="text-blue-400"
           description="Union of aspect drivers (strengths & weaknesses) across all matching keywords."
           serviceFn={marketingAggregationService.getAspectDrivers}
@@ -401,6 +404,7 @@ export default function MarketingAggregationView() {
         <AggregationSection
           icon={Heart}
           title="Aggregated Brand Evangelists"
+          subtitle="Loyal advocates consistently promoting positive sentiment"
           color="text-emerald-400"
           description="Union of brand evangelists across all matching keywords."
           serviceFn={marketingAggregationService.getBrandEvangelists}

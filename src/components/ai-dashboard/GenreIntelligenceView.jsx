@@ -134,7 +134,7 @@ export default function GenreIntelligenceView() {
           </div>
         </div>
 
-        <Section icon={Target} title="Potential Viewers" color="text-cyan-400">
+        <Section icon={Target} title="Potential Viewers" subtitle="Users most likely to watch content in this genre based on behavioral signals" color="text-cyan-400">
           <KeywordSearch
             label="Enter genre name..."
             loading={loading.genreViewers}
@@ -143,7 +143,7 @@ export default function GenreIntelligenceView() {
           <GenreViewersSpreadersTable data={genreViewers} type="viewers" />
         </Section>
 
-        <Section icon={Target} title="Super Spreaders" color="text-amber-400">
+        <Section icon={Target} title="Super Spreaders" subtitle="Top influencers who can amplify content within this genre" color="text-amber-400">
           <KeywordSearch
             label="Enter genre name..."
             loading={loading.genreSpreaders}
@@ -152,7 +152,7 @@ export default function GenreIntelligenceView() {
           <GenreViewersSpreadersTable data={genreSpreaders} type="spreaders" />
         </Section>
 
-        <Section icon={Target} title="Channel Strategy" color="text-emerald-400">
+        <Section icon={Target} title="Channel Strategy" subtitle="Optimal platform mix and posting strategy for reaching this genre's audience" color="text-emerald-400">
           <KeywordSearch
             label="Enter genre name..."
             loading={loading.genreStrategy}
