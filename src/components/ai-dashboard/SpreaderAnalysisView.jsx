@@ -218,7 +218,7 @@ export default function SpreaderAnalysisView() {
           </div>
         </div>
 
-        <Section icon={Zap} title="Viral Seeds" color="text-amber-400">
+        <Section icon={Zap} title="Viral Seeds" subtitle="Early adopters whose activity signals the start of a viral cascade" color="text-amber-400">
           <KeywordSearch
             label="Enter keyword to find viral seeds..."
             loading={loading.viralSeeds}
@@ -227,7 +227,7 @@ export default function SpreaderAnalysisView() {
           <ViralSeedsTable data={viralSeeds} />
         </Section>
 
-        <Section icon={Network} title="Top Spreaders" color="text-purple-400">
+        <Section icon={Network} title="Top Spreaders" subtitle="High-reach individuals who amplify content to the widest audiences" color="text-purple-400">
           <KeywordSearch
             label="Enter keyword to find top spreaders..."
             loading={loading.topSpreaders}

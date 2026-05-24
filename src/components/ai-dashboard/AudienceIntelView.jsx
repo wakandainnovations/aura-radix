@@ -649,7 +649,7 @@ function DiagnosticsDisplay({ data }) {
   return <div className="mt-2"><CollapsibleKV title="Details" data={data} /></div>;
 }
 
-function Section({ icon: Icon, title, color, children }) {
+function Section({ icon: Icon, title, subtitle, color, children }) {
   const [open, setOpen] = useState(true);
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
@@ -658,7 +658,10 @@ function Section({ icon: Icon, title, color, children }) {
         className="w-full flex items-center gap-2 p-4 hover:bg-accent/20 transition-colors"
       >
         <Icon className={`w-5 h-5 ${color}`} />
-        <span className="text-sm font-semibold text-foreground flex-1 text-left">{title}</span>
+        <div className="flex-1 text-left">
+          <span className="text-sm font-semibold text-foreground">{title}</span>
+          {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+        </div>
         {open ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
       </button>
       {open && <div className="p-4 pt-0 border-t border-border">{children}</div>}
@@ -729,7 +732,7 @@ export default function AudienceIntelView() {
           </div>
         </div>
 
-        <Section icon={Zap} title="Viral Seeds" color="text-amber-400">
+        <Section icon={Zap} title="Viral Seeds" subtitle="Early adopters whose activity signals the start of a viral cascade" color="text-amber-400">
           <KeywordSearch
             label="Enter keyword to find viral seeds..."
             loading={loading.viralSeeds}
@@ -747,7 +750,7 @@ export default function AudienceIntelView() {
           <AspectDriversDisplay data={aspectDrivers} />
         </Section>
 
-        <Section icon={Network} title="Top Spreaders" color="text-purple-400">
+        <Section icon={Network} title="Top Spreaders" subtitle="High-reach individuals who amplify content to the widest audiences" color="text-purple-400">
           <KeywordSearch
             label="Enter keyword to find top spreaders..."
             loading={loading.topSpreaders}

@@ -179,7 +179,7 @@ export function CollapsibleKV({ title, data }) {
   );
 }
 
-export function Section({ icon: Icon, title, color, children }) {
+export function Section({ icon: Icon, title, subtitle, color, children }) {
   const [open, setOpen] = useState(true);
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
@@ -188,7 +188,10 @@ export function Section({ icon: Icon, title, color, children }) {
         className="w-full flex items-center gap-2 p-4 hover:bg-accent/20 transition-colors"
       >
         <Icon className={`w-5 h-5 ${color}`} />
-        <span className="text-sm font-semibold text-foreground flex-1 text-left">{title}</span>
+        <div className="flex-1 text-left">
+          <span className="text-sm font-semibold text-foreground">{title}</span>
+          {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+        </div>
         {open ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
       </button>
       {open && <div className="p-4 pt-0 border-t border-border">{children}</div>}
