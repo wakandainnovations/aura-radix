@@ -13,7 +13,11 @@ export default function LeftNavbar({ activeTab, onTabChange }) {
       subTabs: [
         { id: 'ai-analytics', label: 'AI Analytics' },
         { id: 'ai-dashboard', label: 'AI Dashboard' },
-        { id: 'audience-intel', label: 'Audience Intel' },
+        { id: 'spreader-analysis', label: 'Spreader Analysis' },
+        { id: 'user-intelligence', label: 'User Intelligence' },
+        { id: 'content-analysis', label: 'Content Analysis' },
+        { id: 'genre-intelligence', label: 'Genre Intelligence' },
+        { id: 'targeting', label: 'Targeting' },
         { id: 'marketing-intel', label: 'Marketing Intel' },
       ]
     },
