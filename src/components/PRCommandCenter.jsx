@@ -10,6 +10,9 @@ import ReplyStatusFilter from './navigation/ReplyStatusFilter';
 import DashboardView from './dashboard/DashboardView';
 import AnalyticsView from './analytics/AnalyticsView';
 import AIAnalyticsView from './analytics/AIAnalyticsView';
+import AIDashboardView from './ai-dashboard/AIDashboardView';
+import AudienceIntelView from './ai-dashboard/AudienceIntelView';
+import MarketingIntelView from './ai-dashboard/MarketingIntelView';
 import CrisisFocusView from './feed/CrisisFocusView';
 import CrisisPlanGenerator from './crisis/CrisisPlanGenerator';
 import NegativeCommentSummary from './crisis/NegativeCommentSummary';
@@ -188,10 +191,34 @@ export default function PRCommandCenter() {
       )}
 
       {activeView === 'ai-analytics' && selectedEntity && (
-        <AIAnalyticsView 
+        <AIAnalyticsView
           selectedEntity={selectedEntity}
           entityType={entityType}
         />
+      )}
+
+      {/* AI Dashboard View */}
+      {activeView === 'ai-dashboard' && !selectedEntity && (
+        <div className="h-full flex items-center justify-center bg-background">
+          <div className="text-center space-y-4">
+            <p className="text-lg font-semibold text-foreground">Select an entity to view the AI Dashboard</p>
+            <p className="text-sm text-muted-foreground">Choose a movie or celebrity using the selectors above</p>
+          </div>
+        </div>
+      )}
+
+      {activeView === 'ai-dashboard' && selectedEntity && (
+        <AIDashboardView selectedEntity={selectedEntity} />
+      )}
+
+      {/* Audience Intelligence View */}
+      {activeView === 'audience-intel' && (
+        <AudienceIntelView />
+      )}
+
+      {/* Marketing Intelligence View */}
+      {activeView === 'marketing-intel' && (
+        <MarketingIntelView />
       )}
 
       {/* Trending Genre Analysis View */}

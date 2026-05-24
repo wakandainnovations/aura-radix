@@ -12,6 +12,9 @@ import CrisisFocusView from './feed/CrisisFocusView';
 import CrisisManagementCenter from './crisis/CrisisManagementCenter';
 import NegativeCommentSummary from './crisis/NegativeCommentSummary';
 import EnhancedMetricsDashboard from './metrics/EnhancedMetricsDashboard';
+import AIDashboardView from './ai-dashboard/AIDashboardView';
+import AudienceIntelView from './ai-dashboard/AudienceIntelView';
+import MarketingIntelView from './ai-dashboard/MarketingIntelView';
 import CommandPalette from './navigation/CommandPalette';
 import LoginModal from './auth/LoginModal';
 // Import API services
@@ -34,6 +37,9 @@ const VIEW_REGISTRY = {
   'crisis-management': CrisisManagementCenter,
   'negative-analysis': NegativeCommentSummary,
   metrics: EnhancedMetricsDashboard,
+  'ai-dashboard': AIDashboardView,
+  'audience-intel': AudienceIntelView,
+  'marketing-intel': MarketingIntelView,
 };
 
 export default function PRCommandCenter() {
@@ -502,14 +508,22 @@ export default function PRCommandCenter() {
           </div>
         )}
 
-        {/* Welcome Screen - Show when no entity is selected yet */}
-        {isAuthenticated && hasLoadedEntities && selectedEntities.length === 0 && !isLoadingEntities && (
+        {/* Welcome Screen - Show when no entity is selected yet (except standalone views) */}
+        {isAuthenticated && hasLoadedEntities && selectedEntities.length === 0 && !isLoadingEntities && activeView !== 'audience-intel' && activeView !== 'marketing-intel' && (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <h2 className="text-5xl font-bold text-foreground mb-4">Welcome to Project Aura</h2>
               <p className="text-muted-foreground">Click "Add Entity" above to select a movie or celebrity to get started</p>
             </div>
           </div>
+        )}
+
+        {/* Standalone views that don't require entity selection */}
+        {isAuthenticated && activeView === 'audience-intel' && (
+          <AudienceIntelView />
+        )}
+        {isAuthenticated && activeView === 'marketing-intel' && (
+          <MarketingIntelView />
         )}
 
         {/* Loading state for data after entity is selected */}
@@ -653,6 +667,17 @@ export default function PRCommandCenter() {
                 stats={metricsData}
                 mentions={filteredMentions}
               />
+            )}
+            {activeView === 'ai-dashboard' && !primaryEntity && (
+              <div className="h-full flex items-center justify-center bg-background">
+                <div className="text-center space-y-4">
+                  <p className="text-lg font-semibold text-foreground">Select an entity to view AI Dashboard</p>
+                  <p className="text-sm text-muted-foreground">Click "Add Entity" in the header to select</p>
+                </div>
+              </div>
+            )}
+            {activeView === 'ai-dashboard' && primaryEntity && (
+              <AIDashboardView selectedEntity={primaryEntity} />
             )}
           </>
         )}

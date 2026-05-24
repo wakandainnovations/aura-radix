@@ -93,6 +93,41 @@ export const dashboardService = {
     }
   },
 
+  getEntityStatsAvg: async (entityId) => {
+    const response = await apiClient.get(`/dashboard/${entityId}/stats/avg`);
+    return response;
+  },
+
+  getClusterStatsRaw: async (entityIds = []) => {
+    const entityIdParam = Array.isArray(entityIds) ? entityIds.join(',') : entityIds;
+    const response = await apiClient.get('/dashboard/cluster/stats', {
+      params: { entityIds: entityIdParam },
+    });
+    return response;
+  },
+
+  getLastSeen: async (entityId) => {
+    const response = await apiClient.get(`/dashboard/${entityId}/last-seen`);
+    return response;
+  },
+
+  getWhatsChanged: async (entityId) => {
+    const response = await apiClient.get(`/dashboard/${entityId}/whats-changed`);
+    return response;
+  },
+
+  getWhatsNew: async (entityId) => {
+    const response = await apiClient.get(`/dashboard/${entityId}/whats-new`);
+    return response;
+  },
+
+  getHourlyActivity: async (entityId, period = 'WEEK') => {
+    const response = await apiClient.get(`/dashboard/${entityId}/hourly-activity`, {
+      params: { period },
+    });
+    return response;
+  },
+
   // ========== CLUSTER APIs (for multiple entities) ==========
 
   // Get average statistics for multiple entities

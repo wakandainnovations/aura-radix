@@ -12,6 +12,9 @@ export default function LeftNavbar({ activeTab, onTabChange }) {
       icon: BarChart3,
       subTabs: [
         { id: 'ai-analytics', label: 'AI Analytics' },
+        { id: 'ai-dashboard', label: 'AI Dashboard' },
+        { id: 'audience-intel', label: 'Audience Intel' },
+        { id: 'marketing-intel', label: 'Marketing Intel' },
       ]
     },
     { 

@@ -1,0 +1,289 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  MessageSquare, Send, AlertTriangle, Users, Loader2,
+  ChevronDown, ChevronUp, FileText, Clock
+} from 'lucide-react';
+import { dashboardService } from '../../api/dashboardService';
+import { mentionActionService } from '../../api/mentionActionService';
+
+const ACTION_ICONS = {
+  REPLY_DRAFT: FileText,
+  CRISIS_PLAN: AlertTriangle,
+  MOBILIZE: Users,
+};
+
+function MentionRow({ mention, entityId }) {
+  const [expanded, setExpanded] = useState(false);
+  const [actions, setActions] = useState([]);
+  const [actionsLoading, setActionsLoading] = useState(false);
+  const [actionInProgress, setActionInProgress] = useState(null);
+  const [draftResult, setDraftResult] = useState(null);
+  const [crisisResult, setCrisisResult] = useState(null);
+  const [mobilizeResult, setMobilizeResult] = useState(null);
+
+  const loadActions = useCallback(async () => {
+    setActionsLoading(true);
+    try {
+      const result = await mentionActionService.getActions(mention.id);
+      setActions(Array.isArray(result) ? result : []);
+    } catch {
+      setActions([]);
+    } finally {
+      setActionsLoading(false);
+    }
+  }, [mention.id]);
+
+  useEffect(() => {
+    if (expanded) loadActions();
+  }, [expanded, loadActions]);
+
+  const handleDraftReply = async () => {
+    setActionInProgress('draft');
+    try {
+      const result = await mentionActionService.draftReply(mention.id);
+      setDraftResult(result);
+      loadActions();
+    } finally {
+      setActionInProgress(null);
+    }
+  };
+
+  const handlePostReply = async (draftId) => {
+    setActionInProgress('post');
+    try {
+      await mentionActionService.postReply(mention.id, draftId);
+      loadActions();
+    } finally {
+      setActionInProgress(null);
+    }
+  };
+
+  const handleEscalate = async () => {
+    setActionInProgress('escalate');
+    try {
+      const result = await mentionActionService.escalateToCrisis(mention.id);
+      setCrisisResult(result);
+      loadActions();
+    } finally {
+      setActionInProgress(null);
+    }
+  };
+
+  const handleMobilize = async () => {
+    setActionInProgress('mobilize');
+    try {
+      const result = await mentionActionService.mobilizeAllies(mention.id);
+      setMobilizeResult(result);
+      loadActions();
+    } finally {
+      setActionInProgress(null);
+    }
+  };
+
+  const sentimentColor = {
+    POSITIVE: 'text-emerald-400',
+    NEGATIVE: 'text-red-400',
+    NEUTRAL: 'text-slate-400',
+  }[mention.sentiment] || 'text-slate-400';
+
+  return (
+    <div className="bg-card border border-border rounded-lg overflow-hidden">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full p-4 flex items-start gap-3 text-left hover:bg-accent/30 transition-colors"
+      >
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-accent text-muted-foreground">
+              {mention.platform}
+            </span>
+            <span className={`text-xs font-medium ${sentimentColor}`}>
+              {mention.sentiment}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              @{mention.author}
+            </span>
+          </div>
+          <p className="text-sm text-foreground line-clamp-2">{mention.content}</p>
+        </div>
+        {expanded ? (
+          <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />
+        ) : (
+          <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />
+        )}
+      </button>
+
+      {expanded && (
+        <div className="border-t border-border p-4 space-y-4">
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={handleDraftReply}
+              disabled={!!actionInProgress}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors disabled:opacity-50"
+            >
+              {actionInProgress === 'draft' ? <Loader2 className="w-3 h-3 animate-spin" /> : <MessageSquare className="w-3 h-3" />}
+              Draft Reply
+            </button>
+            <button
+              onClick={handleEscalate}
+              disabled={!!actionInProgress}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-colors disabled:opacity-50"
+            >
+              {actionInProgress === 'escalate' ? <Loader2 className="w-3 h-3 animate-spin" /> : <AlertTriangle className="w-3 h-3" />}
+              Escalate to Crisis
+            </button>
+            <button
+              onClick={handleMobilize}
+              disabled={!!actionInProgress}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition-colors disabled:opacity-50"
+            >
+              {actionInProgress === 'mobilize' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Users className="w-3 h-3" />}
+              Mobilize Allies
+            </button>
+          </div>
+
+          {draftResult && (
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+              <p className="text-xs text-blue-400 font-medium mb-1">AI Draft Reply</p>
+              <p className="text-sm text-foreground">{draftResult.generatedText}</p>
+              <button
+                onClick={() => handlePostReply(draftResult.draftId)}
+                disabled={!!actionInProgress}
+                className="mt-2 flex items-center gap-1 px-3 py-1 text-xs rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 disabled:opacity-50"
+              >
+                {actionInProgress === 'post' ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                Post Reply
+              </button>
+            </div>
+          )}
+
+          {crisisResult && (
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+              <p className="text-xs text-amber-400 font-medium mb-1">Crisis Plan</p>
+              <p className="text-sm text-foreground whitespace-pre-wrap">{crisisResult.plan}</p>
+            </div>
+          )}
+
+          {mobilizeResult?.allies && mobilizeResult.allies.length > 0 && (
+            <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
+              <p className="text-xs text-purple-400 font-medium mb-2">
+                Ally Recommendations ({mobilizeResult.allies.length})
+              </p>
+              <div className="space-y-2">
+                {mobilizeResult.allies.map((ally, i) => (
+                  <div key={i} className="bg-background/50 rounded-lg p-2">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-medium text-foreground">{ally.globalUserId}</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent text-muted-foreground">
+                        {ally.primaryPlatform}
+                      </span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-accent text-muted-foreground">
+                        {ally.influenceTier}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground italic">"{ally.suggestedDm}"</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {actionsLoading ? (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              Loading action history...
+            </div>
+          ) : actions.length > 0 && (
+            <div>
+              <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                Action History
+              </p>
+              <div className="space-y-1">
+                {actions.map((action, i) => {
+                  const ActionIcon = ACTION_ICONS[action.type] || FileText;
+                  return (
+                    <div key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <ActionIcon className="w-3 h-3" />
+                      <span className="font-medium">{action.type}</span>
+                      {action.actor && <span>by {action.actor}</span>}
+                      {action.createdAt && (
+                        <span>{new Date(action.createdAt).toLocaleString()}</span>
+                      )}
+                      {action.draftStatus && (
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] ${
+                          action.draftStatus === 'POSTED'
+                            ? 'bg-emerald-500/20 text-emerald-400'
+                            : 'bg-blue-500/20 text-blue-400'
+                        }`}>
+                          {action.draftStatus}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function MentionActionsPanel({ entityId }) {
+  const [mentions, setMentions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+
+  useEffect(() => {
+    if (!entityId) return;
+    setLoading(true);
+    dashboardService.getMentions(entityId, { page, size: 10 })
+      .then((result) => {
+        setMentions(result.content || []);
+      })
+      .catch(() => setMentions([]))
+      .finally(() => setLoading(false));
+  }, [entityId, page]);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 mb-4">
+        <MessageSquare className="w-5 h-5 text-blue-400" />
+        <h3 className="text-lg font-semibold text-foreground">Mention Actions</h3>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+        </div>
+      ) : mentions.length === 0 ? (
+        <div className="text-center py-6 text-muted-foreground text-sm">No mentions found</div>
+      ) : (
+        <div className="space-y-2">
+          {mentions.map((mention) => (
+            <MentionRow key={mention.id} mention={mention} entityId={entityId} />
+          ))}
+          <div className="flex items-center justify-center gap-3 pt-2">
+            <button
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={page === 0}
+              className="px-3 py-1 text-xs rounded-lg bg-accent text-muted-foreground disabled:opacity-30"
+            >
+              Previous
+            </button>
+            <span className="text-xs text-muted-foreground">Page {page + 1}</span>
+            <button
+              onClick={() => setPage((p) => p + 1)}
+              disabled={mentions.length < 10}
+              className="px-3 py-1 text-xs rounded-lg bg-accent text-muted-foreground disabled:opacity-30"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

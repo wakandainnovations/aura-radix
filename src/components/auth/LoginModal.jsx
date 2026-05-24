@@ -5,8 +5,9 @@ import { X, CheckCircle } from 'lucide-react';
 import { authService } from '../../api';
 
 export default function LoginModal({ open, onOpenChange, onLoginSuccess }) {
-  const [username, setUsername] = useState('newuser');
-  const [password, setPassword] = useState('password123');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [isRegister, setIsRegister] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState(null); // null, 'success', 'error'
   const [errorMessage, setErrorMessage] = useState('');
@@ -17,43 +18,44 @@ export default function LoginModal({ open, onOpenChange, onLoginSuccess }) {
       setTimeout(() => {
         setStatus(null);
         setErrorMessage('');
-        setUsername('newuser');
-        setPassword('password123');
+        setUsername('');
+        setPassword('');
         setIsLoading(false);
+        setIsRegister(false);
       }, 300);
     }
   }, [open]);
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setStatus(null);
     setErrorMessage('');
 
     try {
-      const response = await authService.login(username, password);
+      if (isRegister) {
+        await authService.register(username, password);
+      }
+      await authService.login(username, password);
       setStatus('success');
-      
-      // Call the callback if provided
+
       if (onLoginSuccess) {
         onLoginSuccess();
       }
-      
-      // Auto close after showing success
+
       setTimeout(() => {
         onOpenChange(false);
       }, 1500);
     } catch (error) {
-      // Handle 403 Forbidden - token is invalid/expired
       if (error.response?.status === 403) {
         authService.logout();
         setStatus('error');
         setErrorMessage('Your session has expired. Please login again.');
       } else {
         setStatus('error');
-        setErrorMessage(error.response?.data?.message || error.message || 'Login failed');
+        setErrorMessage(error.message || 'Authentication failed. Check credentials or register first.');
       }
-      console.error('Login error:', error);
+      console.error('Auth error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -66,7 +68,7 @@ export default function LoginModal({ open, onOpenChange, onLoginSuccess }) {
         <Dialog.Content className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-sm bg-card border border-border rounded-lg shadow-2xl z-50 p-6">
           <div className="flex items-center justify-between mb-6">
             <Dialog.Title className="text-lg font-bold text-foreground">
-              Login
+              {isRegister ? 'Register' : 'Login'}
             </Dialog.Title>
             <Dialog.Close asChild>
               <button className="inline-flex items-center justify-center w-8 h-8 rounded-full hover:bg-accent transition-colors">
@@ -81,7 +83,7 @@ export default function LoginModal({ open, onOpenChange, onLoginSuccess }) {
               <p className="text-sm font-medium text-foreground">Login successful!</p>
             </div>
           ) : (
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               {/* Username */}
               <div className="space-y-2">
                 <Label.Root htmlFor="username" className="text-sm font-medium text-foreground">
@@ -123,7 +125,7 @@ export default function LoginModal({ open, onOpenChange, onLoginSuccess }) {
                 </div>
               )}
 
-              {/* Login Button */}
+              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={isLoading}
@@ -132,16 +134,24 @@ export default function LoginModal({ open, onOpenChange, onLoginSuccess }) {
                 {isLoading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                    Logging in...
+                    {isRegister ? 'Registering...' : 'Logging in...'}
                   </>
                 ) : (
-                  'Login'
+                  isRegister ? 'Register & Login' : 'Login'
                 )}
               </button>
 
-              {/* Info text */}
+              {/* Toggle */}
               <p className="text-xs text-muted-foreground text-center">
-                Demo credentials: jason1 / password1234
+                {isRegister ? (
+                  <>Already have an account?{' '}
+                    <button type="button" onClick={() => setIsRegister(false)} className="text-primary hover:underline">Login</button>
+                  </>
+                ) : (
+                  <>No account?{' '}
+                    <button type="button" onClick={() => setIsRegister(true)} className="text-primary hover:underline">Register</button>
+                  </>
+                )}
               </p>
             </form>
           )}
