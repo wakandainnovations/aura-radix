@@ -34,7 +34,10 @@ export default function WhatsChangedSummary({ entityId }) {
     if (!entityId) return;
     setLoading(true);
     dashboardService.getWhatsChanged(entityId)
-      .then(setData)
+      .then((result) => {
+        const payload = result?.changes || result?.summary || result;
+        setData(payload);
+      })
       .catch(() => setData(null))
       .finally(() => setLoading(false));
   }, [entityId]);
@@ -47,7 +50,13 @@ export default function WhatsChangedSummary({ entityId }) {
     );
   }
 
-  if (!data) {
+  const hasFields = data
+    && (data.sentiment_score_delta != null
+      || data.new_mentions_count != null
+      || data.new_negative_count != null
+      || data.new_super_spreader_count != null);
+
+  if (!data || !hasFields) {
     return (
       <div className="text-center py-6 text-muted-foreground text-sm">
         No change data available — this may be your first visit

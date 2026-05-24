@@ -24,7 +24,10 @@ export default function WhatsNewCards({ entityId }) {
     if (!entityId) return;
     setLoading(true);
     dashboardService.getWhatsNew(entityId)
-      .then(setCards)
+      .then((result) => {
+        const items = Array.isArray(result) ? result : (result?.cards || result?.items || []);
+        setCards(items);
+      })
       .catch(() => setCards([]))
       .finally(() => setLoading(false));
   }, [entityId]);
