@@ -19,6 +19,7 @@ export default function LeftNavbar({ activeTab, onTabChange }) {
         { id: 'genre-intelligence', label: 'Genre Intelligence' },
         { id: 'targeting', label: 'Targeting' },
         { id: 'marketing-intel', label: 'Marketing Intel' },
+        { id: 'marketing-aggregation', label: 'Mktg Aggregation' },
       ]
     },
     { 

@@ -17,6 +17,7 @@ import ContentAnalysisView from './ai-dashboard/ContentAnalysisView';
 import GenreIntelligenceView from './ai-dashboard/GenreIntelligenceView';
 import TargetingView from './ai-dashboard/TargetingView';
 import MarketingIntelView from './ai-dashboard/MarketingIntelView';
+import MarketingAggregationView from './ai-dashboard/MarketingAggregationView';
 import CrisisFocusView from './feed/CrisisFocusView';
 import CrisisPlanGenerator from './crisis/CrisisPlanGenerator';
 import NegativeCommentSummary from './crisis/NegativeCommentSummary';
@@ -225,6 +226,11 @@ export default function PRCommandCenter() {
       {/* Marketing Intelligence View */}
       {activeView === 'marketing-intel' && (
         <MarketingIntelView />
+      )}
+
+      {/* Marketing Aggregation View */}
+      {activeView === 'marketing-aggregation' && (
+        <MarketingAggregationView />
       )}
 
       {/* Trending Genre Analysis View */}
