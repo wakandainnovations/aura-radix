@@ -2,11 +2,11 @@ import React, { useState, useCallback } from 'react';
 import {
   Layers, Network, Zap, Search, Heart, Film,
   Loader2, Filter, ChevronDown, ChevronUp,
-  ExternalLink, ToggleLeft, ToggleRight,
+  ToggleLeft, ToggleRight,
 } from 'lucide-react';
 import { marketingAggregationService } from '../../api/marketingAggregationService';
 import {
-  PlatformBadge, ScoreBar, getDominantReach, fmt,
+  ScoreBar, fmt,
   Section, SmallJsonFallback, KeyValueCards,
 } from './audienceIntelShared';
 
@@ -209,7 +209,6 @@ function TopSpreadersResults({ data }) {
   if (!data) return null;
   if (!Array.isArray(data)) return <GenericTable data={data} />;
   if (data.length === 0) return <p className="text-xs text-muted-foreground mt-3">No results</p>;
-  const hasAlpha = data.some((r) => r.hawkesAlpha !== undefined);
   return (
     <div className="mt-3 overflow-x-auto">
       <table className="w-full text-xs">
@@ -217,39 +216,39 @@ function TopSpreadersResults({ data }) {
           <tr className="border-b border-border">
             <th className="text-left py-2 px-3 text-muted-foreground font-medium">#</th>
             <th className="text-left py-2 px-3 text-muted-foreground font-medium">Author</th>
-            {hasAlpha && <th className="text-left py-2 px-3 text-muted-foreground font-medium">Hawkes Alpha</th>}
-            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Platform</th>
-            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Tier</th>
-            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Reach</th>
-            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Link</th>
+            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Viral Score</th>
+            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Alpha</th>
+            <th className="text-right py-2 px-3 text-muted-foreground font-medium">Engagement</th>
+            <th className="text-right py-2 px-3 text-muted-foreground font-medium">Likes</th>
+            <th className="text-right py-2 px-3 text-muted-foreground font-medium">Comments</th>
+            <th className="text-right py-2 px-3 text-muted-foreground font-medium">Views</th>
+            <th className="text-right py-2 px-3 text-muted-foreground font-medium">Eng. Rate</th>
+            <th className="text-right py-2 px-3 text-muted-foreground font-medium">Sentiment</th>
           </tr>
         </thead>
         <tbody>
-          {data.slice(0, 50).map((row, i) => {
-            const reach = getDominantReach(row.reachSignals);
-            const profileUrl = row.outreachHandle?.profile_url;
-            return (
-              <tr key={i} className="border-b border-border/50 hover:bg-accent/20">
-                <td className="py-2 px-3 text-foreground font-mono">{row.rank ?? i + 1}</td>
-                <td className="py-2 px-3 text-foreground font-medium">{row.author || row.globalUserId || '—'}</td>
-                {hasAlpha && <td className="py-2 px-3"><ScoreBar value={row.hawkesAlpha} max={1} color="bg-purple-400" /></td>}
-                <td className="py-2 px-3"><PlatformBadge platform={row.primaryPlatform || row.outreachHandle?.platform} /></td>
-                <td className="py-2 px-3">
-                  <span className="px-2 py-0.5 rounded bg-violet-500/20 text-violet-400 text-[10px] font-medium">
-                    {row.influenceTier || row.tribe || '—'}
-                  </span>
-                </td>
-                <td className="py-2 px-3 text-foreground">{reach.label}</td>
-                <td className="py-2 px-3">
-                  {profileUrl ? (
-                    <a href={profileUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  ) : '—'}
-                </td>
-              </tr>
-            );
-          })}
+          {data.slice(0, 50).map((row, i) => (
+            <tr key={i} className="border-b border-border/50 hover:bg-accent/20">
+              <td className="py-2 px-3 text-foreground font-mono">{i + 1}</td>
+              <td className="py-2 px-3 text-foreground font-medium">{row.author || '—'}</td>
+              <td className="py-2 px-3"><ScoreBar value={row.viral_potential_score} max={100} color="bg-purple-400" /></td>
+              <td className="py-2 px-3 text-foreground font-mono">{row.alpha != null ? row.alpha.toExponential(2) : '—'}</td>
+              <td className="py-2 px-3 text-right text-foreground">{fmt(row.engagement_count)}</td>
+              <td className="py-2 px-3 text-right text-foreground">{fmt(row.total_likes)}</td>
+              <td className="py-2 px-3 text-right text-foreground">{fmt(row.total_comments)}</td>
+              <td className="py-2 px-3 text-right text-foreground">{fmt(row.total_views)}</td>
+              <td className="py-2 px-3 text-right text-foreground">{row.engagement_rate != null ? (row.engagement_rate * 100).toFixed(2) + '%' : '—'}</td>
+              <td className="py-2 px-3 text-right">
+                <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${
+                  row.average_sentiment_score >= 70 ? 'bg-emerald-500/20 text-emerald-400' :
+                  row.average_sentiment_score >= 40 ? 'bg-amber-500/20 text-amber-400' :
+                  'bg-red-500/20 text-red-400'
+                }`}>
+                  {row.average_sentiment_score != null ? row.average_sentiment_score.toFixed(1) : '—'}
+                </span>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
       {data.length > 50 && <p className="text-xs text-muted-foreground mt-1">Showing 50 of {data.length} results</p>}
@@ -366,7 +365,7 @@ export default function MarketingAggregationView() {
         <div className="flex items-center gap-3 mb-2">
           <Layers className="w-7 h-7 text-teal-400" />
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Marketing Aggregation</h2>
+            <h2 className="text-2xl font-bold text-foreground">Aggregated Intel</h2>
             <p className="text-sm text-muted-foreground">
               Cross-keyword marketing intelligence aggregated by language, industry, genre, state, or entity
             </p>
