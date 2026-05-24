@@ -170,6 +170,10 @@ function CollapsibleKV({ title, data }) {
 
 function ViralSeedsTable({ data }) {
   const rows = Array.isArray(data) ? data : [];
+  const [page, setPage] = useState(0);
+  const perPage = 10;
+  const totalPages = Math.min(Math.ceil(rows.length / perPage), 5);
+  const pageRows = rows.slice(page * perPage, (page + 1) * perPage);
   if (rows.length === 0) return <p className="text-xs text-muted-foreground mt-3">No results</p>;
   return (
     <div className="mt-3 overflow-x-auto">
@@ -186,12 +190,12 @@ function ViralSeedsTable({ data }) {
           </tr>
         </thead>
         <tbody>
-          {rows.slice(0, 50).map((row, i) => {
+          {pageRows.map((row, i) => {
             const reach = getDominantReach(row.reachSignals);
             const profileUrl = row.outreachHandle?.profile_url;
             return (
               <tr key={i} className="border-b border-border/50 hover:bg-accent/20">
-                <td className="py-2 px-3 text-foreground font-mono">{row.rank ?? i + 1}</td>
+                <td className="py-2 px-3 text-foreground font-mono">{row.rank ?? page * perPage + i + 1}</td>
                 <td className="py-2 px-3 text-foreground font-medium">{row.author || '—'}</td>
                 <td className="py-2 px-3"><ScoreBar value={row.seedScore} /></td>
                 <td className="py-2 px-3"><PlatformBadge platform={row.primaryPlatform || row.outreachHandle?.platform} /></td>
@@ -209,13 +213,32 @@ function ViralSeedsTable({ data }) {
           })}
         </tbody>
       </table>
-      {rows.length > 50 && <p className="text-xs text-muted-foreground mt-1">Showing 50 of {rows.length} results</p>}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-2">
+          <p className="text-xs text-muted-foreground">Showing {page * perPage + 1}–{Math.min((page + 1) * perPage, rows.length)} of {Math.min(rows.length, perPage * 5)}</p>
+          <div className="flex gap-1">
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => setPage(i)}
+                className={`w-7 h-7 rounded text-xs font-medium ${page === i ? 'bg-primary text-primary-foreground' : 'bg-accent text-foreground hover:bg-accent/80'}`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 function TopSpreadersTable({ data }) {
   const rows = Array.isArray(data) ? data : [];
+  const [page, setPage] = useState(0);
+  const perPage = 10;
+  const totalPages = Math.min(Math.ceil(rows.length / perPage), 5);
+  const pageRows = rows.slice(page * perPage, (page + 1) * perPage);
   if (rows.length === 0) return <p className="text-xs text-muted-foreground mt-3">No results</p>;
   return (
     <div className="mt-3 overflow-x-auto">
@@ -225,7 +248,6 @@ function TopSpreadersTable({ data }) {
             <th className="text-left py-2 px-3 text-muted-foreground font-medium">#</th>
             <th className="text-left py-2 px-3 text-muted-foreground font-medium">Author</th>
             <th className="text-left py-2 px-3 text-muted-foreground font-medium">Viral Score</th>
-            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Alpha</th>
             <th className="text-right py-2 px-3 text-muted-foreground font-medium">Views</th>
             <th className="text-right py-2 px-3 text-muted-foreground font-medium">Likes</th>
             <th className="text-right py-2 px-3 text-muted-foreground font-medium">Comments</th>
@@ -234,12 +256,11 @@ function TopSpreadersTable({ data }) {
           </tr>
         </thead>
         <tbody>
-          {rows.slice(0, 50).map((row, i) => (
+          {pageRows.map((row, i) => (
             <tr key={i} className="border-b border-border/50 hover:bg-accent/20">
-              <td className="py-2 px-3 text-foreground font-mono">{i + 1}</td>
+              <td className="py-2 px-3 text-foreground font-mono">{page * perPage + i + 1}</td>
               <td className="py-2 px-3 text-foreground font-medium">{row.author || '—'}</td>
               <td className="py-2 px-3 font-mono text-foreground">{fmt(row.viral_potential_score, 1)}</td>
-              <td className="py-2 px-3"><ScoreBar value={row.alpha} max={1} color="bg-purple-400" /></td>
               <td className="py-2 px-3 text-right text-foreground font-mono">{row.total_views?.toLocaleString() ?? '—'}</td>
               <td className="py-2 px-3 text-right text-foreground font-mono">{row.total_likes?.toLocaleString() ?? '—'}</td>
               <td className="py-2 px-3 text-right text-foreground font-mono">{row.total_comments?.toLocaleString() ?? '—'}</td>
@@ -257,7 +278,22 @@ function TopSpreadersTable({ data }) {
           ))}
         </tbody>
       </table>
-      {rows.length > 50 && <p className="text-xs text-muted-foreground mt-1">Showing 50 of {rows.length} results</p>}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-2">
+          <p className="text-xs text-muted-foreground">Showing {page * perPage + 1}–{Math.min((page + 1) * perPage, rows.length)} of {Math.min(rows.length, perPage * 5)}</p>
+          <div className="flex gap-1">
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => setPage(i)}
+                className={`w-7 h-7 rounded text-xs font-medium ${page === i ? 'bg-primary text-primary-foreground' : 'bg-accent text-foreground hover:bg-accent/80'}`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -321,11 +357,15 @@ function AspectDriversDisplay({ data }) {
 }
 
 function LookalikesDisplay({ data }) {
+  const [page, setPage] = useState(0);
   if (!data) return null;
   if (Array.isArray(data)) {
     if (data.length === 0) return <p className="text-xs text-muted-foreground mt-3">No lookalikes found</p>;
     if (typeof data[0] === 'object') {
       const cols = Object.keys(data[0]).slice(0, 8);
+      const perPage = 10;
+      const totalPages = Math.min(Math.ceil(data.length / perPage), 5);
+      const pageRows = data.slice(page * perPage, (page + 1) * perPage);
       return (
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-xs">
@@ -335,7 +375,7 @@ function LookalikesDisplay({ data }) {
               </tr>
             </thead>
             <tbody>
-              {data.slice(0, 50).map((row, i) => (
+              {pageRows.map((row, i) => (
                 <tr key={i} className="border-b border-border/50 hover:bg-accent/20">
                   {cols.map((c) => (
                     <td key={c} className="py-2 px-3 text-foreground">
@@ -346,7 +386,22 @@ function LookalikesDisplay({ data }) {
               ))}
             </tbody>
           </table>
-          {data.length > 50 && <p className="text-xs text-muted-foreground mt-1">Showing 50 of {data.length}</p>}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-2">
+              <p className="text-xs text-muted-foreground">Showing {page * perPage + 1}–{Math.min((page + 1) * perPage, data.length)} of {Math.min(data.length, perPage * 5)}</p>
+              <div className="flex gap-1">
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setPage(i)}
+                    className={`w-7 h-7 rounded text-xs font-medium ${page === i ? 'bg-primary text-primary-foreground' : 'bg-accent text-foreground hover:bg-accent/80'}`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       );
     }
