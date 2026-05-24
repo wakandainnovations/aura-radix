@@ -288,7 +288,13 @@ function AspectDriversDisplay({ data }) {
           <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-3">
             <p className="text-xs font-semibold text-emerald-400 mb-2 flex items-center gap-1"><ThumbsUp className="w-3 h-3" /> Strengths</p>
             <ul className="space-y-1">
-              {data.strengths.map((s, i) => <li key={i} className="text-xs text-emerald-300/80">{s}</li>)}
+              {data.strengths.map((s, i) => (
+                <li key={i} className="text-xs text-emerald-300/80">
+                  {typeof s === 'object' ? (
+                    <span><span className="font-medium">{s.aspect}</span> — sentiment {s.averageSentiment?.toFixed(1)}, {s.postsMentioning} posts, impact {s.impactScore?.toFixed(1)}</span>
+                  ) : s}
+                </li>
+              ))}
             </ul>
           </div>
         )}
@@ -296,7 +302,13 @@ function AspectDriversDisplay({ data }) {
           <div className="bg-red-500/5 border border-red-500/20 rounded-lg p-3">
             <p className="text-xs font-semibold text-red-400 mb-2 flex items-center gap-1"><ThumbsDown className="w-3 h-3" /> Weaknesses</p>
             <ul className="space-y-1">
-              {data.weaknesses.map((w, i) => <li key={i} className="text-xs text-red-300/80">{w}</li>)}
+              {data.weaknesses.map((w, i) => (
+                <li key={i} className="text-xs text-red-300/80">
+                  {typeof w === 'object' ? (
+                    <span><span className="font-medium">{w.aspect}</span> — sentiment {w.averageSentiment?.toFixed(1)}, {w.postsMentioning} posts, impact {w.impactScore?.toFixed(1)}</span>
+                  ) : w}
+                </li>
+              ))}
             </ul>
           </div>
         )}
