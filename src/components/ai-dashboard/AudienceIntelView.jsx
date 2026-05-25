@@ -356,13 +356,71 @@ function AspectDriversDisplay({ data }) {
   );
 }
 
+function ObjectCellDisplay({ value, columnKey }) {
+  if (Array.isArray(value)) {
+    return (
+      <div className="flex flex-wrap gap-1">
+        {value.map((item, i) => (
+          <span key={i} className="px-1.5 py-0.5 rounded bg-accent text-[10px] text-foreground">
+            {typeof item === 'object' ? JSON.stringify(item) : String(item)}
+          </span>
+        ))}
+      </div>
+    );
+  }
+  if (columnKey === 'platform_handles' || columnKey === 'platformHandles') {
+    const primary = value.primary_platform || value.primaryPlatform || '';
+    const byPlatform = value.by_platform || value.byPlatform || {};
+    const platforms = Object.entries(byPlatform);
+    if (platforms.length === 0) {
+      return <span className="px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 text-[10px]">{primary || '—'}</span>;
+    }
+    return (
+      <div className="space-y-1">
+        {platforms.map(([platform, details]) => (
+          <div key={platform} className="flex flex-wrap items-center gap-1">
+            <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${platform === primary ? 'bg-blue-500/20 text-blue-400' : 'bg-accent text-foreground'}`}>
+              {platform}
+            </span>
+            {details?.profile_url && (
+              <a href={details.profile_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-400 hover:underline truncate max-w-[120px]">
+                {details.profile_url.replace(/https?:\/\/(www\.)?/, '').split('/').pop()}
+              </a>
+            )}
+            {details?.post_count != null && (
+              <span className="text-[10px] text-muted-foreground">{details.post_count} posts</span>
+            )}
+            {details?.total_views != null && (
+              <span className="text-[10px] text-muted-foreground">{Number(details.total_views).toLocaleString()} views</span>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+  const entries = Object.entries(value);
+  if (entries.length <= 4) {
+    return (
+      <div className="flex flex-wrap gap-1">
+        {entries.map(([k, v]) => (
+          <span key={k} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-accent text-[10px]">
+            <span className="text-muted-foreground">{k}:</span>
+            <span className="text-foreground">{typeof v === 'object' ? JSON.stringify(v) : String(v)}</span>
+          </span>
+        ))}
+      </div>
+    );
+  }
+  return <span className="text-[10px] text-muted-foreground">{JSON.stringify(value)}</span>;
+}
+
 function LookalikesDisplay({ data }) {
   const [page, setPage] = useState(0);
   if (!data) return null;
   if (Array.isArray(data)) {
     if (data.length === 0) return <p className="text-xs text-muted-foreground mt-3">No lookalikes found</p>;
     if (typeof data[0] === 'object') {
-      const cols = Object.keys(data[0]).slice(0, 8);
+      const cols = Object.keys(data[0]).filter((c) => c !== 'moi_score').slice(0, 8);
       const perPage = 10;
       const totalPages = Math.min(Math.ceil(data.length / perPage), 5);
       const pageRows = data.slice(page * perPage, (page + 1) * perPage);
@@ -377,11 +435,20 @@ function LookalikesDisplay({ data }) {
             <tbody>
               {pageRows.map((row, i) => (
                 <tr key={i} className="border-b border-border/50 hover:bg-accent/20">
-                  {cols.map((c) => (
-                    <td key={c} className="py-2 px-3 text-foreground">
-                      {typeof row[c] === 'object' && row[c] !== null ? JSON.stringify(row[c]) : String(row[c] ?? '—')}
-                    </td>
-                  ))}
+                  {cols.map((c) => {
+                    let cellValue = row[c];
+                    let isObject = typeof cellValue === 'object' && cellValue !== null;
+                    if (!isObject && typeof cellValue === 'string' && (cellValue.startsWith('{') || cellValue.startsWith('['))) {
+                      try { cellValue = JSON.parse(cellValue); isObject = true; } catch (_) {}
+                    }
+                    return (
+                      <td key={c} className="py-2 px-3 text-foreground">
+                        {isObject
+                          ? <ObjectCellDisplay value={cellValue} columnKey={c} />
+                          : String(row[c] ?? '—')}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>
