@@ -1,6 +1,7 @@
-import React, { useState, useCallback } from 'react';
-import { Zap, Network, Users } from 'lucide-react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { Zap, Network, Users, Info } from 'lucide-react';
 import { auraMathService } from '../../api/auraMathService';
+import { marketingAggregationService } from '../../api/marketingAggregationService';
 import {
   PlatformBadge, ScoreBar, getDominantReach, fmt,
   Section, KeywordSearch, KeyValueCards,
@@ -137,13 +138,66 @@ function TopSpreadersTable({ data }) {
   );
 }
 
+function PlatformHandlesCell({ value }) {
+  const primary = value.primary_platform || value.primaryPlatform || '';
+  const byPlatform = value.by_platform || value.byPlatform || {};
+  const platforms = Object.entries(byPlatform);
+  if (platforms.length === 0) {
+    return <span className="px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 text-[10px]">{primary || '—'}</span>;
+  }
+  return (
+    <div className="space-y-1">
+      {platforms.map(([platform, details]) => (
+        <div key={platform} className="flex flex-wrap items-center gap-1">
+          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${platform === primary ? 'bg-blue-500/20 text-blue-400' : 'bg-accent text-foreground'}`}>
+            {platform}
+          </span>
+          {details?.profile_url && (
+            <a href={details.profile_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-400 hover:underline truncate max-w-[120px]">
+              {details.profile_url.replace(/https?:\/\/(www\.)?/, '').split('/').pop()}
+            </a>
+          )}
+          {details?.post_count != null && (
+            <span className="text-[10px] text-muted-foreground">{details.post_count} posts</span>
+          )}
+          {details?.total_views != null && (
+            <span className="text-[10px] text-muted-foreground">{Number(details.total_views).toLocaleString()} views</span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function LookalikeCellValue({ value, columnKey }) {
+  if (value == null) return '—';
+  if (typeof value !== 'object') return String(value);
+  if (columnKey === 'platform_handles' || columnKey === 'platformHandles') {
+    return <PlatformHandlesCell value={value} />;
+  }
+  const entries = Object.entries(value);
+  if (entries.length <= 4) {
+    return (
+      <div className="flex flex-wrap gap-1">
+        {entries.map(([k, v]) => (
+          <span key={k} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-accent text-[10px]">
+            <span className="text-muted-foreground">{k}:</span>
+            <span className="text-foreground">{typeof v === 'object' ? JSON.stringify(v) : String(v)}</span>
+          </span>
+        ))}
+      </div>
+    );
+  }
+  return <span className="text-[10px] text-muted-foreground">{JSON.stringify(value)}</span>;
+}
+
 function LookalikesDisplay({ data }) {
   const [page, setPage] = useState(0);
   if (!data) return null;
   if (Array.isArray(data)) {
     if (data.length === 0) return <p className="text-xs text-muted-foreground mt-3">No lookalikes found</p>;
     if (typeof data[0] === 'object') {
-      const cols = Object.keys(data[0]).slice(0, 8);
+      const cols = Object.keys(data[0]).filter((c) => c !== 'moi_score').slice(0, 8);
       const perPage = 10;
       const totalPages = Math.min(Math.ceil(data.length / perPage), 5);
       const pageRows = data.slice(page * perPage, (page + 1) * perPage);
@@ -160,7 +214,7 @@ function LookalikesDisplay({ data }) {
                 <tr key={i} className="border-b border-border/50 hover:bg-accent/20">
                   {cols.map((c) => (
                     <td key={c} className="py-2 px-3 text-foreground">
-                      {typeof row[c] === 'object' && row[c] !== null ? JSON.stringify(row[c]) : String(row[c] ?? '—')}
+                      <LookalikeCellValue value={row[c]} columnKey={c} />
                     </td>
                   ))}
                 </tr>
@@ -192,11 +246,14 @@ function LookalikesDisplay({ data }) {
   return null;
 }
 
-export default function SpreaderAnalysisView() {
+export default function SpreaderAnalysisView({ selectedEntity }) {
   const [viralSeeds, setViralSeeds] = useState(null);
   const [topSpreaders, setTopSpreaders] = useState(null);
   const [lookalikes, setLookalikes] = useState(null);
   const [loading, setLoading] = useState({});
+  const [autoLoaded, setAutoLoaded] = useState(false);
+  const [autoLoadError, setAutoLoadError] = useState(null);
+  const lastLoadedEntityRef = useRef(null);
 
   const withLoading = useCallback(async (key, fn) => {
     setLoading((prev) => ({ ...prev, [key]: true }));
@@ -206,6 +263,33 @@ export default function SpreaderAnalysisView() {
       setLoading((prev) => ({ ...prev, [key]: false }));
     }
   }, []);
+
+  const autoLoadForEntity = useCallback(async (entity) => {
+    const filters = { entityId: entity.id };
+    setLoading({ viralSeeds: true, topSpreaders: true });
+    setAutoLoaded(false);
+    setAutoLoadError(null);
+    try {
+      const [seeds, spreaders] = await Promise.all([
+        marketingAggregationService.getViralSeeds(filters),
+        marketingAggregationService.getTopSpreaders(filters),
+      ]);
+      setViralSeeds(seeds);
+      setTopSpreaders(spreaders);
+      setAutoLoaded(true);
+    } catch (err) {
+      setAutoLoadError(err?.message || 'Failed to load aggregated data');
+    } finally {
+      setLoading({});
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!selectedEntity) return;
+    if (lastLoadedEntityRef.current === selectedEntity.id) return;
+    lastLoadedEntityRef.current = selectedEntity.id;
+    autoLoadForEntity(selectedEntity);
+  }, [selectedEntity, autoLoadForEntity]);
 
   return (
     <div className="h-full overflow-y-auto bg-background">
@@ -218,20 +302,44 @@ export default function SpreaderAnalysisView() {
           </div>
         </div>
 
+        {selectedEntity && autoLoaded && (
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary/10 border border-primary/20">
+            <Info className="w-4 h-4 text-primary flex-shrink-0" />
+            <p className="text-xs text-primary">
+              Showing aggregated data for <span className="font-semibold">{selectedEntity.name}</span>. Use the search fields below to look up a different keyword.
+            </p>
+          </div>
+        )}
+
+        {autoLoadError && (
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-red-500/10 border border-red-500/20">
+            <Info className="w-4 h-4 text-red-400 flex-shrink-0" />
+            <p className="text-xs text-red-400">{autoLoadError}</p>
+          </div>
+        )}
+
         <Section icon={Zap} title="Viral Seeds" subtitle="Early adopters whose activity signals the start of a viral cascade" color="text-amber-400">
           <KeywordSearch
-            label="Enter keyword to find viral seeds..."
+            label="Search by keyword to override..."
             loading={loading.viralSeeds}
-            onSearch={(kw) => withLoading('viralSeeds', () => auraMathService.getViralSeeds(kw).then(setViralSeeds))}
+            onSearch={(kw) => {
+              setAutoLoaded(false);
+              setAutoLoadError(null);
+              withLoading('viralSeeds', () => auraMathService.getViralSeeds(kw).then(setViralSeeds));
+            }}
           />
           <ViralSeedsTable data={viralSeeds} />
         </Section>
 
         <Section icon={Network} title="Top Spreaders" subtitle="High-reach individuals who amplify content to the widest audiences" color="text-purple-400">
           <KeywordSearch
-            label="Enter keyword to find top spreaders..."
+            label="Search by keyword to override..."
             loading={loading.topSpreaders}
-            onSearch={(kw) => withLoading('topSpreaders', () => auraMathService.getTopSpreaders(kw).then(setTopSpreaders))}
+            onSearch={(kw) => {
+              setAutoLoaded(false);
+              setAutoLoadError(null);
+              withLoading('topSpreaders', () => auraMathService.getTopSpreaders(kw).then(setTopSpreaders));
+            }}
           />
           <TopSpreadersTable data={topSpreaders} />
         </Section>
