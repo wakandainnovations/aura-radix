@@ -529,7 +529,7 @@ export default function PRCommandCenter() {
         )}
 
         {/* Standalone views that don't require entity selection */}
-        {isAuthenticated && activeView === 'spreader-analysis' && <SpreaderAnalysisView />}
+        {isAuthenticated && activeView === 'spreader-analysis' && <SpreaderAnalysisView selectedEntity={primaryEntity} />}
         {isAuthenticated && activeView === 'user-intelligence' && <UserIntelligenceView />}
         {isAuthenticated && activeView === 'content-analysis' && <ContentAnalysisView />}
         {isAuthenticated && activeView === 'genre-intelligence' && <GenreIntelligenceView />}

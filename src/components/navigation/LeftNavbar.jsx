@@ -14,7 +14,7 @@ export default function LeftNavbar({ activeTab, onTabChange }) {
         { id: 'ai-analytics', label: 'AI Analytics' },
         { id: 'ai-dashboard', label: 'AI Dashboard' },
         { id: 'spreader-analysis', label: 'Spreader Analysis' },
-        { id: 'user-intelligence', label: 'User Intelligence' },
+        { id: 'user-intelligence', label: 'User Intel' },
         { id: 'content-analysis', label: 'Content Analysis' },
         { id: 'genre-intelligence', label: 'Genre Intelligence' },
         { id: 'targeting', label: 'Targeting' },

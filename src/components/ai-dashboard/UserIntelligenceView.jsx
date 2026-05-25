@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { User, Users, Filter, Loader2, Tag } from 'lucide-react';
+import { User, Users, Filter, Loader2, Tag, Copy, Check } from 'lucide-react';
 import { auraMathService } from '../../api/auraMathService';
 import {
   TONE_CONFIG, TIER_COLORS, CLASSIFICATION_COLORS,
@@ -8,6 +8,22 @@ import {
   fmt, PlatformBadge, ColoredBadge,
   Section, KeywordSearch, KeyValueCards, FilterSelect,
 } from './audienceIntelShared';
+
+function CopyableId({ id }) {
+  const [copied, setCopied] = useState(false);
+  if (!id) return <span className="text-muted-foreground">—</span>;
+  const handleCopy = () => {
+    navigator.clipboard.writeText(id);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  return (
+    <button onClick={handleCopy} className="inline-flex items-center gap-1 text-primary hover:underline font-mono group" title="Copy to use in User Lookup">
+      <span className="truncate max-w-[120px]">{id}</span>
+      {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />}
+    </button>
+  );
+}
 
 function UsersDisplay({ data }) {
   if (!data) return null;
@@ -34,6 +50,7 @@ function UsersDisplay({ data }) {
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-border">
+                <th className="text-left py-2 px-3 text-muted-foreground font-medium">Global User ID</th>
                 <th className="text-left py-2 px-3 text-muted-foreground font-medium">Author</th>
                 <th className="text-left py-2 px-3 text-muted-foreground font-medium">Classification</th>
                 <th className="text-left py-2 px-3 text-muted-foreground font-medium">Tier</th>
@@ -50,6 +67,7 @@ function UsersDisplay({ data }) {
                 const ToneIcon = tone.icon;
                 return (
                   <tr key={i} className="border-b border-border/50 hover:bg-accent/20">
+                    <td className="py-2 px-3"><CopyableId id={u.global_user_id} /></td>
                     <td className="py-2 px-3 text-foreground font-medium">{u.author || '—'}</td>
                     <td className="py-2 px-3"><ColoredBadge value={u.audience_classification} colorMap={CLASSIFICATION_COLORS} /></td>
                     <td className="py-2 px-3"><ColoredBadge value={u.influence_tier} colorMap={TIER_COLORS} /></td>
@@ -135,7 +153,7 @@ export default function UserIntelligenceView() {
         <div className="flex items-center gap-3 mb-2">
           <Users className="w-7 h-7 text-indigo-400" />
           <div>
-            <h2 className="text-2xl font-bold text-foreground">User Intelligence</h2>
+            <h2 className="text-2xl font-bold text-foreground">User Intel</h2>
             <p className="text-sm text-muted-foreground">Look up user profiles and browse the user directory</p>
           </div>
         </div>
