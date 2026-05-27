@@ -8,6 +8,8 @@ export default function SentimentGraphsGrid({
   onRefresh = () => {},
   sentimentTrendRaw = null,
 }) {
+  const [checkpointLabelMode, setCheckpointLabelMode] = React.useState('hover');
+
   const checkpoints = React.useMemo(() => {
     if (!sentimentTrendRaw?.entities) return [];
     return sentimentTrendRaw.entities.flatMap(e => e.checkpoints || []);
@@ -35,13 +37,42 @@ export default function SentimentGraphsGrid({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h2 className="text-lg font-bold text-foreground">Sentiment Analysis</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          {clusterMode 
-            ? `Comparing ${clusterEntities.length} entities` 
-            : 'Single entity sentiment trends'}
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-foreground">Sentiment Analysis</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            {clusterMode
+              ? `Comparing ${clusterEntities.length} entities`
+              : 'Single entity sentiment trends'}
+          </p>
+        </div>
+        {checkpoints.length > 0 && (
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-muted-foreground whitespace-nowrap">Checkpoint labels:</span>
+            <div className="flex rounded-md border border-border overflow-hidden">
+              <button
+                onClick={() => setCheckpointLabelMode('hover')}
+                className={`px-2.5 py-1 text-xs transition-colors ${
+                  checkpointLabelMode === 'hover'
+                    ? 'bg-amber-500/20 text-amber-400'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                On hover
+              </button>
+              <button
+                onClick={() => setCheckpointLabelMode('always')}
+                className={`px-2.5 py-1 text-xs transition-colors ${
+                  checkpointLabelMode === 'always'
+                    ? 'bg-amber-500/20 text-amber-400'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Always
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 3 Graphs Stacked Vertically */}
@@ -55,6 +86,7 @@ export default function SentimentGraphsGrid({
           onRefresh={onRefresh}
           uniqueDates={uniqueDates}
           checkpoints={checkpoints}
+          checkpointLabelMode={checkpointLabelMode}
         />
 
         {/* Positive Graph */}
@@ -66,6 +98,7 @@ export default function SentimentGraphsGrid({
           onRefresh={onRefresh}
           uniqueDates={uniqueDates}
           checkpoints={checkpoints}
+          checkpointLabelMode={checkpointLabelMode}
         />
 
         {/* Negative Graph */}
@@ -77,6 +110,7 @@ export default function SentimentGraphsGrid({
           onRefresh={onRefresh}
           uniqueDates={uniqueDates}
           checkpoints={checkpoints}
+          checkpointLabelMode={checkpointLabelMode}
         />
       </div>
 

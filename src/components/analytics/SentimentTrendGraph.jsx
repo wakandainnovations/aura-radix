@@ -12,6 +12,64 @@ import {
 } from "recharts";
 import { RotateCcw } from "lucide-react";
 
+function CheckpointLabel({ viewBox, value, alwaysShow }) {
+  const [hovered, setHovered] = useState(false);
+  const show = alwaysShow || hovered;
+
+  if (!viewBox || !value) return null;
+
+  const { x, y } = viewBox;
+  const textWidth = value.length * 6 + 20;
+
+  return (
+    <g
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{ cursor: "pointer" }}
+    >
+      <rect
+        x={x - 10}
+        y={y}
+        width={20}
+        height={viewBox.height || 280}
+        fill="transparent"
+      />
+      <circle
+        cx={x}
+        cy={y + 10}
+        r={4.5}
+        fill="#f59e0b"
+        stroke="#1a1a1a"
+        strokeWidth={1.5}
+      />
+      {show && (
+        <g>
+          <rect
+            x={x - textWidth / 2}
+            y={y + 20}
+            width={textWidth}
+            height={22}
+            rx={4}
+            fill="rgba(26, 26, 26, 0.95)"
+            stroke="#f59e0b"
+            strokeWidth={0.5}
+          />
+          <text
+            x={x}
+            y={y + 35}
+            fill="#f59e0b"
+            fontSize={10}
+            fontWeight={600}
+            textAnchor="middle"
+          >
+            {value}
+          </text>
+        </g>
+      )}
+    </g>
+  );
+}
+
 // Color mapping for sentiment types
 const SENTIMENT_COLORS = {
   positive: "#10b981",
@@ -29,8 +87,8 @@ const ENTITY_COLORS = [
   "#ec4899",
 ];
 
-export default function SentimentTrendGraph({ 
-  data = [], 
+export default function SentimentTrendGraph({
+  data = [],
   sentiment = 'positive', // 'positive', 'negative', 'neutral'
   clusterMode = false,
   clusterEntities = [],
@@ -38,6 +96,7 @@ export default function SentimentTrendGraph({
   uniqueDates = [],
   title = 'Sentiment Trend',
   checkpoints = [],
+  checkpointLabelMode = 'hover',
 }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -174,7 +233,19 @@ export default function SentimentTrendGraph({
               }}
               labelStyle={{ color: "#fff" }}
               formatter={(value, name) => [value, name]}
-              labelFormatter={(label) => `Date: ${label}`}
+              labelFormatter={(label) => {
+                const cp = checkpoints.find(c => c.date === label);
+                if (cp) {
+                  return (
+                    <span>
+                      <span style={{ color: "#f59e0b" }}>&#9679; {cp.description}</span>
+                      <br />
+                      Date: {label}
+                    </span>
+                  );
+                }
+                return `Date: ${label}`;
+              }}
             />
             <Legend />
             {checkpoints.map((cp, i) => (
@@ -184,13 +255,13 @@ export default function SentimentTrendGraph({
                 stroke="#f59e0b"
                 strokeDasharray="4 4"
                 strokeWidth={1.5}
-                label={{
-                  value: cp.description,
-                  position: "top",
-                  fill: "#f59e0b",
-                  fontSize: 9,
-                  fontWeight: 600,
-                }}
+                label={(props) => (
+                  <CheckpointLabel
+                    {...props}
+                    value={cp.description}
+                    alwaysShow={checkpointLabelMode === 'always'}
+                  />
+                )}
               />
             ))}
 
