@@ -20,6 +20,7 @@ import GenreIntelligenceView from './ai-dashboard/GenreIntelligenceView';
 import TargetingView from './ai-dashboard/TargetingView';
 import MarketingIntelView from './ai-dashboard/MarketingIntelView';
 import MarketingAggregationView from './ai-dashboard/MarketingAggregationView';
+import CheckpointsView from './checkpoints/CheckpointsView';
 import CommandPalette from './navigation/CommandPalette';
 import LoginModal from './auth/LoginModal';
 // Import API services
@@ -50,6 +51,7 @@ const VIEW_REGISTRY = {
   'targeting': TargetingView,
   'marketing-intel': MarketingIntelView,
   'marketing-aggregation': MarketingAggregationView,
+  'checkpoints': CheckpointsView,
 };
 
 export default function PRCommandCenter() {
@@ -599,6 +601,7 @@ export default function PRCommandCenter() {
                 stats={metricsData}
                 sentimentData={sentimentTrend}
                 sentimentGraphs={sentimentGraphs}
+                sentimentTrendRaw={sentimentTrendRaw}
                 platformData={platformData}
                 clusterMode={clusterMode}
                 clusterEntities={selectedEntities}
@@ -693,6 +696,17 @@ export default function PRCommandCenter() {
             )}
             {activeView === 'ai-dashboard' && primaryEntity && (
               <AIDashboardView selectedEntity={primaryEntity} />
+            )}
+            {activeView === 'checkpoints' && !primaryEntity && (
+              <div className="h-full flex items-center justify-center bg-background">
+                <div className="text-center space-y-4">
+                  <p className="text-lg font-semibold text-foreground">Select an entity to view checkpoints</p>
+                  <p className="text-sm text-muted-foreground">Click "Add Entity" in the header to select</p>
+                </div>
+              </div>
+            )}
+            {activeView === 'checkpoints' && primaryEntity && (
+              <CheckpointsView selectedEntity={primaryEntity} />
             )}
           </>
         )}

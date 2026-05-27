@@ -16,6 +16,7 @@ export default function AnalyticsView({
   selectedEntity, 
   entityType,
   sentimentGraphs = { positive: [], total: [], negative: [] },
+  sentimentTrendRaw = null,
   clusterMode = false,
   clusterEntities = [],
   onDateRangeChange,
@@ -219,6 +220,7 @@ export default function AnalyticsView({
           clusterMode={clusterMode}
           clusterEntities={clusterEntities}
           onRefresh={() => console.log('Refresh sentiment data')}
+          sentimentTrendRaw={sentimentTrendRaw}
         />
       </div>
 

@@ -332,6 +332,7 @@ export default function DashboardView({
           clusterMode={clusterMode}
           clusterEntities={clusterEntities}
           onRefresh={onRefresh}
+          sentimentTrendRaw={sentimentTrendRaw}
         />
 
         {/* 

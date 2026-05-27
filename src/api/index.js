@@ -6,3 +6,4 @@ export { crisisService } from './crisisService';
 export { analyticsService } from './analyticsService';
 export { interactionService } from './interactionService';
 export { marketingAggregationService } from './marketingAggregationService';
+export { checkpointService } from './checkpointService';

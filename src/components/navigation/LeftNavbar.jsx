@@ -20,6 +20,7 @@ export default function LeftNavbar({ activeTab, onTabChange }) {
         { id: 'targeting', label: 'Targeting' },
         { id: 'marketing-intel', label: 'Marketing Intel' },
         { id: 'marketing-aggregation', label: 'Aggregated Intel' },
+        { id: 'checkpoints', label: 'Checkpoints' },
       ]
     },
     { 

@@ -1,12 +1,17 @@
 import React from 'react';
 import SentimentTrendGraph from './SentimentTrendGraph';
 
-export default function SentimentGraphsGrid({ 
+export default function SentimentGraphsGrid({
   sentimentGraphs = { positive: [], total: [], negative: [] },
   clusterMode = false,
   clusterEntities = [],
-  onRefresh = () => {}
+  onRefresh = () => {},
+  sentimentTrendRaw = null,
 }) {
+  const checkpoints = React.useMemo(() => {
+    if (!sentimentTrendRaw?.entities) return [];
+    return sentimentTrendRaw.entities.flatMap(e => e.checkpoints || []);
+  }, [sentimentTrendRaw]);
   // Check if we have any data
   const hasData = sentimentGraphs?.positive?.length > 0 || 
                   sentimentGraphs?.total?.length > 0 || 
@@ -49,6 +54,7 @@ export default function SentimentGraphsGrid({
           clusterEntities={clusterEntities}
           onRefresh={onRefresh}
           uniqueDates={uniqueDates}
+          checkpoints={checkpoints}
         />
 
         {/* Positive Graph */}
@@ -59,6 +65,7 @@ export default function SentimentGraphsGrid({
           clusterEntities={clusterEntities}
           onRefresh={onRefresh}
           uniqueDates={uniqueDates}
+          checkpoints={checkpoints}
         />
 
         {/* Negative Graph */}
@@ -69,6 +76,7 @@ export default function SentimentGraphsGrid({
           clusterEntities={clusterEntities}
           onRefresh={onRefresh}
           uniqueDates={uniqueDates}
+          checkpoints={checkpoints}
         />
       </div>
 

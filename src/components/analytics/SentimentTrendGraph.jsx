@@ -8,6 +8,7 @@ import {
   Tooltip,
   CartesianGrid,
   Legend,
+  ReferenceLine,
 } from "recharts";
 import { RotateCcw } from "lucide-react";
 
@@ -35,7 +36,8 @@ export default function SentimentTrendGraph({
   clusterEntities = [],
   onRefresh = () => {},
   uniqueDates = [],
-  title = 'Sentiment Trend'
+  title = 'Sentiment Trend',
+  checkpoints = [],
 }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -175,6 +177,22 @@ export default function SentimentTrendGraph({
               labelFormatter={(label) => `Date: ${label}`}
             />
             <Legend />
+            {checkpoints.map((cp, i) => (
+              <ReferenceLine
+                key={`cp-${i}`}
+                x={cp.date}
+                stroke="#f59e0b"
+                strokeDasharray="4 4"
+                strokeWidth={1.5}
+                label={{
+                  value: cp.description,
+                  position: "top",
+                  fill: "#f59e0b",
+                  fontSize: 9,
+                  fontWeight: 600,
+                }}
+              />
+            ))}
 
           {/* Single entity - simple line */}
             {!clusterMode && (
