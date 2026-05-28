@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { TrendingUp, TrendingDown, Minus, Activity } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Activity, Info } from 'lucide-react';
 import { checkpointService } from '../../api';
 
 function ImpactCard({ impact }) {
@@ -28,7 +28,7 @@ function ImpactCard({ impact }) {
 
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <p className="text-xs text-muted-foreground mb-0.5">Mentions</p>
+          <p className="text-xs text-muted-foreground mb-0.5">Mentions (window)</p>
           <div className="flex items-baseline gap-1.5">
             <span className="text-sm font-medium text-foreground">{impact.beforeTotalMentions}</span>
             <span className="text-xs text-muted-foreground">→</span>
@@ -78,6 +78,10 @@ export default function CheckpointImpactView({ entityId, entityName }) {
           <Activity className="w-4 h-4 text-primary" />
           <h3 className="text-sm font-semibold text-foreground">Checkpoint Impact</h3>
           <span className="text-xs text-muted-foreground">Before/after sentiment for each checkpoint</span>
+          <Info
+            className="w-3.5 h-3.5 text-muted-foreground cursor-help"
+            title="Each metric compares the N days before the checkpoint to the N days after, where N is the selected Window. Mentions show the volume in each window — not a lifetime total — so values can rise or fall depending on activity around the checkpoint."
+          />
         </div>
         <div className="flex items-center gap-2">
           <label className="text-xs text-muted-foreground">Window:</label>
