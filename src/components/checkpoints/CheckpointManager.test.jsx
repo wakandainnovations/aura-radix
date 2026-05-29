@@ -179,3 +179,59 @@ describe('CheckpointManager edit flow', () => {
     expect(screen.getByText('Trailer Launch')).toBeInTheDocument();
   });
 });
+
+const SECOND_CHECKPOINT = {
+  id: 12,
+  entityId: 6,
+  entityName: 'Parasakthi',
+  checkpointDate: '2026-04-01',
+  description: 'Teaser Drop',
+};
+
+describe('CheckpointManager delete flow', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    checkpointService.listByEntity.mockResolvedValue([CHECKPOINT]);
+    checkpointService.delete.mockResolvedValue({});
+  });
+
+  it('deletes the checkpoint via checkpointService.delete with its id', async () => {
+    renderManager();
+    fireEvent.click(await screen.findByTitle('Delete checkpoint'));
+
+    await waitFor(() => {
+      expect(checkpointService.delete).toHaveBeenCalledWith(9);
+    });
+  });
+
+  it('removes the row from the list after a successful delete', async () => {
+    // first load returns the checkpoint, the post-delete refetch returns none
+    checkpointService.listByEntity
+      .mockResolvedValueOnce([CHECKPOINT])
+      .mockResolvedValue([]);
+    renderManager();
+    fireEvent.click(await screen.findByTitle('Delete checkpoint'));
+
+    expect(
+      await screen.findByText('No checkpoints yet. Add one to mark significant events.')
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Trailer Launch')).not.toBeInTheDocument();
+  });
+
+  it('deletes only the targeted checkpoint when multiple exist', async () => {
+    checkpointService.listByEntity.mockResolvedValue([CHECKPOINT, SECOND_CHECKPOINT]);
+    renderManager();
+
+    await screen.findByText('Trailer Launch');
+    const deleteButtons = screen.getAllByTitle('Delete checkpoint');
+    expect(deleteButtons).toHaveLength(2);
+
+    // second row corresponds to SECOND_CHECKPOINT (id 12)
+    fireEvent.click(deleteButtons[1]);
+
+    await waitFor(() => {
+      expect(checkpointService.delete).toHaveBeenCalledWith(12);
+    });
+    expect(checkpointService.delete).toHaveBeenCalledTimes(1);
+  });
+});
