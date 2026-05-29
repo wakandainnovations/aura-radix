@@ -6,24 +6,9 @@ import { TrendingUp } from 'lucide-react';
 
 describe('StatsGrid Component', () => {
   const mockStats = [
-    {
-      icon: TrendingUp,
-      label: 'Metric 1',
-      value: '100',
-      color: 'green',
-    },
-    {
-      icon: TrendingUp,
-      label: 'Metric 2',
-      value: '200',
-      color: 'purple',
-    },
-    {
-      icon: TrendingUp,
-      label: 'Metric 3',
-      value: '300',
-      color: 'blue',
-    },
+    <StatCard key="m1" icon={TrendingUp} label="Metric 1" value="100" color="green" />,
+    <StatCard key="m2" icon={TrendingUp} label="Metric 2" value="200" color="purple" />,
+    <StatCard key="m3" icon={TrendingUp} label="Metric 3" value="300" color="blue" />,
   ];
 
   it('renders grid with correct number of items', () => {
@@ -60,7 +45,7 @@ describe('StatsGrid Component', () => {
   it('has proper accessibility role and label', () => {
     render(<StatsGrid stats={mockStats} columns={3} />);
     
-    const grid = screen.getByRole('region');
+    const grid = screen.getByRole('region', { name: 'Statistics Grid' });
     expect(grid).toHaveAttribute('aria-label', 'Statistics Grid');
   });
 
@@ -77,7 +62,7 @@ describe('StatsGrid Component', () => {
     render(<StatsGrid stats={mockStats} columns={3} isLoading={false} />);
     
     // Verify grid still renders
-    expect(screen.getByRole('region')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Statistics Grid' })).toBeInTheDocument();
   });
 
   it('uses key based on label for list items', () => {

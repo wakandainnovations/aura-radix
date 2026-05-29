@@ -63,13 +63,13 @@ describe('ErrorState Component', () => {
     const onRetry = () => {};
     render(<ErrorState error={mockError} onRetry={onRetry} />);
     
-    expect(screen.getByRole('button', { name: 'Try Again' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Retry loading data' })).toBeInTheDocument();
   });
 
   it('does not render retry button without onRetry', () => {
     render(<ErrorState error={mockError} />);
     
-    expect(screen.queryByRole('button', { name: 'Try Again' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Retry loading data' })).not.toBeInTheDocument();
   });
 
   it('has alert role for accessibility', () => {
