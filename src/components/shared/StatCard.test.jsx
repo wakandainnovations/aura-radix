@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { StatCard } from '../components/shared/StatCard';
+import { StatCard } from './StatCard';
 import { TrendingUp } from 'lucide-react';
 
 describe('StatCard Component', () => {

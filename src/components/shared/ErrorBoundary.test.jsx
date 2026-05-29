@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { ErrorBoundary } from '../components/shared/ErrorBoundary';
+import { ErrorBoundary } from './ErrorBoundary';
 
 describe('ErrorBoundary Component', () => {
   // Suppress console errors for these tests

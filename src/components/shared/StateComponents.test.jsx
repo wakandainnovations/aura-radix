@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { EmptyState, ErrorState, LoadingState } from '../components/shared/StateComponents';
+import { EmptyState, ErrorState, LoadingState } from './StateComponents';
 
 describe('EmptyState Component', () => {
   it('renders with default content', () => {

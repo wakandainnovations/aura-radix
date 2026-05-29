@@ -15,6 +15,14 @@ export const checkpointService = {
     return response;
   },
 
+  update: async (checkpointId, { checkpointDate, description } = {}) => {
+    const body = {};
+    if (checkpointDate !== undefined) body.checkpointDate = checkpointDate;
+    if (description !== undefined) body.description = description;
+    const response = await apiClient.patch(`/checkpoints/${checkpointId}`, body);
+    return response;
+  },
+
   delete: async (checkpointId) => {
     const response = await apiClient.delete(`/checkpoints/${checkpointId}`);
     return response;

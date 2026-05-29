@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { StatsGrid } from '../components/shared/StatsGrid';
-import { StatCard } from '../components/shared/StatCard';
+import { StatsGrid } from './StatsGrid';
+import { StatCard } from './StatCard';
 import { TrendingUp } from 'lucide-react';
 
 describe('StatsGrid Component', () => {
