@@ -84,6 +84,62 @@ describe('CheckpointManager edit flow', () => {
     });
   });
 
+  it('sends only the date when only the date changed', async () => {
+    renderManager();
+    fireEvent.click(await screen.findByTitle('Edit checkpoint'));
+
+    fireEvent.change(screen.getByDisplayValue('2026-03-15'), {
+      target: { value: '2026-03-20' },
+    });
+    fireEvent.click(screen.getByTitle('Save changes'));
+
+    await waitFor(() => {
+      expect(checkpointService.update).toHaveBeenCalledWith(9, { checkpointDate: '2026-03-20' });
+    });
+  });
+
+  it('exits edit mode after a successful save', async () => {
+    renderManager();
+    fireEvent.click(await screen.findByTitle('Edit checkpoint'));
+
+    fireEvent.change(screen.getByDisplayValue('Trailer Launch'), {
+      target: { value: 'Teaser Drop' },
+    });
+    fireEvent.click(screen.getByTitle('Save changes'));
+
+    await waitFor(() => {
+      expect(screen.queryByTitle('Save changes')).not.toBeInTheDocument();
+    });
+    // back to the read-only row with the edit affordance
+    expect(screen.getByTitle('Edit checkpoint')).toBeInTheDocument();
+  });
+
+  it('blocks a cleared date with a validation error and does not call update', async () => {
+    renderManager();
+    fireEvent.click(await screen.findByTitle('Edit checkpoint'));
+
+    fireEvent.change(screen.getByDisplayValue('2026-03-15'), { target: { value: '' } });
+    fireEvent.click(screen.getByTitle('Save changes'));
+
+    expect(await screen.findByText('Date is required')).toBeInTheDocument();
+    expect(checkpointService.update).not.toHaveBeenCalled();
+  });
+
+  it('surfaces a server error and stays in edit mode when update fails', async () => {
+    checkpointService.update.mockRejectedValue(new Error('Server exploded'));
+    renderManager();
+    fireEvent.click(await screen.findByTitle('Edit checkpoint'));
+
+    fireEvent.change(screen.getByDisplayValue('Trailer Launch'), {
+      target: { value: 'Teaser Drop' },
+    });
+    fireEvent.click(screen.getByTitle('Save changes'));
+
+    expect(await screen.findByText('Server exploded')).toBeInTheDocument();
+    // still in edit mode so the user can retry or cancel
+    expect(screen.getByTitle('Save changes')).toBeInTheDocument();
+  });
+
   it('blocks a blank description with a validation error and does not call update', async () => {
     renderManager();
     fireEvent.click(await screen.findByTitle('Edit checkpoint'));
