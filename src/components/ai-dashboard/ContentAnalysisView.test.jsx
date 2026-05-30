@@ -97,9 +97,9 @@ describe('ContentAnalysisView', () => {
     expect(await screen.findByText(/aggregate boom/)).toBeTruthy();
   });
 
-  it('renders only the top 20 aspect drivers ranked by impact', async () => {
-    // 30 strengths with descending impact (30..1) — only the top 20 should show,
-    // and the lowest-impact ones (impact 1–10, i.e. aspects 21–30) must be dropped.
+  it('renders only the top 10 aspect drivers ranked by impact', async () => {
+    // 30 strengths with descending impact (30..1) — only the top 10 should show,
+    // and the lower-impact ones (aspects 10–29) must be dropped.
     const manyStrengths = Array.from({ length: 30 }, (_, i) => ({
       aspect: `aspect-${i}`,
       averageSentiment: 80,
@@ -115,9 +115,9 @@ describe('ContentAnalysisView', () => {
 
     // Highest impact (aspect-0) is shown; a low-impact one beyond the cut is not.
     expect(await screen.findByText('aspect-0')).toBeTruthy();
-    expect(screen.getByText('aspect-19')).toBeTruthy();
-    expect(screen.queryByText('aspect-20')).toBeNull();
-    expect(screen.getByText(/Top 20 of 30/)).toBeTruthy();
+    expect(screen.getByText('aspect-9')).toBeTruthy();
+    expect(screen.queryByText('aspect-10')).toBeNull();
+    expect(screen.getByText(/Top 10 of 30/)).toBeTruthy();
   });
 
   it('ranks weaknesses above strengths when their impact is higher', async () => {

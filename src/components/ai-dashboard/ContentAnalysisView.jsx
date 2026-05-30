@@ -13,7 +13,7 @@ import {
 
 // Cap the number of aspect drivers surfaced so the view stays focused on the
 // highest-impact signals rather than dumping the full API payload.
-const MAX_DRIVERS = 20;
+const MAX_DRIVERS = 10;
 
 // Normalize a strength/weakness entry: the API usually returns objects, but
 // older responses sometimes send bare aspect strings.
