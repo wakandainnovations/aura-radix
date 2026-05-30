@@ -197,7 +197,8 @@ function LookalikesDisplay({ data }) {
   if (Array.isArray(data)) {
     if (data.length === 0) return <p className="text-xs text-muted-foreground mt-3">No lookalikes found</p>;
     if (typeof data[0] === 'object') {
-      const cols = Object.keys(data[0]).filter((c) => c !== 'moi_score').slice(0, 8);
+      const HIDDEN_COLS = ['moi_score', 'similarity_score', 'topic_sim', 'sentiment_sim', 'moi_sim'];
+      const cols = Object.keys(data[0]).filter((c) => !HIDDEN_COLS.includes(c)).slice(0, 8);
       const perPage = 10;
       const totalPages = Math.min(Math.ceil(data.length / perPage), 5);
       const pageRows = data.slice(page * perPage, (page + 1) * perPage);
