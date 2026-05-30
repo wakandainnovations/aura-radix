@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, BarChart3, AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, BarChart3, AlertTriangle, Boxes, ChevronDown, ChevronRight } from 'lucide-react';
 
 export default function LeftNavbar({ activeTab, onTabChange }) {
   const [expandedMenu, setExpandedMenu] = useState({ crisis: true, analytics: true });
   
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { 
-      id: 'analytics', 
+    { id: 'entity-management', label: 'Manage Entities', icon: Boxes },
+    {
+      id: 'analytics',
       label: 'Analytics', 
       icon: BarChart3,
       subTabs: [
@@ -17,7 +18,6 @@ export default function LeftNavbar({ activeTab, onTabChange }) {
         { id: 'user-intelligence', label: 'User Intel' },
         { id: 'content-analysis', label: 'Content Analysis' },
         { id: 'genre-intelligence', label: 'Genre Intelligence' },
-        { id: 'targeting', label: 'Targeting' },
         { id: 'marketing-intel', label: 'Marketing Intel' },
         { id: 'marketing-aggregation', label: 'Aggregated Intel' },
         { id: 'checkpoints', label: 'Checkpoints' },

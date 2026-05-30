@@ -1,5 +1,15 @@
 import apiClient from './client';
 
+// The backend deserializes keywords into KeywordDto objects, so a bare string
+// (e.g. "blast") fails with "no String-argument constructor". Wrap each keyword
+// string as { keyword: "..." }; pass through values that are already objects.
+const toKeywordDtos = (keywords) => {
+  if (!Array.isArray(keywords)) return [];
+  return keywords
+    .map((k) => (k && typeof k === 'object' ? k : { keyword: String(k).trim() }))
+    .filter((k) => k.keyword);
+};
+
 export const entityService = {
   // Get all entities of a specific type
   // Path: GET /api/entities/{entityType}
@@ -33,7 +43,10 @@ export const entityService = {
   // Response: Created entity object
   create: async (entityType = 'movie', entityData) => {
     try {
-      const response = await apiClient.post(`/entities/${entityType}`, entityData);
+      const payload = entityData?.keywords
+        ? { ...entityData, keywords: toKeywordDtos(entityData.keywords) }
+        : entityData;
+      const response = await apiClient.post(`/entities/${entityType}`, payload);
       return response;
     } catch (error) {
       console.error(`Failed to create entity of type ${entityType}:`, error);
@@ -63,8 +76,8 @@ export const entityService = {
   // Response: Updated entity with new keywords
   updateKeywords: async (entityType, entityId, keywords) => {
     try {
-      const response = await apiClient.put(`/entities/${entityType}/${entityId}/keywords`, { 
-        keywords 
+      const response = await apiClient.put(`/entities/${entityType}/${entityId}/keywords`, {
+        keywords: toKeywordDtos(keywords)
       });
       return response;
     } catch (error) {

@@ -17,10 +17,10 @@ import SpreaderAnalysisView from './ai-dashboard/SpreaderAnalysisView';
 import UserIntelligenceView from './ai-dashboard/UserIntelligenceView';
 import ContentAnalysisView from './ai-dashboard/ContentAnalysisView';
 import GenreIntelligenceView from './ai-dashboard/GenreIntelligenceView';
-import TargetingView from './ai-dashboard/TargetingView';
 import MarketingIntelView from './ai-dashboard/MarketingIntelView';
 import MarketingAggregationView from './ai-dashboard/MarketingAggregationView';
 import CheckpointsView from './checkpoints/CheckpointsView';
+import EntityManagementView from './entity-management/EntityManagementView';
 import CommandPalette from './navigation/CommandPalette';
 import LoginModal from './auth/LoginModal';
 // Import API services
@@ -48,10 +48,10 @@ const VIEW_REGISTRY = {
   'user-intelligence': UserIntelligenceView,
   'content-analysis': ContentAnalysisView,
   'genre-intelligence': GenreIntelligenceView,
-  'targeting': TargetingView,
   'marketing-intel': MarketingIntelView,
   'marketing-aggregation': MarketingAggregationView,
   'checkpoints': CheckpointsView,
+  'entity-management': EntityManagementView,
 };
 
 export default function PRCommandCenter() {
@@ -521,7 +521,7 @@ export default function PRCommandCenter() {
         )}
 
         {/* Welcome Screen - Show when no entity is selected yet (except standalone views) */}
-        {isAuthenticated && hasLoadedEntities && selectedEntities.length === 0 && !isLoadingEntities && !['spreader-analysis', 'user-intelligence', 'content-analysis', 'genre-intelligence', 'targeting', 'marketing-intel', 'marketing-aggregation'].includes(activeView) && (
+        {isAuthenticated && hasLoadedEntities && selectedEntities.length === 0 && !isLoadingEntities && !['entity-management', 'spreader-analysis', 'user-intelligence', 'content-analysis', 'genre-intelligence', 'marketing-intel', 'marketing-aggregation'].includes(activeView) && (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <h2 className="text-5xl font-bold text-foreground mb-4">Welcome to Project Aura</h2>
@@ -531,11 +531,11 @@ export default function PRCommandCenter() {
         )}
 
         {/* Standalone views that don't require entity selection */}
+        {isAuthenticated && activeView === 'entity-management' && <EntityManagementView />}
         {isAuthenticated && activeView === 'spreader-analysis' && <SpreaderAnalysisView selectedEntity={primaryEntity} />}
         {isAuthenticated && activeView === 'user-intelligence' && <UserIntelligenceView />}
-        {isAuthenticated && activeView === 'content-analysis' && <ContentAnalysisView />}
+        {isAuthenticated && activeView === 'content-analysis' && <ContentAnalysisView selectedEntity={primaryEntity} />}
         {isAuthenticated && activeView === 'genre-intelligence' && <GenreIntelligenceView />}
-        {isAuthenticated && activeView === 'targeting' && <TargetingView />}
         {isAuthenticated && activeView === 'marketing-intel' && (
           <MarketingIntelView />
         )}

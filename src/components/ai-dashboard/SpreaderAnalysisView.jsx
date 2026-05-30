@@ -1,4 +1,5 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Zap, Network, Users, Info } from 'lucide-react';
 import { auraMathService } from '../../api/auraMathService';
 import { marketingAggregationService } from '../../api/marketingAggregationService';
@@ -247,50 +248,68 @@ function LookalikesDisplay({ data }) {
   return null;
 }
 
+// Spreader data is stable for a given entity/keyword, so cache it indefinitely:
+// a request only fires for a new query key (new entity or a newly typed keyword).
+// The React Query cache lives at the app root and survives this view unmounting,
+// so navigating back to the section shows cached data instead of refetching.
+const SPREADER_QUERY_OPTIONS = {
+  staleTime: Infinity,
+  gcTime: 1000 * 60 * 30,
+  refetchOnWindowFocus: false,
+  retry: false,
+};
+
 export default function SpreaderAnalysisView({ selectedEntity }) {
-  const [viralSeeds, setViralSeeds] = useState(null);
-  const [topSpreaders, setTopSpreaders] = useState(null);
-  const [lookalikes, setLookalikes] = useState(null);
-  const [loading, setLoading] = useState({});
-  const [autoLoaded, setAutoLoaded] = useState(false);
-  const [autoLoadError, setAutoLoadError] = useState(null);
-  const lastLoadedEntityRef = useRef(null);
+  const entityId = selectedEntity?.id ?? null;
 
-  const withLoading = useCallback(async (key, fn) => {
-    setLoading((prev) => ({ ...prev, [key]: true }));
-    try {
-      return await fn();
-    } finally {
-      setLoading((prev) => ({ ...prev, [key]: false }));
-    }
-  }, []);
+  // A typed keyword overrides the entity-aggregated data for that section.
+  const [viralKeyword, setViralKeyword] = useState(null);
+  const [spreaderKeyword, setSpreaderKeyword] = useState(null);
+  const [seedId, setSeedId] = useState(null);
 
-  const autoLoadForEntity = useCallback(async (entity) => {
-    const filters = { entityId: entity.id };
-    setLoading({ viralSeeds: true, topSpreaders: true });
-    setAutoLoaded(false);
-    setAutoLoadError(null);
-    try {
-      const [seeds, spreaders] = await Promise.all([
-        marketingAggregationService.getViralSeeds(filters),
-        marketingAggregationService.getTopSpreaders(filters),
-      ]);
-      setViralSeeds(seeds);
-      setTopSpreaders(spreaders);
-      setAutoLoaded(true);
-    } catch (err) {
-      setAutoLoadError(err?.message || 'Failed to load aggregated data');
-    } finally {
-      setLoading({});
-    }
-  }, []);
-
+  // Reset keyword overrides when a different entity is selected so its
+  // aggregated data shows by default.
   useEffect(() => {
-    if (!selectedEntity) return;
-    if (lastLoadedEntityRef.current === selectedEntity.id) return;
-    lastLoadedEntityRef.current = selectedEntity.id;
-    autoLoadForEntity(selectedEntity);
-  }, [selectedEntity, autoLoadForEntity]);
+    setViralKeyword(null);
+    setSpreaderKeyword(null);
+    setSeedId(null);
+  }, [entityId]);
+
+  const viralSeedsQuery = useQuery({
+    queryKey: viralKeyword
+      ? ['spreader', 'viralSeeds', 'keyword', viralKeyword]
+      : ['spreader', 'viralSeeds', 'entity', entityId],
+    queryFn: () => (viralKeyword
+      ? auraMathService.getViralSeeds(viralKeyword)
+      : marketingAggregationService.getViralSeeds({ entityId })),
+    enabled: Boolean(viralKeyword || entityId),
+    ...SPREADER_QUERY_OPTIONS,
+  });
+
+  const topSpreadersQuery = useQuery({
+    queryKey: spreaderKeyword
+      ? ['spreader', 'topSpreaders', 'keyword', spreaderKeyword]
+      : ['spreader', 'topSpreaders', 'entity', entityId],
+    queryFn: () => (spreaderKeyword
+      ? auraMathService.getTopSpreaders(spreaderKeyword)
+      : marketingAggregationService.getTopSpreaders({ entityId })),
+    enabled: Boolean(spreaderKeyword || entityId),
+    ...SPREADER_QUERY_OPTIONS,
+  });
+
+  const lookalikesQuery = useQuery({
+    queryKey: ['spreader', 'lookalikes', seedId],
+    queryFn: () => auraMathService.findLookalikes(seedId),
+    enabled: Boolean(seedId),
+    ...SPREADER_QUERY_OPTIONS,
+  });
+
+  const showEntityBanner = Boolean(
+    selectedEntity && !viralKeyword && !spreaderKeyword
+    && (viralSeedsQuery.data || topSpreadersQuery.data),
+  );
+  const autoLoadError = (!viralKeyword && viralSeedsQuery.error)
+    || (!spreaderKeyword && topSpreadersQuery.error);
 
   return (
     <div className="h-full overflow-y-auto bg-background">
@@ -303,7 +322,7 @@ export default function SpreaderAnalysisView({ selectedEntity }) {
           </div>
         </div>
 
-        {selectedEntity && autoLoaded && (
+        {showEntityBanner && (
           <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary/10 border border-primary/20">
             <Info className="w-4 h-4 text-primary flex-shrink-0" />
             <p className="text-xs text-primary">
@@ -315,43 +334,35 @@ export default function SpreaderAnalysisView({ selectedEntity }) {
         {autoLoadError && (
           <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-red-500/10 border border-red-500/20">
             <Info className="w-4 h-4 text-red-400 flex-shrink-0" />
-            <p className="text-xs text-red-400">{autoLoadError}</p>
+            <p className="text-xs text-red-400">{autoLoadError.message || 'Failed to load aggregated data'}</p>
           </div>
         )}
 
         <Section icon={Zap} title="Viral Seeds" subtitle="Early adopters whose activity signals the start of a viral cascade" color="text-amber-400">
           <KeywordSearch
             label="Search by keyword to override..."
-            loading={loading.viralSeeds}
-            onSearch={(kw) => {
-              setAutoLoaded(false);
-              setAutoLoadError(null);
-              withLoading('viralSeeds', () => auraMathService.getViralSeeds(kw).then(setViralSeeds));
-            }}
+            loading={viralSeedsQuery.isFetching}
+            onSearch={(kw) => setViralKeyword(kw)}
           />
-          <ViralSeedsTable data={viralSeeds} />
+          <ViralSeedsTable data={viralSeedsQuery.data} />
         </Section>
 
         <Section icon={Network} title="Top Spreaders" subtitle="High-reach individuals who amplify content to the widest audiences" color="text-purple-400">
           <KeywordSearch
             label="Search by keyword to override..."
-            loading={loading.topSpreaders}
-            onSearch={(kw) => {
-              setAutoLoaded(false);
-              setAutoLoadError(null);
-              withLoading('topSpreaders', () => auraMathService.getTopSpreaders(kw).then(setTopSpreaders));
-            }}
+            loading={topSpreadersQuery.isFetching}
+            onSearch={(kw) => setSpreaderKeyword(kw)}
           />
-          <TopSpreadersTable data={topSpreaders} />
+          <TopSpreadersTable data={topSpreadersQuery.data} />
         </Section>
 
         <Section icon={Users} title="Find Lookalikes" subtitle="Discover new audiences that behave like your best-performing seed authors" color="text-emerald-400">
           <KeywordSearch
             label="Enter seed author ID..."
-            loading={loading.lookalikes}
-            onSearch={(id) => withLoading('lookalikes', () => auraMathService.findLookalikes(id).then(setLookalikes))}
+            loading={lookalikesQuery.isFetching}
+            onSearch={(id) => setSeedId(id)}
           />
-          <LookalikesDisplay data={lookalikes} />
+          <LookalikesDisplay data={lookalikesQuery.data} />
         </Section>
       </div>
     </div>

@@ -1,16 +1,44 @@
 import React, { useState, useCallback } from 'react';
-import { Target } from 'lucide-react';
+import { Target, Sun, Sunrise, Sunset, Moon } from 'lucide-react';
 import { auraMathService } from '../../api/auraMathService';
 import {
   PLATFORM_COLORS, fmt, PlatformBadge,
   Section, KeywordSearch,
 } from './audienceIntelShared';
 
+function PeakActivityIndicators({ times }) {
+  if (!times) return null;
+  const slots = [
+    { key: 'morning', icon: Sunrise, label: 'Morning' },
+    { key: 'afternoon', icon: Sun, label: 'Afternoon' },
+    { key: 'evening', icon: Sunset, label: 'Evening' },
+    { key: 'night', icon: Moon, label: 'Night' },
+  ];
+  return (
+    <div className="flex items-center gap-1">
+      {slots.map(({ key, icon: Icon, label }) => {
+        const val = times[key] ?? 0;
+        return (
+          <div key={key} title={`${label}: ${fmt(val)}`} style={{ opacity: Math.max(0.15, val) }}>
+            <Icon className="w-3 h-3 text-foreground" />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+const PAGE_SIZE = 10;
+
 function GenreViewersSpreadersTable({ data, type }) {
-  if (!data) return null;
   const isSpreaders = type === 'spreaders';
-  const rows = isSpreaders ? (data.spreaders || []) : (data.viewers || []);
-  const total = isSpreaders ? data.totalSpreaders : data.totalViewers;
+  const rows = data ? (isSpreaders ? (data.spreaders || []) : (data.viewers || [])) : [];
+  const total = data ? (isSpreaders ? data.totalSpreaders : data.totalViewers) : 0;
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const [page, setPage] = useState(0);
+  const safePage = Math.min(page, totalPages - 1);
+  if (!data) return null;
+  const pageRows = rows.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
   return (
     <div className="mt-2 space-y-2">
       <div className="flex items-center gap-3">
@@ -27,32 +55,48 @@ function GenreViewersSpreadersTable({ data, type }) {
                 <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">Tribe</th>
                 <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">Platform</th>
                 <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">{isSpreaders ? 'Hawkes Alpha' : 'Interest Score'}</th>
-                <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">MOI</th>
                 <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">Peak Activity</th>
               </tr>
             </thead>
             <tbody>
-              {rows.slice(0, 30).map((r, i) => {
+              {pageRows.map((r, i) => {
                 const primaryPlat = r.platform_handles?.primary_platform || '';
-                const peakTimes = r.peak_activity_times || {};
-                const peakLabel = ['morning', 'afternoon', 'evening', 'night']
-                  .filter((t) => (peakTimes[t] || 0) > 0)
-                  .map((t) => `${t} ${fmt(peakTimes[t])}`)
-                  .join(', ') || '—';
                 return (
                   <tr key={i} className="border-b border-border/50 hover:bg-accent/20">
                     <td className="py-1.5 px-2 text-foreground font-mono text-[10px]">{r.global_user_id || '—'}</td>
                     <td className="py-1.5 px-2"><span className="px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-400 text-[10px]">{r.tribe_label || '—'}</span></td>
                     <td className="py-1.5 px-2"><PlatformBadge platform={primaryPlat} /></td>
                     <td className="py-1.5 px-2 text-foreground font-mono">{fmt(isSpreaders ? r.hawkes_alpha : r.genre_interest_score, 4)}</td>
-                    <td className="py-1.5 px-2 text-foreground font-mono">{fmt(r.moi_score, 4)}</td>
-                    <td className="py-1.5 px-2 text-foreground text-[10px]">{peakLabel}</td>
+                    <td className="py-1.5 px-2"><PeakActivityIndicators times={r.peak_activity_times} /></td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
-          {rows.length > 30 && <p className="text-xs text-muted-foreground mt-1">Showing 30 of {rows.length}</p>}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-2">
+              <span className="text-xs text-muted-foreground">
+                Showing {safePage * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE + PAGE_SIZE, rows.length)} of {rows.length}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  className="text-xs px-2 py-0.5 rounded border border-border text-foreground disabled:opacity-40 disabled:cursor-not-allowed hover:bg-accent/20"
+                  onClick={() => setPage(safePage - 1)}
+                  disabled={safePage === 0}
+                >
+                  Prev
+                </button>
+                <span className="text-xs text-muted-foreground">Page {safePage + 1} of {totalPages}</span>
+                <button
+                  className="text-xs px-2 py-0.5 rounded border border-border text-foreground disabled:opacity-40 disabled:cursor-not-allowed hover:bg-accent/20"
+                  onClick={() => setPage(safePage + 1)}
+                  disabled={safePage >= totalPages - 1}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
