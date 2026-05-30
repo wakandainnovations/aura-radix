@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Search, ThumbsUp, ThumbsDown, Info, TrendingUp, TrendingDown,
-  MessageSquare, BarChart3,
+  MessageSquare, BarChart3, Layers,
 } from 'lucide-react';
 import { auraMathService } from '../../api/auraMathService';
 import { marketingAggregationService } from '../../api/marketingAggregationService';
 import {
-  PlatformBadge, CollapsibleKV,
+  PlatformBadge, KeyValueCards,
   Section, KeywordSearch,
 } from './audienceIntelShared';
 
@@ -97,6 +97,175 @@ function AspectDriverRow({ driver, rank, maxImpact }) {
   );
 }
 
+// Keys (case-insensitive) we recognise inside a per-platform entry so we can
+// render them as purpose-built widgets instead of a raw key/value dump.
+const PLATFORM_COUNT_KEYS = ['posts', 'postcount', 'totalposts', 'total', 'count', 'mentions', 'postsmentioning', 'totalpostsanalyzed'];
+const PLATFORM_SENTIMENT_KEYS = ['avgsentiment', 'averagesentiment', 'sentiment', 'sentimentscore', 'avgsentimentscore'];
+const SENTIMENT_DIST_KEYS = ['positive', 'negative', 'neutral'];
+
+function prettyLabel(key) {
+  return key
+    .replace(/[_-]+/g, ' ')
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function formatNum(v) {
+  if (typeof v !== 'number') return String(v);
+  return Number.isInteger(v) ? v.toLocaleString() : v.toFixed(1);
+}
+
+// Pull a {positive, neutral, negative} distribution out of a platform entry if
+// those numeric keys are present (case-insensitive).
+function extractSentimentDist(obj) {
+  const out = {};
+  let found = false;
+  for (const [k, v] of Object.entries(obj)) {
+    const lk = k.toLowerCase();
+    if (SENTIMENT_DIST_KEYS.includes(lk) && typeof v === 'number') { out[lk] = v; found = true; }
+  }
+  return found ? { positive: out.positive || 0, neutral: out.neutral || 0, negative: out.negative || 0 } : null;
+}
+
+function SentimentDistBar({ dist }) {
+  const total = dist.positive + dist.neutral + dist.negative;
+  if (total <= 0) return null;
+  const seg = (v, cls) => (v > 0 ? <div className={cls} style={{ width: `${(v / total) * 100}%` }} /> : null);
+  return (
+    <div>
+      <div className="flex h-2 overflow-hidden rounded-full bg-border">
+        {seg(dist.positive, 'bg-emerald-400')}
+        {seg(dist.neutral, 'bg-slate-400')}
+        {seg(dist.negative, 'bg-red-400')}
+      </div>
+      <div className="mt-1 flex justify-between text-[10px]">
+        <span className="text-emerald-400">{formatNum(dist.positive)} pos</span>
+        <span className="text-slate-400">{formatNum(dist.neutral)} neu</span>
+        <span className="text-red-400">{formatNum(dist.negative)} neg</span>
+      </div>
+    </div>
+  );
+}
+
+function AspectChips({ items, strength }) {
+  const cls = strength ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400';
+  return (
+    <div>
+      <p className={`mb-1 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide ${strength ? 'text-emerald-400' : 'text-red-400'}`}>
+        {strength ? <ThumbsUp className="h-3 w-3" /> : <ThumbsDown className="h-3 w-3" />}
+        {strength ? 'Strengths' : 'Weaknesses'}
+      </p>
+      <div className="flex flex-wrap gap-1">
+        {items.slice(0, 6).map((it, i) => {
+          const label = it && typeof it === 'object' ? (it.aspect ?? JSON.stringify(it)) : String(it);
+          return <span key={i} className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${cls}`}>{label}</span>;
+        })}
+        {items.length > 6 && <span className="text-[10px] text-muted-foreground">+{items.length - 6}</span>}
+      </div>
+    </div>
+  );
+}
+
+function PlatformCard({ platform, value }) {
+  if (value == null || typeof value !== 'object' || Array.isArray(value)) {
+    return (
+      <div className="rounded-xl border border-border bg-background p-3">
+        <PlatformBadge platform={platform} />
+        <p className="mt-2 text-sm font-semibold text-foreground">{String(value ?? '—')}</p>
+      </div>
+    );
+  }
+
+  const lower = (k) => k.toLowerCase();
+  const entries = Object.entries(value);
+  const used = new Set();
+
+  const countEntry = entries.find(([k, v]) => typeof v === 'number' && PLATFORM_COUNT_KEYS.includes(lower(k)));
+  if (countEntry) used.add(countEntry[0]);
+
+  const sentEntry = entries.find(([k, v]) => typeof v === 'number' && PLATFORM_SENTIMENT_KEYS.includes(lower(k)));
+  if (sentEntry) used.add(sentEntry[0]);
+
+  const dist = extractSentimentDist(value);
+  if (dist) entries.forEach(([k, v]) => { if (typeof v === 'number' && SENTIMENT_DIST_KEYS.includes(lower(k))) used.add(k); });
+
+  const strengthEntry = entries.find(([k, v]) => Array.isArray(v) && lower(k).includes('strength'));
+  if (strengthEntry) used.add(strengthEntry[0]);
+  const weaknessEntry = entries.find(([k, v]) => Array.isArray(v) && lower(k).includes('weak'));
+  if (weaknessEntry) used.add(weaknessEntry[0]);
+
+  const restScalars = entries.filter(([k, v]) => !used.has(k) && (typeof v === 'number' || typeof v === 'string' || typeof v === 'boolean'));
+  const restOther = entries.filter(([k, v]) => !used.has(k) && v && typeof v === 'object');
+
+  const sentScore = sentEntry ? sentEntry[1] : null;
+  const tone = sentScore != null ? sentimentTone(sentScore) : null;
+
+  return (
+    <div className="space-y-2.5 rounded-xl border border-border bg-background p-3">
+      <div className="flex items-center justify-between">
+        <PlatformBadge platform={platform} />
+        {countEntry && (
+          <span className="text-xs text-muted-foreground">
+            <span className="font-semibold text-foreground">{formatNum(countEntry[1])}</span> {prettyLabel(countEntry[0]).toLowerCase()}
+          </span>
+        )}
+      </div>
+
+      {sentScore != null && (
+        <div>
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+            <span>Avg. sentiment</span>
+            <span className={`font-mono font-semibold ${tone.text}`}>{formatNum(sentScore)}</span>
+          </div>
+          <div className="mt-1 h-2 overflow-hidden rounded-full bg-border">
+            <div className={`h-full rounded-full ${tone.bar}`} style={{ width: `${Math.min(Math.max(sentScore, 0), 100)}%` }} />
+          </div>
+        </div>
+      )}
+
+      {dist && <SentimentDistBar dist={dist} />}
+
+      {strengthEntry && strengthEntry[1].length > 0 && <AspectChips items={strengthEntry[1]} strength />}
+      {weaknessEntry && weaknessEntry[1].length > 0 && <AspectChips items={weaknessEntry[1]} strength={false} />}
+
+      {restScalars.length > 0 && (
+        <div className="flex flex-wrap gap-x-3 gap-y-1">
+          {restScalars.map(([k, v]) => (
+            <span key={k} className="text-[11px] text-muted-foreground">
+              {prettyLabel(k)}: <span className="font-medium text-foreground">{formatNum(v)}</span>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {restOther.map(([k, v]) => (
+        <div key={k}>
+          <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{prettyLabel(k)}</p>
+          <KeyValueCards data={v} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PlatformBreakdown({ data }) {
+  const entries = Object.entries(data || {});
+  if (entries.length === 0) return null;
+  return (
+    <div>
+      <h4 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-foreground">
+        <Layers className="h-4 w-4 text-blue-400" />
+        Per-Platform Breakdown
+      </h4>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {entries.map(([platform, value]) => (
+          <PlatformCard key={platform} platform={platform} value={value} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function AspectDriversDisplay({ data }) {
   if (!data) return null;
 
@@ -160,7 +329,7 @@ function AspectDriversDisplay({ data }) {
       )}
 
       {data.byPlatform && Object.keys(data.byPlatform).length > 0 && (
-        <CollapsibleKV title="Per-Platform Breakdown" data={data.byPlatform} />
+        <PlatformBreakdown data={data.byPlatform} />
       )}
     </div>
   );
