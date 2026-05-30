@@ -1,9 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   User, Users, Filter, Loader2, Tag, Copy, Check,
   Clock, BarChart3, Zap, Target, AlertTriangle, Lightbulb,
   Calendar, MessageSquare, TrendingUp, Megaphone, Shield,
-  Activity, ChevronDown, ChevronUp, Search, FileText, Info,
+  Activity, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Search, FileText, Info,
 } from 'lucide-react';
 import { auraMathService } from '../../api/auraMathService';
 import {
@@ -741,10 +741,19 @@ function UserProfileDisplay({ data, onViewReport }) {
   );
 }
 
+const USERS_PER_PAGE = 10;
+
 function UsersDisplay({ data }) {
+  const [page, setPage] = useState(1);
+  const usersList = data ? (data.users || (Array.isArray(data) ? data : [])) : [];
+  // Reset to the first page whenever a new result set comes in.
+  useEffect(() => { setPage(1); }, [usersList]);
   if (!data) return null;
-  const usersList = data.users || (Array.isArray(data) ? data : []);
   const totalUsers = data.totalUsers ?? usersList.length;
+  const pageCount = Math.ceil(usersList.length / USERS_PER_PAGE);
+  const currentPage = Math.min(page, pageCount || 1);
+  const startIndex = (currentPage - 1) * USERS_PER_PAGE;
+  const pageUsers = usersList.slice(startIndex, startIndex + USERS_PER_PAGE);
   return (
     <div className="mt-3 space-y-3">
       <div className="flex items-center gap-4">
@@ -766,7 +775,6 @@ function UsersDisplay({ data }) {
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left py-2 px-3 text-muted-foreground font-medium">Global User ID</th>
                 <th className="text-left py-2 px-3 text-muted-foreground font-medium">Author</th>
                 <th className="text-left py-2 px-3 text-muted-foreground font-medium">Classification</th>
                 <th className="text-left py-2 px-3 text-muted-foreground font-medium">Tier</th>
@@ -778,12 +786,11 @@ function UsersDisplay({ data }) {
               </tr>
             </thead>
             <tbody>
-              {usersList.slice(0, 50).map((u, i) => {
+              {pageUsers.map((u, i) => {
                 const tone = TONE_CONFIG[u.dominant_tone] || TONE_CONFIG.neutral;
                 const ToneIcon = tone.icon;
                 return (
-                  <tr key={i} className="border-b border-border/50 hover:bg-accent/20">
-                    <td className="py-2 px-3"><CopyableId id={u.global_user_id} /></td>
+                  <tr key={startIndex + i} className="border-b border-border/50 hover:bg-accent/20">
                     <td className="py-2 px-3 text-foreground font-medium">{u.author || '—'}</td>
                     <td className="py-2 px-3"><ColoredBadge value={u.audience_classification} colorMap={CLASSIFICATION_COLORS} /></td>
                     <td className="py-2 px-3"><ColoredBadge value={u.influence_tier} colorMap={TIER_COLORS} /></td>
@@ -802,7 +809,32 @@ function UsersDisplay({ data }) {
               })}
             </tbody>
           </table>
-          {usersList.length > 50 && <p className="text-xs text-muted-foreground mt-1">Showing 50 of {usersList.length}</p>}
+          {pageCount > 1 && (
+            <div className="flex items-center justify-between mt-2">
+              <p className="text-xs text-muted-foreground">
+                Showing {startIndex + 1}–{Math.min(startIndex + USERS_PER_PAGE, usersList.length)} of {usersList.length}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage(currentPage - 1)}
+                  disabled={currentPage <= 1}
+                  className="p-1 rounded-md border border-border text-muted-foreground hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed"
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+                <span className="text-xs text-muted-foreground tabular-nums">Page {currentPage} of {pageCount}</span>
+                <button
+                  onClick={() => setPage(currentPage + 1)}
+                  disabled={currentPage >= pageCount}
+                  className="p-1 rounded-md border border-border text-muted-foreground hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed"
+                  aria-label="Next page"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -980,6 +1012,25 @@ export default function UserIntelligenceView() {
               Search
             </button>
           </div>
+          {(() => {
+            const hints = [
+              ['Classification', userFilters.audienceClassification, CLASSIFICATION_DESCRIPTIONS],
+              ['Influence Tier', userFilters.influenceTier, TIER_DESCRIPTIONS],
+              ['Posting Style', userFilters.postingStyle, POSTING_STYLE_DESCRIPTIONS],
+            ].filter(([, value, map]) => value && map[value]);
+            if (!hints.length) return null;
+            return (
+              <div className="mt-2 space-y-1">
+                {hints.map(([label, value, map]) => (
+                  <p key={label} className="text-[11px] text-muted-foreground leading-relaxed">
+                    <span className="text-foreground font-medium">{value}</span>
+                    <span className="text-muted-foreground/60"> · {label}</span>
+                    {' — '}{map[value]}
+                  </p>
+                ))}
+              </div>
+            );
+          })()}
           <UsersDisplay data={users} />
 
           <div className="flex gap-2 mt-4">
