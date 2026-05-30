@@ -1,10 +1,50 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Megaphone, Film, Landmark, Star, Loader2, Search,
+  Megaphone, Film, Landmark, Star, Loader2,
   ChevronDown, ChevronUp, Map, ExternalLink, BarChart3,
-  Sun, Sunrise, Sunset, Moon
+  Sun, Sunrise, Sunset, Moon, Info
 } from 'lucide-react';
+import * as Tooltip from '@radix-ui/react-tooltip';
 import { marketingService } from '../../api/marketingService';
+
+// Small info-icon tooltip used to explain table columns.
+function InfoTooltip({ text }) {
+  return (
+    <Tooltip.Provider delayDuration={150}>
+      <Tooltip.Root>
+        <Tooltip.Trigger asChild>
+          <button
+            type="button"
+            className="inline-flex items-center justify-center align-middle text-muted-foreground hover:text-foreground transition-colors"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Info className="w-3 h-3" />
+          </button>
+        </Tooltip.Trigger>
+        <Tooltip.Portal>
+          <Tooltip.Content
+            side="top"
+            sideOffset={5}
+            className="z-50 max-w-xs rounded-lg bg-popover border border-border px-3 py-2 text-xs text-popover-foreground shadow-lg"
+          >
+            {text}
+            <Tooltip.Arrow className="fill-border" />
+          </Tooltip.Content>
+        </Tooltip.Portal>
+      </Tooltip.Root>
+    </Tooltip.Provider>
+  );
+}
+
+// Header cell label paired with an info tooltip.
+function ColumnHeader({ label, tip, align = 'left' }) {
+  return (
+    <span className={`inline-flex items-center gap-1 ${align === 'right' ? 'justify-end' : ''}`}>
+      {label}
+      <InfoTooltip text={tip} />
+    </span>
+  );
+}
 
 const PLATFORM_COLORS = {
   x: 'bg-sky-400/20 text-sky-400 border-sky-400/30',
@@ -105,13 +145,29 @@ function UserTable({ users, showConversion }) {
         <table className="w-full text-xs">
           <thead>
             <tr className="text-left text-muted-foreground border-b border-border">
-              <th className="pb-2 pr-3 font-medium">User</th>
-              <th className="pb-2 pr-3 font-medium">Tribe</th>
-              <th className="pb-2 pr-3 font-medium">Platform</th>
-              <th className="pb-2 pr-3 font-medium text-right">Score</th>
-              <th className="pb-2 pr-3 font-medium text-right">Influence</th>
-              {showConversion && <th className="pb-2 pr-3 font-medium">Conversion</th>}
-              <th className="pb-2 font-medium">Activity</th>
+              <th className="pb-2 pr-3 font-medium">
+                <ColumnHeader label="User" tip="Global user ID — click to open their profile where available" />
+              </th>
+              <th className="pb-2 pr-3 font-medium">
+                <ColumnHeader label="Tribe" tip="Audience tribe / segment this user belongs to" />
+              </th>
+              <th className="pb-2 pr-3 font-medium">
+                <ColumnHeader label="Platform" tip="The user's primary social platform" />
+              </th>
+              <th className="pb-2 pr-3 font-medium text-right">
+                <ColumnHeader label="Score" align="right" tip="Affinity / interest score — higher means stronger alignment with this audience" />
+              </th>
+              <th className="pb-2 pr-3 font-medium text-right">
+                <ColumnHeader label="Influence" align="right" tip="Influence rank — the user's reach and impact within their network" />
+              </th>
+              {showConversion && (
+                <th className="pb-2 pr-3 font-medium">
+                  <ColumnHeader label="Conversion" tip="Predicted probability this user converts (becomes a viewer / voter / fan)" />
+                </th>
+              )}
+              <th className="pb-2 font-medium">
+                <ColumnHeader label="Activity" tip="Peak activity times of day (morning, afternoon, evening, night)" />
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -270,10 +326,10 @@ function StrategyRenderer({ data }) {
       </div>
       <div className="space-y-2">
         <div className="flex items-center gap-3 text-[10px] text-muted-foreground uppercase tracking-wide px-1 mb-1">
-          <span className="w-20 shrink-0">Platform</span>
-          <span className="flex-1">Relative Strength</span>
-          <span className="w-16 text-right shrink-0">Reach</span>
-          <span className="w-12 text-right shrink-0">Posts</span>
+          <span className="w-20 shrink-0"><ColumnHeader label="Platform" tip="Social platform / channel" /></span>
+          <span className="flex-1"><ColumnHeader label="Relative Strength" tip="Channel's relative effectiveness compared with the other channels" /></span>
+          <span className="w-16 text-right shrink-0"><ColumnHeader label="Reach" align="right" tip="Estimated total audience reach on this channel" /></span>
+          <span className="w-12 text-right shrink-0"><ColumnHeader label="Posts" align="right" tip="Number of posts analyzed for this channel" /></span>
         </div>
         {channels.map((ch) => (
           <ChannelBar key={ch.platform} channel={ch} />
@@ -325,6 +381,13 @@ function CatalogTable({ catalog }) {
 
 function EntityCard({ name, onViewers, onSpreaders, onStrategy, loading, viewersData, spreadersData, strategyData, viewersLabel, spreadersLabel }) {
   const [open, setOpen] = useState(false);
+  // Only one of viewers / spreaders / strategy is shown at a time.
+  const [activeTab, setActiveTab] = useState(null);
+
+  const selectTab = (tab, fetchFn) => {
+    setActiveTab(tab);
+    fetchFn();
+  };
 
   return (
     <div className="bg-card border border-border rounded-lg overflow-hidden">
@@ -339,33 +402,33 @@ function EntityCard({ name, onViewers, onSpreaders, onStrategy, loading, viewers
         <div className="p-3 pt-0 border-t border-border space-y-3">
           <div className="flex flex-wrap gap-2 mt-2">
             <button
-              onClick={onViewers}
+              onClick={() => selectTab('viewers', onViewers)}
               disabled={loading?.viewers}
-              className="px-3 py-1.5 text-xs rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 disabled:opacity-50 flex items-center gap-1"
+              className={`px-3 py-1.5 text-xs rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 disabled:opacity-50 flex items-center gap-1 ${activeTab === 'viewers' ? 'ring-1 ring-emerald-400' : ''}`}
             >
               {loading?.viewers ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
               {viewersLabel || 'Potential Viewers'}
             </button>
             <button
-              onClick={onSpreaders}
+              onClick={() => selectTab('spreaders', onSpreaders)}
               disabled={loading?.spreaders}
-              className="px-3 py-1.5 text-xs rounded-lg bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 disabled:opacity-50 flex items-center gap-1"
+              className={`px-3 py-1.5 text-xs rounded-lg bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 disabled:opacity-50 flex items-center gap-1 ${activeTab === 'spreaders' ? 'ring-1 ring-purple-400' : ''}`}
             >
               {loading?.spreaders ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
               {spreadersLabel || 'Super Spreaders'}
             </button>
             <button
-              onClick={onStrategy}
+              onClick={() => selectTab('strategy', onStrategy)}
               disabled={loading?.strategy}
-              className="px-3 py-1.5 text-xs rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 disabled:opacity-50 flex items-center gap-1"
+              className={`px-3 py-1.5 text-xs rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 disabled:opacity-50 flex items-center gap-1 ${activeTab === 'strategy' ? 'ring-1 ring-blue-400' : ''}`}
             >
               {loading?.strategy ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
               Channel Strategy
             </button>
           </div>
-          {viewersData && <ViewersRenderer data={viewersData} />}
-          {spreadersData && <SpreadersRenderer data={spreadersData} />}
-          {strategyData && <StrategyRenderer data={strategyData} />}
+          {activeTab === 'viewers' && viewersData && <ViewersRenderer data={viewersData} />}
+          {activeTab === 'spreaders' && spreadersData && <SpreadersRenderer data={spreadersData} />}
+          {activeTab === 'strategy' && strategyData && <StrategyRenderer data={strategyData} />}
         </div>
       )}
     </div>
@@ -379,7 +442,7 @@ function MarketingSection({ icon: Icon, title, color, listFn, viewersFn, spreade
   const [itemData, setItemData] = useState({});
   const [itemLoading, setItemLoading] = useState({});
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     setListLoading(true);
     try {
       const result = await listFn();
@@ -387,10 +450,17 @@ function MarketingSection({ icon: Icon, title, color, listFn, viewersFn, spreade
       setLoaded(true);
     } catch {
       setItems([]);
+      setLoaded(true);
     } finally {
       setListLoading(false);
     }
-  };
+  }, [listFn]);
+
+  // Auto-load the list when the section mounts (driven by the primary entity)
+  // so the user never has to click a "Load" button.
+  useEffect(() => {
+    loadItems();
+  }, [loadItems]);
 
   const fetchData = useCallback(async (name, type, fn) => {
     setItemLoading((prev) => ({ ...prev, [name]: { ...prev[name], [type]: true } }));
@@ -409,16 +479,7 @@ function MarketingSection({ icon: Icon, title, color, listFn, viewersFn, spreade
           <Icon className={`w-5 h-5 ${color}`} />
           <h3 className="text-lg font-semibold text-foreground">{title}</h3>
         </div>
-        {!loaded && (
-          <button
-            onClick={loadItems}
-            disabled={listLoading}
-            className="px-3 py-1.5 text-xs rounded-lg bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 flex items-center gap-1"
-          >
-            {listLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Search className="w-3 h-3" />}
-            Load
-          </button>
-        )}
+        {listLoading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
       </div>
 
       {loaded && items.length === 0 && (
@@ -449,9 +510,46 @@ function MarketingSection({ icon: Icon, title, color, listFn, viewersFn, spreade
   );
 }
 
-export default function MarketingIntelView() {
+// Maps the primary entity's type to the single marketing section that applies.
+const SECTION_BY_ENTITY_TYPE = {
+  movie: {
+    icon: Film,
+    title: 'Genre Marketing',
+    color: 'text-amber-400',
+    listFn: marketingService.listGenres,
+    viewersFn: marketingService.getGenrePotentialViewers,
+    spreadersFn: marketingService.getGenreSuperSpreaders,
+    strategyFn: marketingService.getGenreChannelStrategy,
+  },
+  political_party: {
+    icon: Landmark,
+    title: 'Political Party Marketing',
+    color: 'text-blue-400',
+    listFn: marketingService.listParties,
+    viewersFn: marketingService.getPartyPotentialVoters,
+    spreadersFn: marketingService.getPartySuperSpreaders,
+    strategyFn: marketingService.getPartyChannelStrategy,
+    viewersLabel: 'Potential Voters',
+  },
+  celebrity: {
+    icon: Star,
+    title: 'Celebrity Marketing',
+    color: 'text-purple-400',
+    listFn: marketingService.listCelebrities,
+    viewersFn: marketingService.getCelebrityPotentialFans,
+    spreadersFn: marketingService.getCelebritySuperFans,
+    strategyFn: marketingService.getCelebrityChannelStrategy,
+    viewersLabel: 'Potential Fans',
+    spreadersLabel: 'Super Fans',
+  },
+};
+
+export default function MarketingIntelView({ primaryEntity }) {
   const [catalog, setCatalog] = useState(null);
   const [catalogLoading, setCatalogLoading] = useState(false);
+
+  const entityType = primaryEntity?.entityType;
+  const section = entityType ? SECTION_BY_ENTITY_TYPE[entityType] : null;
 
   return (
     <div className="h-full overflow-y-auto bg-background">
@@ -464,40 +562,37 @@ export default function MarketingIntelView() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6">
-          <MarketingSection
-            icon={Film}
-            title="Genre Marketing"
-            color="text-amber-400"
-            listFn={marketingService.listGenres}
-            viewersFn={marketingService.getGenrePotentialViewers}
-            spreadersFn={marketingService.getGenreSuperSpreaders}
-            strategyFn={marketingService.getGenreChannelStrategy}
-          />
-
-          <MarketingSection
-            icon={Landmark}
-            title="Political Party Marketing"
-            color="text-blue-400"
-            listFn={marketingService.listParties}
-            viewersFn={marketingService.getPartyPotentialVoters}
-            spreadersFn={marketingService.getPartySuperSpreaders}
-            strategyFn={marketingService.getPartyChannelStrategy}
-            viewersLabel="Potential Voters"
-          />
-
-          <MarketingSection
-            icon={Star}
-            title="Celebrity Marketing"
-            color="text-purple-400"
-            listFn={marketingService.listCelebrities}
-            viewersFn={marketingService.getCelebrityPotentialFans}
-            spreadersFn={marketingService.getCelebritySuperFans}
-            strategyFn={marketingService.getCelebrityChannelStrategy}
-            viewersLabel="Potential Fans"
-            spreadersLabel="Super Fans"
-          />
-        </div>
+        {!primaryEntity ? (
+          <div className="bg-card border border-border rounded-xl p-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              Select a primary entity to view its marketing intelligence.
+            </p>
+          </div>
+        ) : !section ? (
+          <div className="bg-card border border-border rounded-xl p-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              Marketing intelligence isn't available for{' '}
+              <span className="font-medium text-foreground">{primaryEntity.name}</span>.
+              Choose a Movie, Political Party, or Celebrity entity.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6">
+            <MarketingSection
+              // Re-mount the section when the entity type changes so it re-loads cleanly.
+              key={entityType}
+              icon={section.icon}
+              title={section.title}
+              color={section.color}
+              listFn={section.listFn}
+              viewersFn={section.viewersFn}
+              spreadersFn={section.spreadersFn}
+              strategyFn={section.strategyFn}
+              viewersLabel={section.viewersLabel}
+              spreadersLabel={section.spreadersLabel}
+            />
+          </div>
+        )}
 
         <div className="bg-card border border-border rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">

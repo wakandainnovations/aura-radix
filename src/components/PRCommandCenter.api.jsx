@@ -537,7 +537,7 @@ export default function PRCommandCenter() {
         {isAuthenticated && activeView === 'content-analysis' && <ContentAnalysisView selectedEntity={primaryEntity} />}
         {isAuthenticated && activeView === 'genre-intelligence' && <GenreIntelligenceView />}
         {isAuthenticated && activeView === 'marketing-intel' && (
-          <MarketingIntelView />
+          <MarketingIntelView primaryEntity={primaryEntity} />
         )}
         {isAuthenticated && activeView === 'marketing-aggregation' && (
           <MarketingAggregationView />

@@ -223,7 +223,7 @@ export default function PRCommandCenter() {
 
       {/* Marketing Intelligence View */}
       {activeView === 'marketing-intel' && (
-        <MarketingIntelView />
+        <MarketingIntelView primaryEntity={selectedEntity} />
       )}
 
       {/* Marketing Aggregation View */}
