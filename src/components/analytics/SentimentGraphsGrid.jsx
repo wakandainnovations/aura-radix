@@ -1,5 +1,8 @@
 import React from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Flag, AlertCircle } from 'lucide-react';
 import SentimentTrendGraph from './SentimentTrendGraph';
+import { checkpointService } from '../../api';
 
 export default function SentimentGraphsGrid({
   sentimentGraphs = { positive: [], total: [], negative: [] },
@@ -7,8 +10,62 @@ export default function SentimentGraphsGrid({
   clusterEntities = [],
   onRefresh = () => {},
   sentimentTrendRaw = null,
+  entityId = null,
 }) {
   const [checkpointLabelMode, setCheckpointLabelMode] = React.useState('hover');
+  const queryClient = useQueryClient();
+
+  // Quick-create checkpoint by double-clicking a point on a graph.
+  // Only available for a single entity (in cluster mode it's ambiguous which
+  // entity a checkpoint would belong to).
+  const checkpointCreationEnabled = !clusterMode && !!entityId;
+  const [checkpointDraft, setCheckpointDraft] = React.useState(null); // { date, description }
+  const [checkpointError, setCheckpointError] = React.useState('');
+
+  const createCheckpointMutation = useMutation({
+    mutationFn: (data) => checkpointService.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['checkpoints', entityId] });
+      queryClient.invalidateQueries({ queryKey: ['sentiment-trend'] });
+      queryClient.invalidateQueries({ queryKey: ['checkpoint-impact', entityId] });
+      queryClient.invalidateQueries({ queryKey: ['checkpoint-trend', entityId] });
+      setCheckpointDraft(null);
+      setCheckpointError('');
+    },
+    onError: (err) => {
+      setCheckpointError(err?.message || 'Failed to create checkpoint');
+    },
+  });
+
+  const handlePointDoubleClick = (date) => {
+    if (!checkpointCreationEnabled || date == null) return;
+    setCheckpointError('');
+    setCheckpointDraft({ date, description: '' });
+  };
+
+  const handleCreateCheckpoint = (e) => {
+    e.preventDefault();
+    setCheckpointError('');
+    const description = checkpointDraft?.description.trim() || '';
+    if (!description) {
+      setCheckpointError('Description is required');
+      return;
+    }
+    if (description.length > 20) {
+      setCheckpointError('Description must be 20 characters or less');
+      return;
+    }
+    createCheckpointMutation.mutate({
+      entityId,
+      checkpointDate: checkpointDraft.date,
+      description,
+    });
+  };
+
+  const closeCheckpointDraft = () => {
+    setCheckpointDraft(null);
+    setCheckpointError('');
+  };
 
   const checkpoints = React.useMemo(() => {
     if (!sentimentTrendRaw?.entities) return [];
@@ -87,6 +144,7 @@ export default function SentimentGraphsGrid({
           uniqueDates={uniqueDates}
           checkpoints={checkpoints}
           checkpointLabelMode={checkpointLabelMode}
+          onPointDoubleClick={checkpointCreationEnabled ? handlePointDoubleClick : null}
         />
 
         {/* Positive Graph */}
@@ -99,6 +157,7 @@ export default function SentimentGraphsGrid({
           uniqueDates={uniqueDates}
           checkpoints={checkpoints}
           checkpointLabelMode={checkpointLabelMode}
+          onPointDoubleClick={checkpointCreationEnabled ? handlePointDoubleClick : null}
         />
 
         {/* Negative Graph */}
@@ -111,8 +170,79 @@ export default function SentimentGraphsGrid({
           uniqueDates={uniqueDates}
           checkpoints={checkpoints}
           checkpointLabelMode={checkpointLabelMode}
+          onPointDoubleClick={checkpointCreationEnabled ? handlePointDoubleClick : null}
         />
       </div>
+
+      {/* Quick checkpoint-creation modal (triggered by double-clicking a graph point) */}
+      {checkpointDraft && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          onClick={closeCheckpointDraft}
+        >
+          <form
+            onSubmit={handleCreateCheckpoint}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm bg-card border border-border rounded-lg p-5 space-y-4 shadow-xl"
+          >
+            <div className="flex items-center gap-2">
+              <Flag className="w-4 h-4 text-amber-500" />
+              <h3 className="text-sm font-semibold text-foreground">New Checkpoint</h3>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Date</label>
+              <div className="px-3 py-2 bg-background border border-border rounded-md text-sm text-foreground">
+                {checkpointDraft.date}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">
+                Description (max 20 chars)
+              </label>
+              <input
+                type="text"
+                autoFocus
+                value={checkpointDraft.description}
+                onChange={(e) =>
+                  setCheckpointDraft((d) => ({ ...d, description: e.target.value }))
+                }
+                maxLength={20}
+                placeholder="e.g. Trailer Launch"
+                className="w-full px-3 py-2 bg-background border border-border rounded-md text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-amber-500"
+              />
+              <span className="text-xs text-muted-foreground mt-0.5 block">
+                {checkpointDraft.description.length}/20
+              </span>
+            </div>
+
+            {checkpointError && (
+              <div className="flex items-center gap-1.5 text-xs text-red-400">
+                <AlertCircle className="w-3.5 h-3.5" />
+                {checkpointError}
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeCheckpointDraft}
+                className="px-3 py-2 rounded-md text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={createCheckpointMutation.isPending}
+                className="px-4 py-2 rounded-md text-sm font-medium bg-amber-500 text-black hover:bg-amber-400 transition-colors disabled:opacity-50"
+              >
+                {createCheckpointMutation.isPending ? 'Creating...' : 'Create'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* Summary Stats */}
       <div className="bg-background/50 border border-border rounded-lg p-4 grid grid-cols-3 gap-4">

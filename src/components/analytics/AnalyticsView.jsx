@@ -221,6 +221,7 @@ export default function AnalyticsView({
           clusterEntities={clusterEntities}
           onRefresh={() => console.log('Refresh sentiment data')}
           sentimentTrendRaw={sentimentTrendRaw}
+          entityId={selectedEntity?.id}
         />
       </div>
 

@@ -333,6 +333,7 @@ export default function DashboardView({
           clusterEntities={clusterEntities}
           onRefresh={onRefresh}
           sentimentTrendRaw={sentimentTrendRaw}
+          entityId={selectedEntity?.id}
         />
 
         {/* 

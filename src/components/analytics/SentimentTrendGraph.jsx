@@ -97,6 +97,7 @@ export default function SentimentTrendGraph({
   title = 'Sentiment Trend',
   checkpoints = [],
   checkpointLabelMode = 'hover',
+  onPointDoubleClick = null,
 }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -195,6 +196,9 @@ export default function SentimentTrendGraph({
           </h3>
           <p className="text-xs text-muted-foreground mt-1">
             {clusterMode ? `${clusterEntities.length} entities` : 'Single entity'} over time
+            {onPointDoubleClick && (
+              <span className="text-muted-foreground/70"> · double-click a point to add a checkpoint</span>
+            )}
           </p>
         </div>
         {/* <button
@@ -214,6 +218,16 @@ export default function SentimentTrendGraph({
             data={chartData}
             margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
             syncId="sentiment-chart"
+            onDoubleClick={
+              onPointDoubleClick
+                ? (state) => {
+                    if (state && state.activeLabel != null) {
+                      onPointDoubleClick(state.activeLabel);
+                    }
+                  }
+                : undefined
+            }
+            style={onPointDoubleClick ? { cursor: "pointer" } : undefined}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#333" />
             <XAxis
