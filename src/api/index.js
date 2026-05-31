@@ -11,3 +11,4 @@ export { replyTemplateService } from './replyTemplateService';
 export { alertRuleService } from './alertRuleService';
 export { playbookService } from './playbookService';
 export { workspaceService } from './workspaceService';
+export { reportAbuseService, ABUSE_CATEGORIES, ABUSE_STATUSES } from './reportAbuseService';

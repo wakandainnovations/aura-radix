@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Gift, TrendingUp, TrendingDown, AlertTriangle, Users, Loader2 } from 'lucide-react';
+import { Gift, TrendingUp, TrendingDown, AlertTriangle, Users, ShieldCheck, Loader2 } from 'lucide-react';
 import { dashboardService } from '../../api/dashboardService';
 
+// Keys match WhatsNewCard.kind from the backend.
 const ICON_MAP = {
-  sentiment_spike: TrendingUp,
-  negative_surge: TrendingDown,
-  super_spreader: Users,
-  alert: AlertTriangle,
+  ABUSE_REPORT_UPHELD: ShieldCheck,
+  COMPETITOR_DROP: TrendingDown,
+  NEW_POSITIVE_SUPER_SPREADER: Users,
+  SENTIMENT_RISE: TrendingUp,
+  NEGATIVE_SPIKE: AlertTriangle,
 };
 
 const COLOR_MAP = {
-  sentiment_spike: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',
-  negative_surge: 'text-red-400 bg-red-400/10 border-red-400/20',
-  super_spreader: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
-  alert: 'text-amber-400 bg-amber-400/10 border-amber-400/20',
+  ABUSE_REPORT_UPHELD: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',
+  COMPETITOR_DROP: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
+  NEW_POSITIVE_SUPER_SPREADER: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
+  SENTIMENT_RISE: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',
+  NEGATIVE_SPIKE: 'text-red-400 bg-red-400/10 border-red-400/20',
 };
 
 export default function WhatsNewCards({ entityId }) {

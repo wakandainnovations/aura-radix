@@ -61,6 +61,7 @@ export default function LeftNavbar({ activeTab, onTabChange }) {
         { id: 'reply-templates', label: 'Reply Templates' },
         { id: 'alert-rules', label: 'Alert Rules' },
         { id: 'crisis-playbooks', label: 'Crisis Playbooks' },
+        { id: 'abuse-reports', label: 'Abuse Reports' },
         { id: 'workspace-export', label: 'Backup & Restore' },
       ]
     }

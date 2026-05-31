@@ -24,6 +24,7 @@ import EntityManagementView from './entity-management/EntityManagementView';
 import ReplyTemplatesView from './workspace/ReplyTemplatesView';
 import AlertRulesView from './workspace/AlertRulesView';
 import PlaybooksView from './workspace/PlaybooksView';
+import AbuseReportsView from './workspace/AbuseReportsView';
 import WorkspaceExportView from './workspace/WorkspaceExportView';
 import CommandPalette from './navigation/CommandPalette';
 import LoginModal from './auth/LoginModal';
@@ -59,6 +60,7 @@ const VIEW_REGISTRY = {
   'reply-templates': ReplyTemplatesView,
   'alert-rules': AlertRulesView,
   'crisis-playbooks': PlaybooksView,
+  'abuse-reports': AbuseReportsView,
   'workspace-export': WorkspaceExportView,
 };
 
@@ -529,7 +531,7 @@ export default function PRCommandCenter() {
         )}
 
         {/* Welcome Screen - Show when no entity is selected yet (except standalone views) */}
-        {isAuthenticated && hasLoadedEntities && selectedEntities.length === 0 && !isLoadingEntities && !['entity-management', 'spreader-analysis', 'user-intelligence', 'content-analysis', 'genre-intelligence', 'marketing-intel', 'marketing-aggregation', 'reply-templates', 'alert-rules', 'crisis-playbooks', 'workspace-export'].includes(activeView) && (
+        {isAuthenticated && hasLoadedEntities && selectedEntities.length === 0 && !isLoadingEntities && !['entity-management', 'spreader-analysis', 'user-intelligence', 'content-analysis', 'genre-intelligence', 'marketing-intel', 'marketing-aggregation', 'reply-templates', 'alert-rules', 'crisis-playbooks', 'abuse-reports', 'workspace-export'].includes(activeView) && (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <h2 className="text-5xl font-bold text-foreground mb-4">Welcome to Project Aura</h2>
@@ -557,6 +559,7 @@ export default function PRCommandCenter() {
         {isAuthenticated && activeView === 'crisis-playbooks' && (
           <PlaybooksView entities={combinedEntities} />
         )}
+        {isAuthenticated && activeView === 'abuse-reports' && <AbuseReportsView />}
         {isAuthenticated && activeView === 'workspace-export' && <WorkspaceExportView />}
 
         {/* Loading state for data after entity is selected */}
