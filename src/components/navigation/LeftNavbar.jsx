@@ -1,23 +1,42 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, BarChart3, AlertTriangle, Boxes, ChevronDown, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, BarChart3, AlertTriangle, Boxes, Users, Megaphone, ChevronDown, ChevronRight } from 'lucide-react';
 
 export default function LeftNavbar({ activeTab, onTabChange }) {
-  const [expandedMenu, setExpandedMenu] = useState({ crisis: true, analytics: true });
-  
+  const [expandedMenu, setExpandedMenu] = useState({
+    'ai-insights': true,
+    'audience-content': true,
+    marketing: true,
+    crisis: true,
+  });
+
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'entity-management', label: 'Manage Entities', icon: Boxes },
     {
-      id: 'analytics',
-      label: 'Analytics', 
+      id: 'ai-insights',
+      label: 'AI Insights',
       icon: BarChart3,
       subTabs: [
         { id: 'ai-analytics', label: 'AI Analytics' },
         { id: 'ai-dashboard', label: 'AI Dashboard' },
         { id: 'spreader-analysis', label: 'Spreader Analysis' },
+      ]
+    },
+    {
+      id: 'audience-content',
+      label: 'Audience & Content',
+      icon: Users,
+      subTabs: [
         { id: 'user-intelligence', label: 'User Intel' },
         { id: 'content-analysis', label: 'Content Analysis' },
         { id: 'genre-intelligence', label: 'Genre Intelligence' },
+      ]
+    },
+    {
+      id: 'marketing',
+      label: 'Marketing',
+      icon: Megaphone,
+      subTabs: [
         { id: 'marketing-intel', label: 'Marketing Intel' },
         { id: 'marketing-aggregation', label: 'Aggregated Intel' },
         { id: 'checkpoints', label: 'Checkpoints' },
