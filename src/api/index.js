@@ -7,3 +7,7 @@ export { analyticsService } from './analyticsService';
 export { interactionService } from './interactionService';
 export { marketingAggregationService } from './marketingAggregationService';
 export { checkpointService } from './checkpointService';
+export { replyTemplateService } from './replyTemplateService';
+export { alertRuleService } from './alertRuleService';
+export { playbookService } from './playbookService';
+export { workspaceService } from './workspaceService';

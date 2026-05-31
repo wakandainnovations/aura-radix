@@ -21,6 +21,10 @@ import MarketingIntelView from './ai-dashboard/MarketingIntelView';
 import MarketingAggregationView from './ai-dashboard/MarketingAggregationView';
 import CheckpointsView from './checkpoints/CheckpointsView';
 import EntityManagementView from './entity-management/EntityManagementView';
+import ReplyTemplatesView from './workspace/ReplyTemplatesView';
+import AlertRulesView from './workspace/AlertRulesView';
+import PlaybooksView from './workspace/PlaybooksView';
+import WorkspaceExportView from './workspace/WorkspaceExportView';
 import CommandPalette from './navigation/CommandPalette';
 import LoginModal from './auth/LoginModal';
 // Import API services
@@ -52,6 +56,10 @@ const VIEW_REGISTRY = {
   'marketing-aggregation': MarketingAggregationView,
   'checkpoints': CheckpointsView,
   'entity-management': EntityManagementView,
+  'reply-templates': ReplyTemplatesView,
+  'alert-rules': AlertRulesView,
+  'crisis-playbooks': PlaybooksView,
+  'workspace-export': WorkspaceExportView,
 };
 
 export default function PRCommandCenter() {
@@ -521,7 +529,7 @@ export default function PRCommandCenter() {
         )}
 
         {/* Welcome Screen - Show when no entity is selected yet (except standalone views) */}
-        {isAuthenticated && hasLoadedEntities && selectedEntities.length === 0 && !isLoadingEntities && !['entity-management', 'spreader-analysis', 'user-intelligence', 'content-analysis', 'genre-intelligence', 'marketing-intel', 'marketing-aggregation'].includes(activeView) && (
+        {isAuthenticated && hasLoadedEntities && selectedEntities.length === 0 && !isLoadingEntities && !['entity-management', 'spreader-analysis', 'user-intelligence', 'content-analysis', 'genre-intelligence', 'marketing-intel', 'marketing-aggregation', 'reply-templates', 'alert-rules', 'crisis-playbooks', 'workspace-export'].includes(activeView) && (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <h2 className="text-5xl font-bold text-foreground mb-4">Welcome to Project Aura</h2>
@@ -542,6 +550,14 @@ export default function PRCommandCenter() {
         {isAuthenticated && activeView === 'marketing-aggregation' && (
           <MarketingAggregationView />
         )}
+        {isAuthenticated && activeView === 'reply-templates' && <ReplyTemplatesView />}
+        {isAuthenticated && activeView === 'alert-rules' && (
+          <AlertRulesView entities={combinedEntities} />
+        )}
+        {isAuthenticated && activeView === 'crisis-playbooks' && (
+          <PlaybooksView entities={combinedEntities} />
+        )}
+        {isAuthenticated && activeView === 'workspace-export' && <WorkspaceExportView />}
 
         {/* Loading state for data after entity is selected */}
         {isLoading && selectedEntities.length > 0 && (

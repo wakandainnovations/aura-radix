@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, BarChart3, AlertTriangle, Boxes, Users, Megaphone, ChevronDown, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, BarChart3, AlertTriangle, Boxes, Users, Megaphone, Briefcase, ChevronDown, ChevronRight } from 'lucide-react';
 
 export default function LeftNavbar({ activeTab, onTabChange }) {
   const [expandedMenu, setExpandedMenu] = useState({
@@ -7,6 +7,7 @@ export default function LeftNavbar({ activeTab, onTabChange }) {
     'audience-content': true,
     marketing: true,
     crisis: true,
+    workspace: true,
   });
 
   const tabs = [
@@ -50,6 +51,17 @@ export default function LeftNavbar({ activeTab, onTabChange }) {
         { id: 'crisis-management', label: 'Crisis Response' },
         { id: 'crisis-center', label: 'Crisis Feed' },
         { id: 'negative-analysis', label: 'Sentiment Analysis' }
+      ]
+    },
+    {
+      id: 'workspace',
+      label: 'Workspace',
+      icon: Briefcase,
+      subTabs: [
+        { id: 'reply-templates', label: 'Reply Templates' },
+        { id: 'alert-rules', label: 'Alert Rules' },
+        { id: 'crisis-playbooks', label: 'Crisis Playbooks' },
+        { id: 'workspace-export', label: 'Backup & Restore' },
       ]
     }
   ];
