@@ -19,7 +19,6 @@ export default function LeftNavbar({ activeTab, onTabChange }) {
       icon: BarChart3,
       subTabs: [
         { id: 'ai-analytics', label: 'AI Analytics' },
-        { id: 'spreader-analysis', label: 'Spreader Analysis' },
       ]
     },
     {
@@ -28,6 +27,7 @@ export default function LeftNavbar({ activeTab, onTabChange }) {
       icon: Users,
       subTabs: [
         { id: 'user-intelligence', label: 'User Intel' },
+        { id: 'spreader-analysis', label: 'Spreader Analysis' },
         { id: 'content-analysis', label: 'Content Analysis' },
         { id: 'genre-intelligence', label: 'Genre Intelligence' },
       ]
