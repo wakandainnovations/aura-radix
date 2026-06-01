@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowUpRight, ArrowDownRight, Minus, Activity, Loader2 } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Minus, Activity, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
 import { dashboardService } from '../../api/dashboardService';
 
 function DeltaChip({ label, value, suffix = '', invertColor = false }) {
@@ -30,6 +30,17 @@ function DeltaChip({ label, value, suffix = '', invertColor = false }) {
 export default function WhatsChangedSummary({ entityId }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [collapsed, setCollapsed] = useState(
+    () => localStorage.getItem('whatsChanged.collapsed') === 'true'
+  );
+
+  const toggleCollapsed = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem('whatsChanged.collapsed', String(next));
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (!entityId) return;
@@ -49,13 +60,8 @@ export default function WhatsChangedSummary({ entityId }) {
     return () => controller.abort();
   }, [entityId]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+  // Stay hidden while loading rather than flashing a spinner box.
+  if (loading) return null;
 
   const hasFields = data
     && (data.sentiment_score_delta != null
@@ -63,20 +69,46 @@ export default function WhatsChangedSummary({ entityId }) {
       || data.new_negative_count != null
       || data.new_super_spreader_count != null);
 
-  if (!data || !hasFields) {
+  // First visit / no data to compare against — nothing meaningful to show, so hide.
+  if (!data || !hasFields) return null;
+
+  // Distinguish "no actual change" from "real change": every delta zero/absent and
+  // no competitor movement means the user is caught up — show a slim confirmation
+  // instead of a grid of zeros (a positive, reassuring signal worth keeping).
+  const hasMeaningfulChange =
+    !!data.sentiment_score_delta
+    || !!data.new_mentions_count
+    || !!data.new_negative_count
+    || !!data.new_super_spreader_count
+    || (data.competitor_delta && Object.values(data.competitor_delta).some((d) => d !== 0));
+
+  if (!hasMeaningfulChange) {
     return (
-      <div className="text-center py-6 text-muted-foreground text-sm">
-        No change data available — this may be your first visit
+      <div className="bg-card border border-border rounded-xl px-5 py-3">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+          <span>You're all caught up — nothing's changed since your last visit.</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2 mb-4">
+    <div className="bg-card border border-border rounded-xl p-5 space-y-3">
+      <button
+        type="button"
+        onClick={toggleCollapsed}
+        aria-expanded={!collapsed}
+        className="flex w-full items-center gap-2 mb-4 text-left"
+      >
         <Activity className="w-5 h-5 text-blue-400" />
         <h3 className="text-lg font-semibold text-foreground">What's Changed</h3>
-      </div>
+        {collapsed
+          ? <ChevronDown className="w-4 h-4 text-muted-foreground ml-auto" />
+          : <ChevronUp className="w-4 h-4 text-muted-foreground ml-auto" />}
+      </button>
+      {!collapsed && (
+      <>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <DeltaChip label="Sentiment Score" value={data.sentiment_score_delta} />
         <DeltaChip label="New Mentions" value={data.new_mentions_count} />
@@ -103,6 +135,8 @@ export default function WhatsChangedSummary({ entityId }) {
             ))}
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   );

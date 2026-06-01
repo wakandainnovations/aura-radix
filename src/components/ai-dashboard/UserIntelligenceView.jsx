@@ -6,6 +6,7 @@ import {
   Activity, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Search, FileText, Info,
 } from 'lucide-react';
 import { auraMathService } from '../../api/auraMathService';
+import HourlyActivityHeatmap from './HourlyActivityHeatmap';
 import {
   TONE_CONFIG, TIER_COLORS, CLASSIFICATION_COLORS,
   AUDIENCE_CLASSIFICATIONS, INFLUENCE_TIERS, POSTING_STYLES,
@@ -873,7 +874,7 @@ function CategoriesDisplay({ data }) {
   );
 }
 
-export default function UserIntelligenceView() {
+export default function UserIntelligenceView({ selectedEntity }) {
   const [userProfile, setUserProfile] = useState(null);
   const [userReport, setUserReport] = useState(null);
   const [users, setUsers] = useState(null);
@@ -906,6 +907,12 @@ export default function UserIntelligenceView() {
             <p className="text-sm text-muted-foreground">Look up user profiles and browse the user directory</p>
           </div>
         </div>
+
+        {selectedEntity?.id && (
+          <div className="bg-card border border-border rounded-xl p-5">
+            <HourlyActivityHeatmap entityId={selectedEntity.id} />
+          </div>
+        )}
 
         <Section icon={Search} title="User Lookup" subtitle="Search for a specific user's profile or detailed influence report" color="text-sky-400">
           <div className="mt-3">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Gift, TrendingUp, TrendingDown, AlertTriangle, Users, ShieldCheck, Loader2 } from 'lucide-react';
+import { Gift, TrendingUp, TrendingDown, AlertTriangle, Users, ShieldCheck, ChevronDown, ChevronUp } from 'lucide-react';
 import { dashboardService } from '../../api/dashboardService';
 
 // Keys match WhatsNewCard.kind from the backend.
@@ -22,6 +22,17 @@ const COLOR_MAP = {
 export default function WhatsNewCards({ entityId }) {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [collapsed, setCollapsed] = useState(
+    () => localStorage.getItem('whatsNew.collapsed') === 'true'
+  );
+
+  const toggleCollapsed = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem('whatsNew.collapsed', String(next));
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (!entityId) return;
@@ -41,51 +52,53 @@ export default function WhatsNewCards({ entityId }) {
     return () => controller.abort();
   }, [entityId]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (!cards || cards.length === 0) {
-    return (
-      <div className="text-center py-6 text-muted-foreground text-sm">
-        No new updates since your last visit
-      </div>
-    );
-  }
+  // Welcome-back digest: stay hidden entirely while loading and when there's
+  // nothing new, so the dashboard isn't left with an empty bordered box.
+  if (loading) return null;
+  if (!cards || cards.length === 0) return null;
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2 mb-4">
-        <Gift className="w-5 h-5 text-amber-400" />
-        <h3 className="text-lg font-semibold text-foreground">What's New</h3>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {cards.map((card, idx) => {
-          const Icon = ICON_MAP[card.kind] || Gift;
-          const colorClass = COLOR_MAP[card.kind] || 'text-slate-400 bg-slate-400/10 border-slate-400/20';
-          return (
-            <div
-              key={idx}
-              className={`rounded-xl border p-4 ${colorClass}`}
-            >
-              <div className="flex items-start gap-3">
-                <Icon className="w-5 h-5 mt-0.5 flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground">{card.headline}</p>
-                  {card.value != null && (
-                    <p className="text-xs mt-1 opacity-80">
-                      {card.value > 0 ? '+' : ''}{typeof card.value === 'number' ? card.value.toFixed(1) : card.value}
-                    </p>
-                  )}
+    <div className="bg-card border border-border rounded-xl p-5">
+      <div className="space-y-3">
+        <button
+          type="button"
+          onClick={toggleCollapsed}
+          aria-expanded={!collapsed}
+          className="flex w-full items-center gap-2 mb-4 text-left"
+        >
+          <Gift className="w-5 h-5 text-amber-400" />
+          <h3 className="text-lg font-semibold text-foreground">What's New</h3>
+          <span className="ml-1 text-xs text-muted-foreground">({cards.length})</span>
+          {collapsed
+            ? <ChevronDown className="w-4 h-4 text-muted-foreground ml-auto" />
+            : <ChevronUp className="w-4 h-4 text-muted-foreground ml-auto" />}
+        </button>
+        {!collapsed && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {cards.map((card, idx) => {
+            const Icon = ICON_MAP[card.kind] || Gift;
+            const colorClass = COLOR_MAP[card.kind] || 'text-slate-400 bg-slate-400/10 border-slate-400/20';
+            return (
+              <div
+                key={idx}
+                className={`rounded-xl border p-4 ${colorClass}`}
+              >
+                <div className="flex items-start gap-3">
+                  <Icon className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground">{card.headline}</p>
+                    {card.value != null && (
+                      <p className="text-xs mt-1 opacity-80">
+                        {card.value > 0 ? '+' : ''}{typeof card.value === 'number' ? card.value.toFixed(1) : card.value}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+        )}
       </div>
     </div>
   );

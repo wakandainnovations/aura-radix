@@ -5,6 +5,7 @@ import * as ScrollArea from '@radix-ui/react-scroll-area';
 import * as Separator from '@radix-ui/react-separator';
 import { AlertTriangle, X, ChevronLeft, ChevronRight, User, Bot, Calendar, TrendingUp, FileText, BarChart3, ExternalLink } from 'lucide-react';
 import MentionFeed from './MentionFeed';
+import MentionActionCard from '../ai-dashboard/MentionActionCard';
 import { getThreatColor, getThreatBg, formatTimestamp, getSentimentBg } from '../../utils/helpers';
 
 export default function CrisisFocusView({ mentions, selectedMention, onSelectMention, activeView = 'crisis' }) {
@@ -73,11 +74,13 @@ export default function CrisisFocusView({ mentions, selectedMention, onSelectMen
         </div>
       </div>
 
-      <MentionFeed
-        mentions={negativePosts}
-        selectedMention={selectedMention}
-        onSelectMention={onSelectMention}
-      />
+      {/* Crisis Feed posts — Mention Actions look & feel: each post expands to
+          Draft Reply / Escalate to Crisis / Mobilize Allies / Report Abuse. */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-2">
+        {negativePosts.map((mention) => (
+          <MentionActionCard key={mention.id} mention={mention} />
+        ))}
+      </div>
 
       {/* Negative Posts Modal */}
       {negativePosts.length > 0  && (

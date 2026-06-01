@@ -217,7 +217,7 @@ export default function PRCommandCenter() {
 
       {/* Audience Intelligence Views */}
       {activeView === 'spreader-analysis' && <SpreaderAnalysisView />}
-      {activeView === 'user-intelligence' && <UserIntelligenceView />}
+      {activeView === 'user-intelligence' && <UserIntelligenceView selectedEntity={selectedEntity} />}
       {activeView === 'content-analysis' && <ContentAnalysisView />}
       {activeView === 'genre-intelligence' && <GenreIntelligenceView />}
 

@@ -1,10 +1,6 @@
 import React from 'react';
 import { LayoutDashboard } from 'lucide-react';
-import WhatsNewCards from './WhatsNewCards';
-import WhatsChangedSummary from './WhatsChangedSummary';
 import AlertsPanel from './AlertsPanel';
-import HourlyActivityHeatmap from './HourlyActivityHeatmap';
-import MentionActionsPanel from './MentionActionsPanel';
 import WebhookSettings from './WebhookSettings';
 
 export default function AIDashboardView({ selectedEntity }) {
@@ -21,32 +17,14 @@ export default function AIDashboardView({ selectedEntity }) {
                 AI Dashboard — {selectedEntity?.name || selectedEntity?.title}
               </h2>
               <p className="text-sm text-muted-foreground">
-                Alerts, activity insights, and mention actions
+                Alerts and webhook integrations
               </p>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="lg:col-span-2 bg-card border border-border rounded-xl p-5">
-            <WhatsNewCards entityId={entityId} />
-          </div>
-
-          <div className="lg:col-span-2 bg-card border border-border rounded-xl p-5">
-            <WhatsChangedSummary entityId={entityId} />
-          </div>
-
-          <div className="lg:col-span-2 bg-card border border-border rounded-xl p-5">
-            <AlertsPanel entityId={entityId} />
-          </div>
-
-          <div className="lg:col-span-2 bg-card border border-border rounded-xl p-5">
-            <HourlyActivityHeatmap entityId={entityId} />
-          </div>
-        </div>
-
         <div className="bg-card border border-border rounded-xl p-5">
-          <MentionActionsPanel entityId={entityId} />
+          <AlertsPanel entityId={entityId} />
         </div>
 
         <WebhookSettings />

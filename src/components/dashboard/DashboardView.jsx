@@ -3,6 +3,8 @@ import { Sparkles } from "lucide-react";
 import { celebrityAnalytics, movies } from "../../dummydata";
 import { transformStatsToCards, calculateStatsFromMentions } from "../../utils/statsTransformer";
 import { formatCurrency } from "../../utils/helpers";
+import WhatsNewCards from "../ai-dashboard/WhatsNewCards";
+import WhatsChangedSummary from "../ai-dashboard/WhatsChangedSummary";
 import CelebrityAnalytics from "./CelebrityAnalytics";
 import CompetitivePositioning from "./CompetitivePositioning";
 import SocialMediaFeed from "./SocialMediaFeed";
@@ -313,6 +315,11 @@ export default function DashboardView({
             <span className="text-sm font-medium text-primary">AI-Powered</span>
           </div>
         </div>
+
+        {/* Welcome-back digest — each renders only when there's something to show,
+            and stays hidden (or shows a slim "all caught up" line) otherwise. */}
+        <WhatsNewCards entityId={selectedEntity?.id} />
+        <WhatsChangedSummary entityId={selectedEntity?.id} />
 
         {/* Date Range Selector for Sentiment Analysis */}
         <TimeRangeSelector
