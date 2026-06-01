@@ -201,17 +201,17 @@ export default function PRCommandCenter() {
         />
       )}
 
-      {/* AI Dashboard View */}
-      {activeView === 'ai-dashboard' && !selectedEntity && (
+      {/* Alert Management View */}
+      {activeView === 'alert-management' && !selectedEntity && (
         <div className="h-full flex items-center justify-center bg-background">
           <div className="text-center space-y-4">
-            <p className="text-lg font-semibold text-foreground">Select an entity to view the AI Dashboard</p>
+            <p className="text-lg font-semibold text-foreground">Select an entity to view Alert Management</p>
             <p className="text-sm text-muted-foreground">Choose a movie or celebrity using the selectors above</p>
           </div>
         </div>
       )}
 
-      {activeView === 'ai-dashboard' && selectedEntity && (
+      {activeView === 'alert-management' && selectedEntity && (
         <AIDashboardView selectedEntity={selectedEntity} />
       )}
 

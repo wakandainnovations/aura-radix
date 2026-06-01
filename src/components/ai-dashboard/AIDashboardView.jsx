@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import AlertsPanel from './AlertsPanel';
 import WebhookSettings from './WebhookSettings';
 
@@ -11,10 +11,10 @@ export default function AIDashboardView({ selectedEntity }) {
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <LayoutDashboard className="w-7 h-7 text-blue-400" />
+            <Bell className="w-7 h-7 text-amber-400" />
             <div>
               <h2 className="text-2xl font-bold text-foreground">
-                AI Dashboard — {selectedEntity?.name || selectedEntity?.title}
+                Alert Management — {selectedEntity?.name || selectedEntity?.title}
               </h2>
               <p className="text-sm text-muted-foreground">
                 Alerts and webhook integrations

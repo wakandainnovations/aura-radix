@@ -28,6 +28,7 @@ import AbuseReportsView from './workspace/AbuseReportsView';
 import WorkspaceExportView from './workspace/WorkspaceExportView';
 import CommandPalette from './navigation/CommandPalette';
 import LoginModal from './auth/LoginModal';
+import NotificationBell from './notifications/NotificationBell';
 // Import API services
 import { entityService, dashboardService, analyticsService, authService } from '../api';
 // Import utilities and hooks
@@ -48,7 +49,7 @@ const VIEW_REGISTRY = {
   'crisis-management': CrisisManagementCenter,
   'negative-analysis': NegativeCommentSummary,
   metrics: EnhancedMetricsDashboard,
-  'ai-dashboard': AIDashboardView,
+  'alert-management': AIDashboardView,
   'spreader-analysis': SpreaderAnalysisView,
   'user-intelligence': UserIntelligenceView,
   'content-analysis': ContentAnalysisView,
@@ -477,6 +478,7 @@ export default function PRCommandCenter() {
               </button>
             ) : (
               <>
+                <NotificationBell onViewAll={() => setActiveView('alert-management')} />
                 <button
                   onClick={handleRefreshCurrentEntities}
                   disabled={!primaryEntity?.id}
@@ -705,15 +707,15 @@ export default function PRCommandCenter() {
                 mentions={filteredMentions}
               />
             )}
-            {activeView === 'ai-dashboard' && !primaryEntity && (
+            {activeView === 'alert-management' && !primaryEntity && (
               <div className="h-full flex items-center justify-center bg-background">
                 <div className="text-center space-y-4">
-                  <p className="text-lg font-semibold text-foreground">Select an entity to view AI Dashboard</p>
+                  <p className="text-lg font-semibold text-foreground">Select an entity to view Alert Management</p>
                   <p className="text-sm text-muted-foreground">Click "Add Entity" in the header to select</p>
                 </div>
               </div>
             )}
-            {activeView === 'ai-dashboard' && primaryEntity && (
+            {activeView === 'alert-management' && primaryEntity && (
               <AIDashboardView selectedEntity={primaryEntity} />
             )}
             {activeView === 'checkpoints' && !primaryEntity && (

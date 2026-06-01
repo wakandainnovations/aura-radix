@@ -19,7 +19,6 @@ export default function LeftNavbar({ activeTab, onTabChange }) {
       icon: BarChart3,
       subTabs: [
         { id: 'ai-analytics', label: 'AI Analytics' },
-        { id: 'ai-dashboard', label: 'AI Dashboard' },
         { id: 'spreader-analysis', label: 'Spreader Analysis' },
       ]
     },
@@ -48,6 +47,8 @@ export default function LeftNavbar({ activeTab, onTabChange }) {
       label: 'Crisis Management', 
       icon: AlertTriangle,
       subTabs: [
+        { id: 'alert-management', label: 'Alert Management' },
+        { id: 'alert-rules', label: 'Alert Rules' },
         { id: 'crisis-management', label: 'Crisis Response' },
         { id: 'crisis-center', label: 'Crisis Feed' },
         { id: 'negative-analysis', label: 'Sentiment Analysis' }
@@ -59,7 +60,6 @@ export default function LeftNavbar({ activeTab, onTabChange }) {
       icon: Briefcase,
       subTabs: [
         { id: 'reply-templates', label: 'Reply Templates' },
-        { id: 'alert-rules', label: 'Alert Rules' },
         { id: 'crisis-playbooks', label: 'Crisis Playbooks' },
         { id: 'abuse-reports', label: 'Abuse Reports' },
         { id: 'workspace-export', label: 'Backup & Restore' },
