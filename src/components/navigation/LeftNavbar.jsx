@@ -51,7 +51,6 @@ export default function LeftNavbar({ activeTab, onTabChange }) {
         { id: 'alert-rules', label: 'Alert Rules' },
         { id: 'crisis-management', label: 'Crisis Response' },
         { id: 'crisis-center', label: 'Crisis Feed' },
-        { id: 'negative-analysis', label: 'Sentiment Analysis' }
       ]
     },
     {
