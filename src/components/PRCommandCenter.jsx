@@ -15,7 +15,6 @@ import SpreaderAnalysisView from './ai-dashboard/SpreaderAnalysisView';
 import UserIntelligenceView from './ai-dashboard/UserIntelligenceView';
 import ContentAnalysisView from './ai-dashboard/ContentAnalysisView';
 import GenreIntelligenceView from './ai-dashboard/GenreIntelligenceView';
-import MarketingIntelView from './ai-dashboard/MarketingIntelView';
 import MarketingAggregationView from './ai-dashboard/MarketingAggregationView';
 import CrisisFocusView from './feed/CrisisFocusView';
 import CrisisPlanGenerator from './crisis/CrisisPlanGenerator';
@@ -220,11 +219,6 @@ export default function PRCommandCenter() {
       {activeView === 'user-intelligence' && <UserIntelligenceView selectedEntity={selectedEntity} />}
       {activeView === 'content-analysis' && <ContentAnalysisView />}
       {activeView === 'genre-intelligence' && <GenreIntelligenceView />}
-
-      {/* Marketing Intelligence View */}
-      {activeView === 'marketing-intel' && (
-        <MarketingIntelView primaryEntity={selectedEntity} />
-      )}
 
       {/* Marketing Aggregation View */}
       {activeView === 'marketing-aggregation' && (

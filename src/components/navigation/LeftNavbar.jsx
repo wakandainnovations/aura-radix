@@ -38,7 +38,6 @@ export default function LeftNavbar({ activeTab, onTabChange, isAdmin = false }) 
       label: 'Marketing',
       icon: Megaphone,
       subTabs: [
-        { id: 'marketing-intel', label: 'Marketing Intel' },
         { id: 'marketing-aggregation', label: 'Aggregated Intel' },
         { id: 'checkpoints', label: 'Checkpoints' },
       ]

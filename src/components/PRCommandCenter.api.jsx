@@ -17,7 +17,6 @@ import SpreaderAnalysisView from './ai-dashboard/SpreaderAnalysisView';
 import UserIntelligenceView from './ai-dashboard/UserIntelligenceView';
 import ContentAnalysisView from './ai-dashboard/ContentAnalysisView';
 import GenreIntelligenceView from './ai-dashboard/GenreIntelligenceView';
-import MarketingIntelView from './ai-dashboard/MarketingIntelView';
 import MarketingAggregationView from './ai-dashboard/MarketingAggregationView';
 import CheckpointsView from './checkpoints/CheckpointsView';
 import EntityManagementView from './entity-management/EntityManagementView';
@@ -54,7 +53,6 @@ const VIEW_REGISTRY = {
   'user-intelligence': UserIntelligenceView,
   'content-analysis': ContentAnalysisView,
   'genre-intelligence': GenreIntelligenceView,
-  'marketing-intel': MarketingIntelView,
   'marketing-aggregation': MarketingAggregationView,
   'checkpoints': CheckpointsView,
   'entity-management': EntityManagementView,
@@ -537,7 +535,7 @@ export default function PRCommandCenter() {
         )}
 
         {/* Welcome Screen - Show when no entity is selected yet (except standalone views) */}
-        {isAuthenticated && hasLoadedEntities && selectedEntities.length === 0 && !isLoadingEntities && !['entity-management', 'spreader-analysis', 'user-intelligence', 'content-analysis', 'genre-intelligence', 'marketing-intel', 'marketing-aggregation', 'reply-templates', 'alert-rules', 'crisis-playbooks', 'abuse-reports', 'workspace-export'].includes(activeView) && (
+        {isAuthenticated && hasLoadedEntities && selectedEntities.length === 0 && !isLoadingEntities && !['entity-management', 'spreader-analysis', 'user-intelligence', 'content-analysis', 'genre-intelligence', 'marketing-aggregation', 'reply-templates', 'alert-rules', 'crisis-playbooks', 'abuse-reports', 'workspace-export'].includes(activeView) && (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <h2 className="text-5xl font-bold text-foreground mb-4">Welcome to Project Aura</h2>
@@ -552,9 +550,6 @@ export default function PRCommandCenter() {
         {isAuthenticated && activeView === 'user-intelligence' && <UserIntelligenceView selectedEntity={primaryEntity} />}
         {isAuthenticated && activeView === 'content-analysis' && <ContentAnalysisView selectedEntity={primaryEntity} />}
         {isAuthenticated && activeView === 'genre-intelligence' && <GenreIntelligenceView />}
-        {isAuthenticated && activeView === 'marketing-intel' && (
-          <MarketingIntelView primaryEntity={primaryEntity} />
-        )}
         {isAuthenticated && activeView === 'marketing-aggregation' && (
           <MarketingAggregationView />
         )}

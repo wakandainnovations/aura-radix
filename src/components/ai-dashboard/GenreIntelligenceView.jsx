@@ -1,10 +1,42 @@
-import React, { useState, useCallback } from 'react';
-import { Target, Sun, Sunrise, Sunset, Moon } from 'lucide-react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { Target, Sun, Sunrise, Sunset, Moon, Loader2, Search } from 'lucide-react';
 import { auraMathService } from '../../api/auraMathService';
+import { marketingService } from '../../api/marketingService';
 import {
   PLATFORM_COLORS, fmt, PlatformBadge,
-  Section, KeywordSearch,
+  Section,
 } from './audienceIntelShared';
+
+// Genre picker: a dropdown of all available genres plus a search button.
+// Mirrors KeywordSearch's onSearch(value) contract so each Section stays unchanged.
+function GenreSearch({ genres, genresLoading, loading, onSearch }) {
+  const [selected, setSelected] = useState('');
+  return (
+    <div className="flex gap-2 mt-3">
+      <select
+        value={selected}
+        onChange={(e) => setSelected(e.target.value)}
+        disabled={genresLoading || genres.length === 0}
+        className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50 cursor-pointer"
+      >
+        <option value="">
+          {genresLoading ? 'Loading genres…' : genres.length === 0 ? 'No genres available' : 'Select a genre…'}
+        </option>
+        {genres.map((g) => (
+          <option key={g} value={g}>{g}</option>
+        ))}
+      </select>
+      <button
+        onClick={() => selected && onSearch(selected)}
+        disabled={loading || !selected}
+        className="px-4 py-2 text-sm rounded-lg bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 flex items-center gap-1"
+      >
+        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+        Search
+      </button>
+    </div>
+  );
+}
 
 function PeakActivityIndicators({ times }) {
   if (!times) return null;
@@ -157,6 +189,24 @@ export default function GenreIntelligenceView() {
   const [genreSpreaders, setGenreSpreaders] = useState(null);
   const [genreStrategy, setGenreStrategy] = useState(null);
   const [loading, setLoading] = useState({});
+  const [genres, setGenres] = useState([]);
+  const [genresLoading, setGenresLoading] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    setGenresLoading(true);
+    marketingService.listGenres()
+      .then((list) => {
+        if (!active) return;
+        const names = (list || [])
+          .map((item) => (typeof item === 'string' ? item : item?.name || item?.genre || ''))
+          .filter(Boolean);
+        setGenres([...new Set(names)].sort());
+      })
+      .catch(() => { if (active) setGenres([]); })
+      .finally(() => { if (active) setGenresLoading(false); });
+    return () => { active = false; };
+  }, []);
 
   const withLoading = useCallback(async (key, fn) => {
     setLoading((prev) => ({ ...prev, [key]: true }));
@@ -179,8 +229,9 @@ export default function GenreIntelligenceView() {
         </div>
 
         <Section icon={Target} title="Potential Viewers" subtitle="Users most likely to watch content in this genre based on behavioral signals" color="text-cyan-400">
-          <KeywordSearch
-            label="Enter genre name..."
+          <GenreSearch
+            genres={genres}
+            genresLoading={genresLoading}
             loading={loading.genreViewers}
             onSearch={(g) => withLoading('genreViewers', () => auraMathService.getGenrePotentialViewers(g).then(setGenreViewers))}
           />
@@ -188,8 +239,9 @@ export default function GenreIntelligenceView() {
         </Section>
 
         <Section icon={Target} title="Super Spreaders" subtitle="Top influencers who can amplify content within this genre" color="text-amber-400">
-          <KeywordSearch
-            label="Enter genre name..."
+          <GenreSearch
+            genres={genres}
+            genresLoading={genresLoading}
             loading={loading.genreSpreaders}
             onSearch={(g) => withLoading('genreSpreaders', () => auraMathService.getGenreSuperSpreaders(g).then(setGenreSpreaders))}
           />
@@ -197,8 +249,9 @@ export default function GenreIntelligenceView() {
         </Section>
 
         <Section icon={Target} title="Channel Strategy" subtitle="Optimal platform mix and posting strategy for reaching this genre's audience" color="text-emerald-400">
-          <KeywordSearch
-            label="Enter genre name..."
+          <GenreSearch
+            genres={genres}
+            genresLoading={genresLoading}
             loading={loading.genreStrategy}
             onSearch={(g) => withLoading('genreStrategy', () => auraMathService.getGenreChannelStrategy(g).then(setGenreStrategy))}
           />
