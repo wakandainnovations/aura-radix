@@ -111,6 +111,68 @@ describe('SpreaderAnalysisView', () => {
     await waitFor(() => expect(auraMathService.findLookalikes).toHaveBeenCalledWith('seed-123'));
   });
 
+  it('hides top spreaders whose sentiment is 0 (or missing)', async () => {
+    mockReturn(marketingAggregationService.getViralSeeds, []);
+    mockReturn(marketingAggregationService.getTopSpreaders, [
+      { author: 'carol', viral_potential_score: 88.5, average_sentiment_score: 75 },
+      { author: 'zeke', viral_potential_score: 50, average_sentiment_score: 0 },
+      { author: 'nomad', viral_potential_score: 40 },
+    ]);
+    renderWithClient(<SpreaderAnalysisView selectedEntity={{ id: 'e1', name: 'Inception' }} />);
+
+    expect(await screen.findByText('carol')).toBeTruthy();
+    expect(screen.queryByText('zeke')).toBeNull();
+    expect(screen.queryByText('nomad')).toBeNull();
+  });
+
+  it('links an author name to their platform profile when the backend provides one', async () => {
+    mockReturn(marketingAggregationService.getViralSeeds, []);
+    mockReturn(marketingAggregationService.getTopSpreaders, [
+      { author: 'carol', viral_potential_score: 88.5, average_sentiment_score: 75, profile_url: 'https://x.com/carol' },
+      { author: 'dan', viral_potential_score: 70, average_sentiment_score: 60 },
+    ]);
+    renderWithClient(<SpreaderAnalysisView selectedEntity={{ id: 'e1', name: 'Inception' }} />);
+
+    const carol = await screen.findByText('carol');
+    expect(carol.tagName).toBe('A');
+    expect(carol.getAttribute('href')).toBe('https://x.com/carol');
+    // No profile URL -> plain text, not a link.
+    expect((await screen.findByText('dan')).tagName).not.toBe('A');
+  });
+
+  it('links viral seed authors via their outreach handle', async () => {
+    mockReturn(marketingAggregationService.getViralSeeds, sampleSeeds);
+    mockReturn(marketingAggregationService.getTopSpreaders, []);
+    renderWithClient(<SpreaderAnalysisView selectedEntity={{ id: 'e1', name: 'Inception' }} />);
+
+    const alice = await screen.findByText('alice');
+    expect(alice.tagName).toBe('A');
+    expect(alice.getAttribute('href')).toBe('http://x.com/alice');
+    // bob has no outreach handle -> plain text.
+    expect((await screen.findByText('bob')).tagName).not.toBe('A');
+  });
+
+  it('links lookalike authors to the profile in their platform handles', async () => {
+    mockReturn(auraMathService.findLookalikes, [
+      {
+        author: 'dave',
+        platform_handles: {
+          primary_platform: 'youtube',
+          by_platform: { youtube: { profile_url: 'https://youtube.com/@dave' } },
+        },
+      },
+    ]);
+    renderWithClient(<SpreaderAnalysisView selectedEntity={null} />);
+
+    const seedInput = screen.getByPlaceholderText(/Enter seed author ID/);
+    fireEvent.change(seedInput, { target: { value: 'seed-123' } });
+    fireEvent.keyDown(seedInput, { key: 'Enter' });
+
+    const dave = await screen.findByText('dave');
+    expect(dave.tagName).toBe('A');
+    expect(dave.getAttribute('href')).toBe('https://youtube.com/@dave');
+  });
+
   it('shows an error banner when the aggregated load fails', async () => {
     marketingAggregationService.getViralSeeds.mockRejectedValue(new Error('seeds boom'));
     marketingAggregationService.getTopSpreaders.mockResolvedValue(sampleSpreaders);

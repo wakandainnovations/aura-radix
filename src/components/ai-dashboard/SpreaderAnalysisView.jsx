@@ -7,7 +7,50 @@ import {
   PlatformBadge, ScoreBar, getDominantReach, fmt,
   Section, KeywordSearch, KeyValueCards,
 } from './audienceIntelShared';
-import { ExternalLink as ExternalLinkIcon } from 'lucide-react';
+
+// Resolve an author's platform profile URL from the various shapes the backend
+// returns across the three sections: viral seeds expose `outreachHandle`, top
+// spreaders may expose a flat `profile_url`, and lookalikes nest URLs under
+// `platform_handles.by_platform`. Returns null when no link is available.
+function resolveProfileUrl(row) {
+  if (!row || typeof row !== 'object') return null;
+  if (row.profile_url) return row.profile_url;
+  if (row.profileUrl) return row.profileUrl;
+  if (row.outreachHandle?.profile_url) return row.outreachHandle.profile_url;
+  const ph = row.platform_handles || row.platformHandles;
+  if (ph) {
+    const primary = ph.primary_platform || ph.primaryPlatform;
+    const byPlatform = ph.by_platform || ph.byPlatform || {};
+    if (primary && byPlatform[primary]?.profile_url) return byPlatform[primary].profile_url;
+    const withUrl = Object.values(byPlatform).find((d) => d?.profile_url);
+    if (withUrl) return withUrl.profile_url;
+  }
+  return null;
+}
+
+// Renders an author name as a link to their platform profile when the backend
+// provides one, otherwise as plain text.
+function AuthorName({ row, name }) {
+  const label = name || '—';
+  const url = resolveProfileUrl(row);
+  if (!url) return <span className="font-medium text-foreground">{label}</span>;
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="font-medium text-primary hover:underline"
+    >
+      {label}
+    </a>
+  );
+}
+
+// Column keys that hold an author's name across the lookalikes result set.
+const AUTHOR_COLUMN_KEYS = new Set([
+  'author', 'authorName', 'author_name', 'name',
+  'global_user_id', 'globalUserId', 'user', 'username', 'handle',
+]);
 
 function ViralSeedsTable({ data }) {
   const rows = Array.isArray(data) ? data : [];
@@ -27,28 +70,19 @@ function ViralSeedsTable({ data }) {
             <th className="text-left py-2 px-3 text-muted-foreground font-medium">Platform</th>
             <th className="text-left py-2 px-3 text-muted-foreground font-medium">Tribe</th>
             <th className="text-left py-2 px-3 text-muted-foreground font-medium">Reach</th>
-            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Link</th>
           </tr>
         </thead>
         <tbody>
           {pageRows.map((row, i) => {
             const reach = getDominantReach(row.reachSignals);
-            const profileUrl = row.outreachHandle?.profile_url;
             return (
               <tr key={i} className="border-b border-border/50 hover:bg-accent/20">
                 <td className="py-2 px-3 text-foreground font-mono">{row.rank ?? page * perPage + i + 1}</td>
-                <td className="py-2 px-3 text-foreground font-medium">{row.author || '—'}</td>
+                <td className="py-2 px-3"><AuthorName row={row} name={row.author} /></td>
                 <td className="py-2 px-3"><ScoreBar value={row.seedScore} /></td>
                 <td className="py-2 px-3"><PlatformBadge platform={row.primaryPlatform || row.outreachHandle?.platform} /></td>
                 <td className="py-2 px-3"><span className="px-2 py-0.5 rounded bg-violet-500/20 text-violet-400 text-[10px] font-medium">{row.tribe || '—'}</span></td>
                 <td className="py-2 px-3 text-foreground">{reach.label}</td>
-                <td className="py-2 px-3">
-                  {profileUrl ? (
-                    <a href={profileUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
-                      <ExternalLinkIcon className="w-3 h-3" />
-                    </a>
-                  ) : '—'}
-                </td>
               </tr>
             );
           })}
@@ -75,7 +109,10 @@ function ViralSeedsTable({ data }) {
 }
 
 function TopSpreadersTable({ data }) {
-  const rows = Array.isArray(data) ? data : [];
+  // Hide authors whose sentiment is 0 (or missing) — they add noise without signal.
+  const rows = (Array.isArray(data) ? data : []).filter(
+    (row) => (row.average_sentiment_score ?? 0) !== 0,
+  );
   const [page, setPage] = useState(0);
   const perPage = 10;
   const totalPages = Math.min(Math.ceil(rows.length / perPage), 5);
@@ -100,7 +137,7 @@ function TopSpreadersTable({ data }) {
           {pageRows.map((row, i) => (
             <tr key={i} className="border-b border-border/50 hover:bg-accent/20">
               <td className="py-2 px-3 text-foreground font-mono">{page * perPage + i + 1}</td>
-              <td className="py-2 px-3 text-foreground font-medium">{row.author || '—'}</td>
+              <td className="py-2 px-3"><AuthorName row={row} name={row.author} /></td>
               <td className="py-2 px-3 font-mono text-foreground">{fmt(row.viral_potential_score, 1)}</td>
               <td className="py-2 px-3 text-right text-foreground font-mono">{row.total_views?.toLocaleString() ?? '—'}</td>
               <td className="py-2 px-3 text-right text-foreground font-mono">{row.total_likes?.toLocaleString() ?? '—'}</td>
@@ -170,8 +207,12 @@ function PlatformHandlesCell({ value }) {
   );
 }
 
-function LookalikeCellValue({ value, columnKey }) {
+function LookalikeCellValue({ value, columnKey, row }) {
   if (value == null) return '—';
+  // The author column links to the author's platform profile when available.
+  if (AUTHOR_COLUMN_KEYS.has(columnKey) && typeof value !== 'object') {
+    return <AuthorName row={row} name={String(value)} />;
+  }
   if (typeof value !== 'object') return String(value);
   if (columnKey === 'platform_handles' || columnKey === 'platformHandles') {
     return <PlatformHandlesCell value={value} />;
@@ -216,7 +257,7 @@ function LookalikesDisplay({ data }) {
                 <tr key={i} className="border-b border-border/50 hover:bg-accent/20">
                   {cols.map((c) => (
                     <td key={c} className="py-2 px-3 text-foreground">
-                      <LookalikeCellValue value={row[c]} columnKey={c} />
+                      <LookalikeCellValue value={row[c]} columnKey={c} row={row} />
                     </td>
                   ))}
                 </tr>
