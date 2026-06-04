@@ -67,7 +67,7 @@ const VIEW_REGISTRY = {
 
 export default function PRCommandCenter() {
   const queryClient = useQueryClient();
-  const { isAuthenticated, setIsAuthenticated } = useAuth();
+  const { isAuthenticated, setIsAuthenticated, isAdmin, setIsAdmin } = useAuth();
   const [selectedMention, setSelectedMention] = useState(null);
   const [activeView, setActiveView] = useState('dashboard');
   // REWORKED: New entity selection using array of entities
@@ -395,7 +395,7 @@ export default function PRCommandCenter() {
     <div className="h-screen flex bg-background text-foreground">
       {/* Left Navbar */}
       <div className="w-64">
-        <LeftNavbar activeTab={activeView} onTabChange={setActiveView} />
+        <LeftNavbar activeTab={activeView} onTabChange={setActiveView} isAdmin={isAdmin} />
       </div>
 
       {/* Main Content Area */}
@@ -493,6 +493,10 @@ export default function PRCommandCenter() {
                   onClick={() => {
                     authService.logout();
                     setIsAuthenticated(false);
+                    setIsAdmin(false);
+                    if (activeView === 'ai-analytics') {
+                      setActiveView('dashboard');
+                    }
                     setSelectedEntities([]);
                     setAddEntityModalOpen(false);
                   }}
@@ -630,7 +634,7 @@ export default function PRCommandCenter() {
                 onDateRangeChange={setDateRange}
               />
             )}
-            {activeView === 'ai-analytics' && !primaryEntity && (
+            {activeView === 'ai-analytics' && isAdmin && !primaryEntity && (
               <div className="h-full flex items-center justify-center bg-background">
                 <div className="text-center space-y-4">
                   <p className="text-lg font-semibold text-foreground">Select an entity to view analytics</p>
@@ -638,7 +642,7 @@ export default function PRCommandCenter() {
                 </div>
               </div>
             )}
-            {activeView === 'ai-analytics' && primaryEntity && (
+            {activeView === 'ai-analytics' && isAdmin && primaryEntity && (
               <AIAnalyticsView
                 selectedEntity={primaryEntity}
                 entityType={entityType}
@@ -761,6 +765,8 @@ export default function PRCommandCenter() {
         onLoginSuccess={() => {
           // Set authenticated state
           setIsAuthenticated(true);
+          // Sync admin gate (set by authService.login for admin/admin)
+          setIsAdmin(localStorage.getItem('isAdmin') === 'true');
           
           // Refetch entities and other queries now that we're authenticated
           handleFetchData();

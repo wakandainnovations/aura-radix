@@ -26,6 +26,13 @@ export const authService = {
       }
       // Store token in localStorage for subsequent requests
       localStorage.setItem('jwtToken', response.jwtToken);
+      // Gate the in-development AI Insights area behind the admin account.
+      // (Backend has no role contract yet, so this is tracked client-side.)
+      if (username === 'admin' && password === 'admin') {
+        localStorage.setItem('isAdmin', 'true');
+      } else {
+        localStorage.removeItem('isAdmin');
+      }
       return response;
     } catch (error) {
       console.error('Failed to login user:', error);
@@ -36,6 +43,7 @@ export const authService = {
   logout: () => {
     try {
       localStorage.removeItem('jwtToken');
+      localStorage.removeItem('isAdmin');
     } catch (error) {
       console.error('Failed to logout user:', error);
       throw error;

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { LayoutDashboard, BarChart3, AlertTriangle, Boxes, Users, Megaphone, Briefcase, ChevronDown, ChevronRight } from 'lucide-react';
 
-export default function LeftNavbar({ activeTab, onTabChange }) {
+export default function LeftNavbar({ activeTab, onTabChange, isAdmin = false }) {
   const [expandedMenu, setExpandedMenu] = useState({
     'ai-insights': true,
     'audience-content': true,
@@ -17,6 +17,7 @@ export default function LeftNavbar({ activeTab, onTabChange }) {
       id: 'ai-insights',
       label: 'AI Insights',
       icon: BarChart3,
+      adminOnly: true, // In-development; visible only to the admin account
       subTabs: [
         { id: 'ai-analytics', label: 'AI Analytics' },
       ]
@@ -80,7 +81,7 @@ export default function LeftNavbar({ activeTab, onTabChange }) {
       </div>
       
       <nav className="flex-1 p-2 overflow-y-auto">
-        {tabs.map(tab => {
+        {tabs.filter(tab => !tab.adminOnly || isAdmin).map(tab => {
           const Icon = tab.icon;
           const hasSubTabs = tab.subTabs && tab.subTabs.length > 0;
           const isExpanded = expandedMenu[tab.id];

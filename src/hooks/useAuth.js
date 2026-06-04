@@ -9,16 +9,21 @@ export function useAuth() {
     // Initialize from localStorage
     return !!localStorage.getItem('jwtToken');
   });
+  const [isAdmin, setIsAdmin] = useState(() => {
+    // Admin gate for in-development areas (admin/admin login)
+    return localStorage.getItem('isAdmin') === 'true';
+  });
 
   // Listen for storage changes (e.g., from other tabs/windows)
   useEffect(() => {
     const handleStorageChange = () => {
       setIsAuthenticated(!!localStorage.getItem('jwtToken'));
+      setIsAdmin(localStorage.getItem('isAdmin') === 'true');
     };
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  return { isAuthenticated, setIsAuthenticated };
+  return { isAuthenticated, setIsAuthenticated, isAdmin, setIsAdmin };
 }
