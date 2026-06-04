@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, BarChart3, AlertTriangle, Boxes, Users, Megaphone, Briefcase, ChevronDown, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, BarChart3, AlertTriangle, Boxes, Users, Flag, Wrench, Briefcase, ChevronDown, ChevronRight } from 'lucide-react';
 
 export default function LeftNavbar({ activeTab, onTabChange, isAdmin = false }) {
   const [expandedMenu, setExpandedMenu] = useState({
     'ai-insights': true,
     'audience-content': true,
-    marketing: true,
+    tools: true,
     crisis: true,
     workspace: true,
   });
@@ -13,6 +13,7 @@ export default function LeftNavbar({ activeTab, onTabChange, isAdmin = false }) 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'entity-management', label: 'Manage Entities', icon: Boxes },
+    { id: 'checkpoints', label: 'Checkpoints', icon: Flag },
     {
       id: 'ai-insights',
       label: 'AI Insights',
@@ -34,23 +35,14 @@ export default function LeftNavbar({ activeTab, onTabChange, isAdmin = false }) 
       ]
     },
     {
-      id: 'marketing',
-      label: 'Marketing',
-      icon: Megaphone,
-      subTabs: [
-        { id: 'marketing-aggregation', label: 'Aggregated Intel' },
-        { id: 'checkpoints', label: 'Checkpoints' },
-      ]
-    },
-    { 
-      id: 'crisis', 
+      id: 'crisis',
       label: 'Crisis Management', 
       icon: AlertTriangle,
       subTabs: [
         { id: 'alert-management', label: 'Alert Management' },
         { id: 'alert-rules', label: 'Alert Rules' },
-        { id: 'crisis-management', label: 'Crisis Response' },
         { id: 'crisis-center', label: 'Crisis Feed' },
+        { id: 'crisis-management', label: 'Crisis Response' },
       ]
     },
     {
@@ -62,6 +54,14 @@ export default function LeftNavbar({ activeTab, onTabChange, isAdmin = false }) 
         { id: 'crisis-playbooks', label: 'Crisis Playbooks' },
         { id: 'abuse-reports', label: 'Abuse Reports' },
         { id: 'workspace-export', label: 'Backup & Restore' },
+      ]
+    },
+    {
+      id: 'tools',
+      label: 'Tools',
+      icon: Wrench,
+      subTabs: [
+        { id: 'marketing-aggregation', label: 'Aggregated Intel' },
       ]
     }
   ];
