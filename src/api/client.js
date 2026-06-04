@@ -139,8 +139,21 @@ apiClient.interceptors.response.use(
       });
     }
 
-    // 401 - Unauthorized (token expired or invalid)
+    // 401 - Unauthorized
     if (status === 401) {
+      // A 401 from a public endpoint (e.g. login) is a failed auth attempt, not an
+      // expired session. Don't clear the token or redirect — let the caller
+      // (e.g. LoginModal) surface the credentials error inline.
+      if (isPublicEndpoint(error.config?.url)) {
+        return Promise.reject({
+          status,
+          message: errorData?.message || 'Invalid username or password',
+          errors: errorData?.errors,
+          data: errorData,
+        });
+      }
+
+      // Genuine expired/invalid session on a protected endpoint.
       localStorage.removeItem('jwtToken');
       window.location.href = '/login';
       return Promise.reject({
