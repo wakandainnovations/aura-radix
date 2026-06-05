@@ -4,12 +4,14 @@ import { dashboardService } from '../../api/dashboardService';
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const SHORT_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const SHORT_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 function formatDayLabel(day) {
   const parsed = new Date(day);
   if (!isNaN(parsed.getTime())) {
     const dayName = SHORT_DAYS[parsed.getUTCDay()];
     const date = parsed.getUTCDate();
-    return `${dayName} ${date}`;
+    const month = SHORT_MONTHS[parsed.getUTCMonth()];
+    return `${dayName} ${date} ${month}`;
   }
   return day.length > 3 ? day.substring(0, 3) : day;
 }
@@ -108,28 +110,30 @@ export default function HourlyActivityHeatmap({ entityId }) {
       ) : (
         <div className="overflow-x-auto">
           <div className="inline-block min-w-full">
-            <div className="flex items-end gap-0.5 mb-1 ml-16">
+            <div className="flex items-end gap-0.5 mb-1 ml-[5.5rem]">
               {HOURS.map((h) => (
                 <div key={h} className="w-5 text-center text-[9px] text-muted-foreground">
                   {h % 3 === 0 ? `${h}` : ''}
                 </div>
               ))}
             </div>
-            {grid.map((row, ri) => (
-              <div key={ri} className="flex items-center gap-0.5 mb-0.5">
-                <span className="w-14 text-right text-xs text-muted-foreground pr-1">
-                  {row.day}
-                </span>
-                {row.hours.map((val, hi) => (
-                  <div
-                    key={hi}
-                    className={`w-5 h-5 rounded-sm ${getIntensity(val, maxVal)} transition-colors`}
-                    title={`${row.day} ${hi}:00 — ${val} active users`}
-                  />
-                ))}
-              </div>
-            ))}
-            <div className="flex items-center gap-2 mt-3 ml-16">
+            <div className="max-h-[154px] overflow-y-auto">
+              {grid.map((row, ri) => (
+                <div key={ri} className="flex items-center gap-0.5 mb-0.5">
+                  <span className="w-20 text-right text-xs text-muted-foreground pr-1 whitespace-nowrap">
+                    {row.day}
+                  </span>
+                  {row.hours.map((val, hi) => (
+                    <div
+                      key={hi}
+                      className={`w-5 h-5 rounded-sm ${getIntensity(val, maxVal)} transition-colors`}
+                      title={`${row.day} ${hi}:00 — ${val} active users`}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 mt-3 ml-[5.5rem]">
               <span className="text-[10px] text-muted-foreground">Less</span>
               {['bg-slate-800', 'bg-blue-800/40', 'bg-blue-700/60', 'bg-blue-600/80', 'bg-blue-500'].map((c, i) => (
                 <div key={i} className={`w-4 h-4 rounded-sm ${c}`} />
