@@ -136,12 +136,22 @@ export default function MentionActionCard({ mention }) {
   const content = mention.content || mention.textSnippet || 'No content available';
   const sentiment = (mention.sentiment || mention.aiSentiment || '').toUpperCase();
   const sentimentColor = SENTIMENT_COLORS[sentiment] || 'text-slate-400';
+  const postUrl = mention.sourceUrl || mention.permalink;
 
   return (
     <div className="bg-card border border-border rounded-lg overflow-hidden">
-      <button
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => setExpanded(!expanded)}
-        className="w-full p-4 flex items-start gap-3 text-left hover:bg-accent/30 transition-colors"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setExpanded(!expanded);
+          }
+        }}
+        className="w-full p-4 flex items-start gap-3 text-left cursor-pointer hover:bg-accent/30 transition-colors"
+        title={expanded ? 'Collapse' : 'Expand actions'}
       >
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
@@ -159,14 +169,27 @@ export default function MentionActionCard({ mention }) {
               @{author}
             </span>
           </div>
-          <p className="text-sm text-foreground line-clamp-2">{content}</p>
+          {postUrl ? (
+            <a
+              href={postUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="block text-sm text-foreground line-clamp-2 hover:text-primary hover:underline transition-colors"
+              title="Open post on the social media platform"
+            >
+              {content}
+            </a>
+          ) : (
+            <p className="text-sm text-foreground line-clamp-2">{content}</p>
+          )}
         </div>
         {expanded ? (
           <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />
         ) : (
           <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />
         )}
-      </button>
+      </div>
 
       {expanded && (
         <div className="border-t border-border p-4 space-y-4">
