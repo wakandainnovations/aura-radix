@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   MessageSquare, Send, AlertTriangle, Users, Loader2,
-  ChevronDown, ChevronUp, FileText, Clock, Flag, Ticket
+  ChevronDown, ChevronUp, FileText, Clock, Flag, Ticket, Ban
 } from 'lucide-react';
 import { mentionActionService } from '../../api/mentionActionService';
 import { reportAbuseService, ABUSE_CATEGORIES } from '../../api/reportAbuseService';
@@ -27,8 +27,12 @@ const SENTIMENT_COLORS = {
  * plain strings) and the feed mention shape (author object, textSnippet,
  * aiSentiment) so it can back both the Mention Actions panel and the Crisis Feed.
  */
-export default function MentionActionCard({ mention }) {
+export default function MentionActionCard({ mention, onMentionDeleted }) {
   const [expanded, setExpanded] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleted, setDeleted] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
   const [actions, setActions] = useState([]);
   const [actionsLoading, setActionsLoading] = useState(false);
   const [actionInProgress, setActionInProgress] = useState(null);
@@ -89,6 +93,23 @@ export default function MentionActionCard({ mention }) {
     }
   };
 
+  // Mark this mention as not relevant: hard-delete it from the database
+  // (README 26b) after confirmation, then drop the card from the feed.
+  const handleNotRelevant = async () => {
+    setDeleteError('');
+    setDeleting(true);
+    try {
+      await mentionActionService.deleteMention(mention.id);
+      setShowDeleteConfirm(false);
+      setDeleted(true);
+      onMentionDeleted?.(mention.id);
+    } catch (err) {
+      setDeleteError(err?.message || 'Failed to remove mention');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const handleDraftReply = async () => {
     setActionInProgress('draft');
     try {
@@ -137,6 +158,9 @@ export default function MentionActionCard({ mention }) {
   const sentiment = (mention.sentiment || mention.aiSentiment || '').toUpperCase();
   const sentimentColor = SENTIMENT_COLORS[sentiment] || 'text-slate-400';
   const postUrl = mention.sourceUrl || mention.permalink;
+
+  // Removed from the database — drop it from the feed.
+  if (deleted) return null;
 
   return (
     <div className="bg-card border border-border rounded-lg overflow-hidden">
@@ -226,7 +250,47 @@ export default function MentionActionCard({ mention }) {
               <Flag className="w-3 h-3" />
               Report Abuse
             </button>
+            <button
+              onClick={() => { setShowDeleteConfirm((s) => !s); setDeleteError(''); }}
+              disabled={!!actionInProgress || deleting}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors disabled:opacity-50"
+              title="Mark this post as not relevant and remove it from the database"
+            >
+              <Ban className="w-3 h-3" />
+              Not Relevant
+            </button>
           </div>
+
+          {showDeleteConfirm && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 space-y-2">
+              <p className="text-xs text-red-400 font-medium">
+                Remove this post permanently?
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                Marking it as not relevant deletes the mention from the database for everyone — this is irreversible.
+              </p>
+              {deleteError && (
+                <p className="text-[11px] text-red-400">{deleteError}</p>
+              )}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleNotRelevant}
+                  disabled={deleting}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-red-500 text-white hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  {deleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Ban className="w-3 h-3" />}
+                  Remove
+                </button>
+                <button
+                  onClick={() => { setShowDeleteConfirm(false); setDeleteError(''); }}
+                  disabled={deleting}
+                  className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
 
           {showReportForm && (
             <form onSubmit={handleReportAbuse} className="bg-rose-500/10 border border-rose-500/20 rounded-lg p-3 space-y-3">

@@ -291,6 +291,18 @@ export default function PRCommandCenter() {
     queryClient.invalidateQueries({ queryKey: ['analytics'] });
   }, [queryClient]);
 
+  // Drop a mention from the cached list after it's deleted server-side (README
+  // 26b). Optimistically prunes the active mentions query so both the Dashboard
+  // feed and the Crisis Feed update without a refetch.
+  const handleMentionDeleted = useCallback((mentionId) => {
+    if (mentionId == null) return;
+    const mentionsKey = ['mentions', entityIdsForQueries.join(','), selectedTimeRange];
+    queryClient.setQueryData(mentionsKey, (prev) => {
+      if (!prev || !Array.isArray(prev.content)) return prev;
+      return { ...prev, content: prev.content.filter((m) => m.id !== mentionId) };
+    });
+  }, [queryClient, entityIdsForQueries, selectedTimeRange]);
+
   const handleRefreshCurrentEntities = useCallback(async () => {
     if (!primaryEntity?.id || entityIdsForQueries.length === 0) return;
 
@@ -602,6 +614,7 @@ export default function PRCommandCenter() {
                 dateRange={dateRange}
                 setDateRange={setDateRange}
                 onMentionSelect={setSelectedMention}
+                onMentionDeleted={handleMentionDeleted}
                 onRefresh={refetchSentimentTrend}
               />
             )}
@@ -658,6 +671,7 @@ export default function PRCommandCenter() {
                 entityType={entityType}
                 mentions={filteredMentions}
                 onMentionSelect={setSelectedMention}
+                onMentionDeleted={handleMentionDeleted}
               />
             )}
             {activeView === 'crisis-management' && !primaryEntity && (

@@ -8,7 +8,7 @@ import MentionFeed from './MentionFeed';
 import MentionActionCard from '../ai-dashboard/MentionActionCard';
 import { getThreatColor, getThreatBg, formatTimestamp, getSentimentBg } from '../../utils/helpers';
 
-export default function CrisisFocusView({ mentions, selectedMention, onSelectMention, activeView = 'crisis' }) {
+export default function CrisisFocusView({ mentions, selectedMention, onSelectMention, onMentionDeleted, activeView = 'crisis' }) {
   const [crisisModalOpen, setCrisisModalOpen] = useState(false);
   const [currentCrisisIndex, setCurrentCrisisIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('overview');
@@ -78,7 +78,7 @@ export default function CrisisFocusView({ mentions, selectedMention, onSelectMen
           Draft Reply / Escalate to Crisis / Mobilize Allies / Report Abuse. */}
       <div className="flex-1 overflow-y-auto p-4 space-y-2">
         {negativePosts.map((mention) => (
-          <MentionActionCard key={mention.id} mention={mention} />
+          <MentionActionCard key={mention.id} mention={mention} onMentionDeleted={onMentionDeleted} />
         ))}
       </div>
 

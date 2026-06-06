@@ -1,17 +1,21 @@
 import React, { useState, useMemo } from 'react';
 import { formatDistanceToNow, format } from 'date-fns';
-import { MessageSquare, Heart, MessageCircle, Share2, AlertTriangle, Star, Send, X, Sparkles, RotateCcw, Check, Loader } from 'lucide-react';
+import { MessageSquare, Heart, MessageCircle, Share2, AlertTriangle, Star, Send, X, Sparkles, RotateCcw, Check, Loader, Ban, Loader2 } from 'lucide-react';
 import { interactionService } from '../../api/interactionService';
+import { mentionActionService } from '../../api/mentionActionService';
 import InlineReplyBox from '../feed/InlineReplyBox';
 import { PLATFORM_LOGOS } from '../../constants/platformLogos';
 
-export default function SocialMediaFeed({ mentions, selectedEntity }) {
+export default function SocialMediaFeed({ mentions, selectedEntity, onMentionDeleted }) {
   const [selectedPlatform, setSelectedPlatform] = useState('all');
   const [sortBy, setSortBy] = useState('postDate'); // 'postDate' or 'sentiment'
   const [sortOrder, setSortOrder] = useState('desc'); // 'asc' or 'desc'
   const [expandedReplyId, setExpandedReplyId] = useState(null);
   const [replies, setReplies] = useState({}); // Store replies by mention id
   const [toast, setToast] = useState(null); // Toast notification state
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null); // mention id awaiting delete confirmation
+  const [deletingId, setDeletingId] = useState(null); // mention id currently being deleted
+  const [removedIds, setRemovedIds] = useState(() => new Set()); // locally hidden after delete
 
   // Format postDate - no timezone offset needed, backend already provides GMT+5:30
   const formatSmartTime = (dateString) => {
@@ -31,7 +35,7 @@ export default function SocialMediaFeed({ mentions, selectedEntity }) {
       return [];
     }
 
-    return mentions.map(mention => ({
+    return mentions.filter(mention => !removedIds.has(mention.id)).map(mention => ({
       id: mention.id,
       text: mention.content,
       author: mention.author || mention.username || mention.userId || 'Anonymous User',
@@ -46,7 +50,7 @@ export default function SocialMediaFeed({ mentions, selectedEntity }) {
       isRealComment: true,
       permalink: mention.permalink
     }));
-  }, [mentions]);
+  }, [mentions, removedIds]);
 
   // Group and filter mentions by platform
   const platformMentions = useMemo(() => {
@@ -218,9 +222,26 @@ export default function SocialMediaFeed({ mentions, selectedEntity }) {
     setExpandedReplyId(null);
   };
 
-  const showToast = (message) => {
-    setToast(message);
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
+  };
+
+  // Mark a post as not relevant: hard-delete the mention from the database
+  // (README 26b) after an explicit inline confirmation, then drop it from the UI.
+  const handleConfirmNotRelevant = async (mentionId) => {
+    setDeletingId(mentionId);
+    try {
+      await mentionActionService.deleteMention(mentionId);
+      setRemovedIds((prev) => new Set(prev).add(mentionId));
+      setConfirmDeleteId(null);
+      onMentionDeleted?.(mentionId);
+      showToast('Post removed — marked as not relevant');
+    } catch (err) {
+      showToast(err?.message || 'Failed to remove post. Please try again.', 'error');
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const handleOpenPost = (permalink) => {
@@ -338,10 +359,18 @@ export default function SocialMediaFeed({ mentions, selectedEntity }) {
                 {mention.text}
               </p>
 
-              {/* Engagement Stats & Reply Button */}
+              {/* Engagement Stats & Action Buttons */}
               <div className="flex items-center justify-between pt-3 border-t border-border/50">
                 <div className="flex-1">
-                  {/* Empty space for balance */}
+                  <button
+                    onClick={() => setConfirmDeleteId(confirmDeleteId === mention.id ? null : mention.id)}
+                    disabled={deletingId === mention.id}
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1 bg-accent text-muted-foreground hover:text-red-400 hover:bg-red-500/10 disabled:opacity-50"
+                    title="Mark this post as not relevant and remove it from the database"
+                  >
+                    <Ban className="w-3 h-3" />
+                    Not Relevant
+                  </button>
                 </div>
                 <button
                   onClick={() => handleReplyClick(idx)}
@@ -355,6 +384,32 @@ export default function SocialMediaFeed({ mentions, selectedEntity }) {
                   Reply
                 </button>
               </div>
+
+              {/* Inline confirmation — deleting a mention is irreversible (README 26b) */}
+              {confirmDeleteId === mention.id && (
+                <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                  <p className="text-xs text-red-400">
+                    Remove this post permanently? This deletes it from the mentions database and can't be undone.
+                  </p>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => handleConfirmNotRelevant(mention.id)}
+                      disabled={deletingId === mention.id}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-500 text-white hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-1"
+                    >
+                      {deletingId === mention.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Ban className="w-3 h-3" />}
+                      Remove
+                    </button>
+                    <button
+                      onClick={() => setConfirmDeleteId(null)}
+                      disabled={deletingId === mention.id}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Previous Replies */}
               {/* {replies[idx] && replies[idx].length > 0 && (
@@ -406,9 +461,15 @@ export default function SocialMediaFeed({ mentions, selectedEntity }) {
 
       {/* Toast Notification */}
       {toast && (
-        <div className="fixed bottom-4 right-4 bg-green-500/20 border border-green-500/50 text-green-400 px-4 py-3 rounded-lg text-sm font-medium flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4 duration-300">
-          <Check className="w-4 h-4" />
-          {toast}
+        <div
+          className={`fixed bottom-4 right-4 px-4 py-3 rounded-lg text-sm font-medium flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4 duration-300 ${
+            toast.type === 'error'
+              ? 'bg-red-500/20 border border-red-500/50 text-red-400'
+              : 'bg-green-500/20 border border-green-500/50 text-green-400'
+          }`}
+        >
+          {toast.type === 'error' ? <AlertTriangle className="w-4 h-4" /> : <Check className="w-4 h-4" />}
+          {toast.message}
         </div>
       )}
     </div>

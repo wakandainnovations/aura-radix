@@ -52,6 +52,7 @@ export default function DashboardView({
   dateRange,
   setDateRange,
   onMentionSelect,
+  onMentionDeleted,
   onRefresh,
 }) {
   // Determine if we're showing celebrity or movie data
@@ -367,7 +368,7 @@ export default function DashboardView({
 
         {/* Social Media Feed - Full Width */}
         {/* Displays recent mentions and posts from all platforms for selected entity */}
-        <SocialMediaFeed mentions={mentions} selectedEntity={selectedEntity} />
+        <SocialMediaFeed mentions={mentions} selectedEntity={selectedEntity} onMentionDeleted={onMentionDeleted} />
 
         {/* Celebrity-Specific Analytics - Only rendered for celebrity entities */}
         {/* Includes social reach, brand value, fan engagement, and controversy metrics */}
