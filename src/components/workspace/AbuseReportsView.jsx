@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ShieldAlert, Loader2, AlertCircle, Ticket, MessageSquare, RotateCcw } from 'lucide-react';
+import { ShieldAlert, Loader2, AlertCircle, Ticket, MessageSquare, RotateCcw, ExternalLink } from 'lucide-react';
 import { reportAbuseService } from '../../api';
 import { abuseStatusMeta, abuseCategoryLabel } from '../../utils/abuseReportStatus';
 
@@ -99,6 +99,12 @@ export default function AbuseReportsView() {
             <div className="divide-y divide-border">
               {reports.map((report) => {
                 const statusMeta = abuseStatusMeta(report.status);
+                // The backend may enrich a report with the reported mention so we
+                // can link straight to the original post. All fields are optional;
+                // we degrade gracefully when the mention isn't included.
+                const mention = report.mention;
+                const postUrl = mention && (mention.permalink || mention.sourceUrl);
+                const snippet = mention && (mention.text || mention.content);
                 return (
                   <div key={report.id} className="p-4 hover:bg-accent/30 transition-colors">
                     <div className="flex items-start justify-between gap-3">
@@ -114,6 +120,11 @@ export default function AbuseReportsView() {
                             <MessageSquare className="w-2.5 h-2.5" />
                             Mention #{report.mentionId}
                           </span>
+                          {mention?.platform && (
+                            <span className="text-[11px] px-1.5 py-0.5 rounded bg-accent text-muted-foreground">
+                              {mention.platform}
+                            </span>
+                          )}
                           {report.externalRef && (
                             <span
                               className="inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded bg-accent text-muted-foreground"
@@ -124,10 +135,32 @@ export default function AbuseReportsView() {
                             </span>
                           )}
                         </div>
+                        {/* Reported post preview (only when the backend includes the mention) */}
+                        {(mention?.author || snippet) && (
+                          <div className="mt-2 text-xs text-muted-foreground">
+                            {mention?.author && (
+                              <span className="font-medium text-foreground">{mention.author}</span>
+                            )}
+                            {snippet && (
+                              <p className="mt-0.5 line-clamp-2">{snippet}</p>
+                            )}
+                          </div>
+                        )}
                         {report.notes && (
                           <p className="text-xs text-muted-foreground mt-1.5 italic">"{report.notes}"</p>
                         )}
                       </div>
+                      {postUrl && (
+                        <a
+                          href={postUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 shrink-0 px-2.5 py-1.5 text-xs font-medium rounded-lg bg-background border border-border text-foreground hover:bg-accent transition-colors"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          View original post
+                        </a>
+                      )}
                     </div>
                     <p className="text-[11px] text-muted-foreground mt-2">
                       Filed {report.submittedAt ? new Date(report.submittedAt).toLocaleString() : '—'}

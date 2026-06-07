@@ -12,7 +12,11 @@ import apiClient from './client';
  *
  * AbuseReport shape (camelCase JSON from the entity):
  *   { id, mentionId, userId, category, notes, status, externalRef,
- *     submittedAt, resolvedAt }
+ *     submittedAt, resolvedAt,
+ *     // Optional. When the backend enriches the report with the reported
+ *     // mention, the UI links straight to the original post. Field names match
+ *     // the mention conventions used across the app (permalink || sourceUrl).
+ *     mention?: { id, author, text, platform, permalink, sourceUrl } }
  */
 
 // AbuseReport.Category
