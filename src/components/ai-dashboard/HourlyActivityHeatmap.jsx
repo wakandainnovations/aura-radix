@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { Clock, Loader2 } from 'lucide-react';
 import { dashboardService } from '../../api/dashboardService';
 
@@ -30,6 +30,7 @@ export default function HourlyActivityHeatmap({ entityId }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('WEEK');
+  const scrollRef = useRef(null);
 
   useEffect(() => {
     if (!entityId) return;
@@ -40,6 +41,14 @@ export default function HourlyActivityHeatmap({ entityId }) {
       .finally(() => setLoading(false));
   }, [entityId, period]);
 
+  // Default the viewport to the most recent days (latest at the bottom);
+  // the user can scroll up to reach earlier activity.
+  useLayoutEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [data]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -49,7 +58,14 @@ export default function HourlyActivityHeatmap({ entityId }) {
   }
 
   const dailyDist = data?.dailyDistribution || {};
-  const dayKeys = Object.keys(dailyDist);
+  // Sort oldest -> latest so the most recent day is at the bottom of the
+  // scroll viewport (auto-scrolled into view above).
+  const dayKeys = Object.keys(dailyDist).sort((a, b) => {
+    const ta = new Date(a).getTime();
+    const tb = new Date(b).getTime();
+    if (isNaN(ta) || isNaN(tb)) return 0;
+    return ta - tb;
+  });
 
   let maxVal = 0;
   const grid = [];
@@ -117,7 +133,7 @@ export default function HourlyActivityHeatmap({ entityId }) {
                 </div>
               ))}
             </div>
-            <div className="max-h-[154px] overflow-y-auto">
+            <div ref={scrollRef} className="max-h-[154px] overflow-y-auto">
               {grid.map((row, ri) => (
                 <div key={ri} className="flex items-center gap-0.5 mb-0.5">
                   <span className="w-20 text-right text-xs text-muted-foreground pr-1 whitespace-nowrap">
