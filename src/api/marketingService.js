@@ -72,4 +72,19 @@ export const marketingService = {
   getCatalog: async () => {
     return marketingClient.get('/_catalog');
   },
+
+  // Entity intelligence reports.
+  // Both upstream routes return the IDENTICAL payload; the difference is intent:
+  //   - getEntityReport         → in-app view a signed-in user opens for an entity
+  //   - getShareableEntityReport→ shareable, prospect-facing version of the same report
+  // entityId is treated as an opaque string and URL-encoded. The backend translates
+  // an unknown entity to 404 and a still-empty (no scored history) entity to a 200
+  // payload carrying only { entityId, name, trackedKeywords, message }.
+  getEntityReport: async (entityId) => {
+    return marketingClient.get(`/entity/${encodeURIComponent(entityId)}/report`);
+  },
+
+  getShareableEntityReport: async (entityId) => {
+    return marketingClient.get(`/entity-report/${encodeURIComponent(entityId)}`);
+  },
 };

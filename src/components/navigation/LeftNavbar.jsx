@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, BarChart3, AlertTriangle, Boxes, Users, Flag, Wrench, Briefcase, ChevronDown, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, BarChart3, AlertTriangle, Boxes, Users, Flag, Wrench, Briefcase, FileText, ChevronDown, ChevronRight } from 'lucide-react';
 
 export default function LeftNavbar({ activeTab, onTabChange, isAdmin = false }) {
   const [expandedMenu, setExpandedMenu] = useState({
@@ -14,6 +14,7 @@ export default function LeftNavbar({ activeTab, onTabChange, isAdmin = false }) 
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'entity-management', label: 'Manage Entities', icon: Boxes },
     { id: 'checkpoints', label: 'Checkpoints', icon: Flag },
+    { id: 'entity-report', label: 'Intelligence Report', icon: FileText },
     {
       id: 'ai-insights',
       label: 'AI Insights',

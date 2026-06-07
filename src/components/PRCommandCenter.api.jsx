@@ -18,6 +18,7 @@ import UserIntelligenceView from './ai-dashboard/UserIntelligenceView';
 import ContentAnalysisView from './ai-dashboard/ContentAnalysisView';
 import GenreIntelligenceView from './ai-dashboard/GenreIntelligenceView';
 import MarketingAggregationView from './ai-dashboard/MarketingAggregationView';
+import EntityReportView from './ai-dashboard/EntityReportView';
 import CheckpointsView from './checkpoints/CheckpointsView';
 import EntityManagementView from './entity-management/EntityManagementView';
 import ReplyTemplatesView from './workspace/ReplyTemplatesView';
@@ -741,6 +742,17 @@ export default function PRCommandCenter() {
             )}
             {activeView === 'checkpoints' && primaryEntity && (
               <CheckpointsView selectedEntity={primaryEntity} />
+            )}
+            {activeView === 'entity-report' && !primaryEntity && (
+              <div className="h-full flex items-center justify-center bg-background">
+                <div className="text-center space-y-4">
+                  <p className="text-lg font-semibold text-foreground">Select an entity to generate its report</p>
+                  <p className="text-sm text-muted-foreground">Click "Add Entity" in the header to select</p>
+                </div>
+              </div>
+            )}
+            {activeView === 'entity-report' && primaryEntity && (
+              <EntityReportView selectedEntity={primaryEntity} />
             )}
           </>
         )}
