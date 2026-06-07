@@ -22,6 +22,33 @@ function normalizeDriver(item, sentimentLabel) {
   return { aspect: String(item ?? ''), sentimentLabel };
 }
 
+// The two aspect-driver endpoints disagree on shape:
+//  - the per-keyword endpoint (/v1/aspect-drivers/{kw}) returns a rich object
+//    { totalPostsAnalyzed, strengths[], weaknesses[], byPlatform };
+//  - the entity-aggregated endpoint (/marketing/aggregate/aspect-drivers?entityId=)
+//    returns a flat ARRAY that unions every aspect driver across the entity's
+//    keywords, with no strength/weakness split.
+// Fold the array form into the same object the display already understands so a
+// selected entity renders identically to a keyword search.
+function isStrengthDriver(item) {
+  const label = item?.type ?? item?.category ?? item?.sentimentLabel ?? item?.driverType;
+  if (typeof label === 'string') return /strength|positive/i.test(label);
+  // No explicit label: split on sentiment score (matches the 40/60 tone bands).
+  const score = item?.averageSentiment;
+  return typeof score === 'number' ? score >= 50 : true;
+}
+
+function normalizeAspectData(data) {
+  if (!data) return null;
+  if (!Array.isArray(data)) return data;
+  const strengths = [];
+  const weaknesses = [];
+  for (const item of data) {
+    (isStrengthDriver(item) ? strengths : weaknesses).push(item);
+  }
+  return { strengths, weaknesses };
+}
+
 // Map a 0–100 sentiment score to a tone palette for badges/bars.
 function sentimentTone(score) {
   if (score == null) return { text: 'text-muted-foreground', bg: 'bg-muted', bar: 'bg-muted-foreground/40' };
@@ -271,6 +298,9 @@ function AspectDriversDisplay({ data }) {
 
   const platforms = data.totalPostsAnalyzed || {};
   const platformEntries = Object.entries(platforms).filter(([k]) => k !== 'total');
+  // The entity-aggregated response carries no post totals, so only show the
+  // stat header when there is something to put in it.
+  const hasStatRow = platforms.total != null || platformEntries.length > 0 || Boolean(data.keyword);
 
   const strengths = (data.strengths || []).map((s) => normalizeDriver(s, 'strength'));
   const weaknesses = (data.weaknesses || []).map((w) => normalizeDriver(w, 'weakness'));
@@ -286,22 +316,24 @@ function AspectDriversDisplay({ data }) {
 
   return (
     <div className="mt-3 space-y-5">
-      <div className="flex flex-wrap items-stretch gap-3">
-        <StatCard value={platforms.total} label="Total Posts" highlight />
-        {platformEntries.map(([plat, count]) => (
-          <StatCard
-            key={plat}
-            value={count}
-            badge={<div className="mt-1 flex justify-center"><PlatformBadge platform={plat} /></div>}
-          />
-        ))}
-        {data.keyword && (
-          <div className="flex min-w-[110px] flex-col justify-center rounded-xl border border-border bg-background px-4 py-3">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Keyword</p>
-            <p className="truncate text-sm font-semibold text-foreground">{data.keyword}</p>
-          </div>
-        )}
-      </div>
+      {hasStatRow && (
+        <div className="flex flex-wrap items-stretch gap-3">
+          <StatCard value={platforms.total} label="Total Posts" highlight />
+          {platformEntries.map(([plat, count]) => (
+            <StatCard
+              key={plat}
+              value={count}
+              badge={<div className="mt-1 flex justify-center"><PlatformBadge platform={plat} /></div>}
+            />
+          ))}
+          {data.keyword && (
+            <div className="flex min-w-[110px] flex-col justify-center rounded-xl border border-border bg-background px-4 py-3">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Keyword</p>
+              <p className="truncate text-sm font-semibold text-foreground">{data.keyword}</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {topDrivers.length > 0 ? (
         <div>
@@ -358,6 +390,10 @@ export default function ContentAnalysisView({ selectedEntity }) {
     setAspectKeyword(null);
   }, [entityId]);
 
+  // Without a keyword override we hit the entity-aggregated aspect-drivers
+  // endpoint so opening this view with an entity selected immediately loads its
+  // details. The aggregate endpoint rejects a request with no filter, so the
+  // query stays disabled until there is a keyword or an entity to scope it to.
   const aspectDriversQuery = useQuery({
     queryKey: aspectKeyword
       ? ['content', 'aspectDrivers', 'keyword', aspectKeyword]
@@ -366,6 +402,7 @@ export default function ContentAnalysisView({ selectedEntity }) {
       ? auraMathService.getAspectDrivers(aspectKeyword)
       : marketingAggregationService.getAspectDrivers({ entityId })),
     enabled: Boolean(aspectKeyword || entityId),
+    select: normalizeAspectData,
     ...CONTENT_QUERY_OPTIONS,
   });
 
@@ -373,6 +410,9 @@ export default function ContentAnalysisView({ selectedEntity }) {
     selectedEntity && !aspectKeyword && aspectDriversQuery.data,
   );
   const autoLoadError = !aspectKeyword && aspectDriversQuery.error;
+  // The aggregate endpoint needs an entity to scope to; prompt for one when
+  // nothing is selected and no keyword has been typed.
+  const showSelectEntityHint = !entityId && !aspectKeyword;
 
   return (
     <div className="h-full overflow-y-auto bg-background">
@@ -407,7 +447,13 @@ export default function ContentAnalysisView({ selectedEntity }) {
             loading={aspectDriversQuery.isFetching}
             onSearch={(kw) => setAspectKeyword(kw)}
           />
-          <AspectDriversDisplay data={aspectDriversQuery.data} />
+          {showSelectEntityHint ? (
+            <p className="mt-3 text-xs text-muted-foreground">
+              Select an entity to load its aggregated aspect drivers, or search by keyword above.
+            </p>
+          ) : (
+            <AspectDriversDisplay data={aspectDriversQuery.data} />
+          )}
         </Section>
       </div>
     </div>

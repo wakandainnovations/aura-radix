@@ -55,6 +55,24 @@ describe('ContentAnalysisView', () => {
     expect(auraMathService.getAspectDrivers).not.toHaveBeenCalled();
   });
 
+  it('renders the entity-aggregated array response (flat union of drivers)', async () => {
+    // The /marketing/aggregate/aspect-drivers?entityId= endpoint returns a flat
+    // array, not the keyword endpoint's { strengths, weaknesses } object.
+    mockReturn(marketingAggregationService.getAspectDrivers, [
+      { aspect: 'soundtrack', averageSentiment: 82, postsMentioning: 40, impactScore: 12 },
+      { aspect: 'runtime', averageSentiment: 28, postsMentioning: 18, impactScore: 7 },
+    ]);
+    renderWithClient(<ContentAnalysisView selectedEntity={{ id: 'e9', name: 'Tenet' }} />);
+
+    await waitFor(() => expect(marketingAggregationService.getAspectDrivers)
+      .toHaveBeenCalledWith({ entityId: 'e9' }));
+    // Both drivers must surface, classified by sentiment into strength/weakness.
+    expect(await screen.findByText('soundtrack')).toBeTruthy();
+    expect(screen.getByText('runtime')).toBeTruthy();
+    expect(screen.getByText('Strength')).toBeTruthy();
+    expect(screen.getByText('Weakness')).toBeTruthy();
+  });
+
   it('does not fetch when no entity is selected and no keyword is entered', async () => {
     renderWithClient(<ContentAnalysisView selectedEntity={null} />);
     await flush();
