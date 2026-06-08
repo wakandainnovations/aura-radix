@@ -4,6 +4,7 @@ import {
   Loader2, Filter, ChevronDown, ChevronUp,
   ToggleLeft, ToggleRight, HelpCircle,
   ArrowUp, ArrowDown, ChevronsUpDown, ExternalLink,
+  ThumbsUp, ThumbsDown, TrendingUp, TrendingDown, MessageSquare,
 } from 'lucide-react';
 import { marketingAggregationService } from '../../api/marketingAggregationService';
 import {
@@ -435,9 +436,10 @@ function GroupedResults({ data }) {
   );
 }
 
-function TopSpreadersResults({ data }) {
+function TopSpreadersResults({ data, maxRows = 50, perPage = 10 }) {
   // Default sort matches the ranked "#" column: highest viral potential first.
   const [sortState, setSortState] = useState({ key: 'viral_potential_score', dir: 'desc' });
+  const [page, setPage] = useState(0);
   const handleSort = useCallback((key) => {
     setSortState((prev) =>
       prev.key === key
@@ -445,6 +447,9 @@ function TopSpreadersResults({ data }) {
         : { key, dir: 'desc' },
     );
   }, []);
+  // Jump back to the first page whenever the result set or sort order changes,
+  // so the user isn't stranded on a now-empty page.
+  useEffect(() => { setPage(0); }, [data, sortState]);
 
   if (!data) return null;
   if (!Array.isArray(data)) return <GenericTable data={data} />;
@@ -467,6 +472,11 @@ function TopSpreadersResults({ data }) {
     return dir === 'asc' ? cmp : -cmp;
   });
 
+  const capped = rows.slice(0, maxRows);
+  const totalPages = Math.ceil(capped.length / perPage);
+  const safePage = Math.min(page, Math.max(0, totalPages - 1));
+  const pageRows = capped.slice(safePage * perPage, (safePage + 1) * perPage);
+
   const sortProps = (sortKey) => ({ sortKey, sortState, onSort: handleSort });
   return (
     <div className="mt-3 overflow-x-auto">
@@ -485,9 +495,11 @@ function TopSpreadersResults({ data }) {
           </tr>
         </thead>
         <tbody>
-          {rows.slice(0, 50).map((row, i) => (
-            <tr key={i} className="border-b border-border/50 hover:bg-accent/20">
-              <td className="py-2 px-3 text-foreground font-mono">{i + 1}</td>
+          {pageRows.map((row, i) => {
+            const rank = safePage * perPage + i;
+            return (
+            <tr key={rank} className="border-b border-border/50 hover:bg-accent/20">
+              <td className="py-2 px-3 text-foreground font-mono">{rank + 1}</td>
               <td className="py-2 px-3 text-foreground font-medium">{row.author || '—'}</td>
               <td className="py-2 px-3"><ScoreBar value={row.viral_potential_score} max={100} color="bg-purple-400" /></td>
               <td className="py-2 px-3 text-right text-foreground">{fmt(row.engagement_count)}</td>
@@ -505,10 +517,245 @@ function TopSpreadersResults({ data }) {
                 </span>
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
-      {data.length > 50 && <p className="text-xs text-muted-foreground mt-1">Showing 50 of {data.length} results</p>}
+      {capped.length > 0 && (
+        <div className="flex items-center justify-between mt-2">
+          <p className="text-xs text-muted-foreground">
+            Showing {safePage * perPage + 1}–{Math.min((safePage + 1) * perPage, capped.length)} of {capped.length}
+            {data.length > capped.length ? ` (top ${capped.length} of ${data.length})` : ''}
+          </p>
+          {totalPages > 1 && (
+            <div className="flex gap-1">
+              <button
+                onClick={() => setPage(safePage - 1)}
+                disabled={safePage === 0}
+                className="px-2 h-7 rounded text-xs font-medium bg-accent text-foreground hover:bg-accent/80 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Prev
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setPage(i)}
+                  className={`w-7 h-7 rounded text-xs font-medium ${safePage === i ? 'bg-primary text-primary-foreground' : 'bg-accent text-foreground hover:bg-accent/80'}`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                onClick={() => setPage(safePage + 1)}
+                disabled={safePage >= totalPages - 1}
+                className="px-2 h-7 rounded text-xs font-medium bg-accent text-foreground hover:bg-accent/80 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Aspect Drivers — the aggregate endpoint hands back aspect drivers in several
+// shapes (a flat array of driver objects, an array of per-keyword objects each
+// carrying `strengths`/`weaknesses` arrays, or a single such object). Dropped
+// into the GenericTable those arrays render as an unreadable `strengths` column
+// full of JSON. Instead we flatten everything to a single list of drivers and
+// present the top strengths and weaknesses as ranked, human-readable rows.
+
+// Map a 0–100 sentiment score to a tone palette for badges/bars.
+function aspectSentimentTone(score) {
+  if (score == null) return { text: 'text-muted-foreground', bg: 'bg-muted', bar: 'bg-muted-foreground/40' };
+  if (score >= 60) return { text: 'text-emerald-400', bg: 'bg-emerald-500/15', bar: 'bg-emerald-400' };
+  if (score >= 40) return { text: 'text-amber-400', bg: 'bg-amber-500/15', bar: 'bg-amber-400' };
+  return { text: 'text-red-400', bg: 'bg-red-500/15', bar: 'bg-red-400' };
+}
+
+const firstNum = (...vals) => vals.find((v) => typeof v === 'number' && !Number.isNaN(v));
+const firstStr = (...vals) => vals.find((v) => typeof v === 'string' && v.trim());
+
+// Pull the fields we care about out of a driver entry, tolerating the various
+// camelCase / snake_case key names the backend uses across endpoints.
+function readDriver(item, forcedLabel, keyword) {
+  const o = item && typeof item === 'object' ? item : { aspect: String(item ?? '') };
+  const aspect = firstStr(o.aspect, o.name, o.label, o.theme, o.driver) || '—';
+  const sentiment = firstNum(o.averageSentiment, o.averageSentimentScore, o.avgSentiment, o.sentiment, o.sentimentScore);
+  const impact = firstNum(o.impactScore, o.impact);
+  const mentions = firstNum(o.postsMentioning, o.mentionCount, o.mentions, o.postCount, o.posts);
+  const labelStr = forcedLabel || firstStr(o.type, o.category, o.sentimentLabel, o.driverType);
+  let isStrength;
+  if (forcedLabel) isStrength = forcedLabel === 'strength';
+  else if (typeof labelStr === 'string' && /strength|positive/i.test(labelStr)) isStrength = true;
+  else if (typeof labelStr === 'string' && /weak|negative/i.test(labelStr)) isStrength = false;
+  else isStrength = sentiment == null ? true : sentiment >= 50;
+  return { aspect, sentiment, impact, mentions, isStrength, keyword: keyword ?? firstStr(o.keyword) };
+}
+
+// Collapse any of the supported response shapes into one flat driver list.
+function flattenAspectDrivers(data) {
+  const out = [];
+  const handleObj = (obj, keyword) => {
+    const kw = keyword ?? (obj && typeof obj === 'object' ? firstStr(obj.keyword) : undefined);
+    const hasSplit = obj && (Array.isArray(obj.strengths) || Array.isArray(obj.weaknesses));
+    if (hasSplit) {
+      (obj.strengths || []).forEach((s) => out.push(readDriver(s, 'strength', kw)));
+      (obj.weaknesses || []).forEach((w) => out.push(readDriver(w, 'weakness', kw)));
+    } else {
+      out.push(readDriver(obj, null, kw));
+    }
+  };
+  if (Array.isArray(data)) {
+    data.forEach((item) => (item && typeof item === 'object' ? handleObj(item) : out.push(readDriver(item))));
+  } else if (data && typeof data === 'object') {
+    handleObj(data);
+  }
+  return out;
+}
+
+// Rank by impact, then mentions — both default to 0 so unscored drivers sink.
+const driverRank = (d) => (d.impact ?? 0) * 1e6 + (d.mentions ?? 0);
+
+function AspectDriverRow({ driver, rank, maxImpact }) {
+  const tone = aspectSentimentTone(driver.sentiment);
+  const impact = driver.impact ?? 0;
+  const impactPct = maxImpact > 0 ? Math.max((impact / maxImpact) * 100, driver.impact != null ? 3 : 0) : 0;
+  return (
+    <div className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2 hover:bg-accent/20 transition-colors">
+      <span className="w-5 shrink-0 text-center font-mono text-[11px] text-muted-foreground">{rank}</span>
+      <div className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-medium text-foreground" title={driver.aspect}>{driver.aspect}</span>
+        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
+          {driver.keyword && (
+            <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">{driver.keyword}</span>
+          )}
+          {driver.mentions != null && (
+            <span className="flex items-center gap-1"><MessageSquare className="h-3 w-3" />{driver.mentions.toLocaleString()}</span>
+          )}
+        </div>
+      </div>
+      {driver.sentiment != null && (
+        <span className={`shrink-0 rounded-md px-2 py-1 text-xs font-semibold ${tone.bg} ${tone.text}`}>
+          {driver.sentiment.toFixed(0)}
+          <span className="ml-0.5 text-[9px] font-normal opacity-70">sent.</span>
+        </span>
+      )}
+      {driver.impact != null && (
+        <div className="hidden w-24 shrink-0 sm:block" title={`Impact ${impact.toFixed(1)}`}>
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+            <span>Impact</span>
+            <span className="font-mono text-foreground">{impact.toFixed(1)}</span>
+          </div>
+          <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-border">
+            <div className={`h-full rounded-full ${tone.bar}`} style={{ width: `${impactPct}%` }} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// One ranked column (Strengths or Weaknesses), paginated to `perPage` rows and
+// capped at `maxPages` pages so the highest-impact drivers stay front-and-centre
+// without an endless page strip. Ranks stay absolute across pages.
+function AspectDriverColumn({ drivers, strength, perPage = 10, maxPages = 5 }) {
+  const [page, setPage] = useState(0);
+  // Reset to the first page whenever the underlying list changes, so a new
+  // search doesn't strand the user on a now-empty page.
+  useEffect(() => { setPage(0); }, [drivers]);
+  const Icon = strength ? ThumbsUp : ThumbsDown;
+  const TrendIcon = strength ? TrendingUp : TrendingDown;
+  const accent = strength ? 'text-emerald-400' : 'text-red-400';
+  const maxImpact = drivers.reduce((m, d) => Math.max(m, d.impact ?? 0), 0);
+  // Only the top (maxPages * perPage) drivers are paginated; the rest are
+  // dropped since they're the lowest-impact and least actionable.
+  const capped = drivers.slice(0, maxPages * perPage);
+  const totalPages = Math.ceil(capped.length / perPage);
+  const safePage = Math.min(page, Math.max(0, totalPages - 1));
+  const start = safePage * perPage;
+  const pageRows = capped.slice(start, start + perPage);
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-1.5">
+        <span className={`flex h-6 w-6 items-center justify-center rounded-full ${strength ? 'bg-emerald-500/15' : 'bg-red-500/15'} ${accent}`}>
+          <Icon className="h-3.5 w-3.5" />
+        </span>
+        <h4 className={`text-sm font-semibold ${accent}`}>{strength ? 'Strengths' : 'Weaknesses'}</h4>
+        <span className="text-xs text-muted-foreground">{drivers.length}</span>
+      </div>
+      {drivers.length === 0 ? (
+        <p className="flex items-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-4 text-xs text-muted-foreground">
+          <TrendIcon className="h-3.5 w-3.5" /> No {strength ? 'strengths' : 'weaknesses'} found
+        </p>
+      ) : (
+        <>
+          <div className="space-y-1.5">
+            {pageRows.map((d, i) => (
+              <AspectDriverRow key={`${d.aspect}-${d.keyword ?? ''}-${start + i}`} driver={d} rank={start + i + 1} maxImpact={maxImpact} />
+            ))}
+          </div>
+          {capped.length > perPage && (
+            <div className="flex items-center justify-between pt-0.5">
+              <p className="text-xs text-muted-foreground">
+                Showing {start + 1}–{Math.min(start + perPage, capped.length)} of {capped.length}
+                {drivers.length > capped.length ? ` (top ${capped.length} of ${drivers.length})` : ''}
+              </p>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setPage(safePage - 1)}
+                  disabled={safePage === 0}
+                  className="px-2 h-7 rounded text-xs font-medium bg-accent text-foreground hover:bg-accent/80 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Prev
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setPage(i)}
+                    className={`w-7 h-7 rounded text-xs font-medium ${safePage === i ? 'bg-primary text-primary-foreground' : 'bg-accent text-foreground hover:bg-accent/80'}`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setPage(safePage + 1)}
+                  disabled={safePage >= totalPages - 1}
+                  className="px-2 h-7 rounded text-xs font-medium bg-accent text-foreground hover:bg-accent/80 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function AspectDriversResults({ data }) {
+  if (!data) return null;
+  // Grouped responses (groupBy active) arrive as a plain object keyed by group;
+  // defer to the existing grouped renderer rather than mis-flattening them.
+  const isGrouped =
+    data && typeof data === 'object' && !Array.isArray(data) &&
+    !Array.isArray(data.strengths) && !Array.isArray(data.weaknesses);
+  if (isGrouped) return <GenericTable data={data} />;
+
+  const drivers = flattenAspectDrivers(data);
+  if (drivers.length === 0) return <p className="text-xs text-muted-foreground mt-3">No aspect drivers</p>;
+
+  const strengths = drivers.filter((d) => d.isStrength).sort((a, b) => driverRank(b) - driverRank(a));
+  const weaknesses = drivers.filter((d) => !d.isStrength).sort((a, b) => driverRank(b) - driverRank(a));
+
+  return (
+    <div className="mt-3 grid grid-cols-1 gap-x-6 gap-y-4 lg:grid-cols-2">
+      <AspectDriverColumn drivers={strengths} strength />
+      <AspectDriverColumn drivers={weaknesses} strength={false} />
     </div>
   );
 }
@@ -655,6 +902,7 @@ export default function MarketingAggregationView() {
           color="text-blue-400"
           description="Union of aspect drivers (strengths & weaknesses) across all matching keywords."
           serviceFn={marketingAggregationService.getAspectDrivers}
+          ResultComponent={AspectDriversResults}
         />
 
         <AggregationSection
