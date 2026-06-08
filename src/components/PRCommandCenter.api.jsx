@@ -74,13 +74,26 @@ export default function PRCommandCenter() {
   const [selectedPlatforms, setSelectedPlatforms] = useState([]);
   const [selectedSentiments, setSelectedSentiments] = useState([]);
   const [selectedTimeRange, setSelectedTimeRange] = useState('24h');
-  const [selectedStatuses, setSelectedStatuses] = useState([]);
+  const [selectedThreatLevels, setSelectedThreatLevels] = useState([]);
   const [commandOpen, setCommandOpen] = useState(false);
   const [addEntityModalOpen, setAddEntityModalOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [timeRange, setTimeRange] = useState('60m');
   const [competitors, setCompetitors] = useState([]);
   const [dateRange, setDateRange] = useState('DAY');
+
+  // Open the command palette with Cmd/Ctrl+K (it has no other entry point).
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setCommandOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAuthenticated]);
 
   // Primary entity is the first selected entity
   const primaryEntity = selectedEntities.length > 0 ? selectedEntities[0] : null;
@@ -273,12 +286,12 @@ export default function PRCommandCenter() {
 
   // Memoize filtered mentions
   const filteredMentions = useMemo(
-    () => filterMentions(mentions, { 
-      platforms: selectedPlatforms, 
-      sentiments: selectedSentiments, 
-      statuses: selectedStatuses 
+    () => filterMentions(mentions, {
+      platforms: selectedPlatforms,
+      sentiments: selectedSentiments,
+      threatLevels: selectedThreatLevels
     }),
-    [mentions, selectedPlatforms, selectedSentiments, selectedStatuses]
+    [mentions, selectedPlatforms, selectedSentiments, selectedThreatLevels]
   );
 
   // Memoize query invalidation callback

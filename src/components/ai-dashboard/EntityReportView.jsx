@@ -8,6 +8,7 @@ import { marketingService } from '../../api/marketingService';
 import {
   fmt, PlatformBadge, ColoredBadge, Section,
 } from './audienceIntelShared';
+import { useSortableRows, SortableHeader } from '../shared';
 
 const SEVERITY_COLORS = {
   HIGH: 'bg-red-500/20 text-red-400',
@@ -141,24 +142,27 @@ function ConversationSection({ cp }) {
 }
 
 function TopicIntelligenceSection({ topics }) {
-  if (!Array.isArray(topics) || topics.length === 0) return null;
+  const list = Array.isArray(topics) ? topics : [];
+  const { rows, sortState, requestSort } = useSortableRows(list, null);
+  const sp = (sortKey) => ({ sortKey, sortState, onSort: requestSort, compact: true });
+  if (list.length === 0) return null;
   return (
     <Section icon={Hash} title="Topic Intelligence" subtitle="Which keywords drive bursts and at what tone" color="text-blue-400">
       <div className="mt-2 overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-border">
-              <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">Keyword</th>
-              <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">Mentions</th>
-              <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">Bursts</th>
-              <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">Category</th>
-              <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">Tone</th>
-              <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">Avg Score</th>
-              <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">Avg Spike</th>
+              <SortableHeader label="Keyword" {...sp('keyword')} />
+              <SortableHeader label="Mentions" {...sp('totalMentions')} />
+              <SortableHeader label="Bursts" {...sp('burstsTriggered')} />
+              <SortableHeader label="Category" {...sp('contentCategory')} />
+              <SortableHeader label="Tone" {...sp('dominantTone')} />
+              <SortableHeader label="Avg Score" {...sp('averageSentimentScore')} />
+              <SortableHeader label="Avg Spike" {...sp('averageExcitationSpike')} />
             </tr>
           </thead>
           <tbody>
-            {topics.map((t, i) => (
+            {rows.map((t, i) => (
               <tr key={i} className="border-b border-border/50 hover:bg-accent/20 align-top">
                 <td className="py-1.5 px-2"><span className="px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-400">{t.keyword}</span></td>
                 <td className="py-1.5 px-2 text-foreground font-mono">{t.totalMentions}</td>
@@ -265,24 +269,29 @@ function RecommendationsSection({ rec }) {
 }
 
 function AdvocatesSection({ advocates }) {
-  if (!Array.isArray(advocates) || advocates.length === 0) return null;
+  const list = Array.isArray(advocates) ? advocates : [];
+  const { rows, sortState, requestSort } = useSortableRows(list, null, {
+    total_engagement: (a) => (typeof a.total_engagement === 'number' ? a.total_engagement : Number(a.total_engagement) || null),
+  });
+  const sp = (sortKey) => ({ sortKey, sortState, onSort: requestSort, compact: true });
+  if (list.length === 0) return null;
   return (
     <Section icon={Users} title="Top Advocates" subtitle="Highest-amplification voices in the conversation" color="text-amber-400">
       <div className="mt-2 overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-border">
-              <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">#</th>
-              <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">User</th>
-              <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">Tribe</th>
-              <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">Hawkes α</th>
-              <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">Posts</th>
-              <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">Engagement</th>
-              <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">MOI</th>
+              <SortableHeader label="#" compact />
+              <SortableHeader label="User" {...sp('global_user_id')} />
+              <SortableHeader label="Tribe" {...sp('tribe_label')} />
+              <SortableHeader label="Hawkes α" {...sp('hawkes_alpha')} />
+              <SortableHeader label="Posts" {...sp('post_count')} />
+              <SortableHeader label="Engagement" {...sp('total_engagement')} />
+              <SortableHeader label="MOI" {...sp('moi_score')} />
             </tr>
           </thead>
           <tbody>
-            {advocates.map((a, i) => (
+            {rows.map((a, i) => (
               <tr key={i} className="border-b border-border/50 hover:bg-accent/20">
                 <td className="py-1.5 px-2 text-foreground font-mono">{i + 1}</td>
                 <td className="py-1.5 px-2 text-foreground font-mono text-[10px]">{a.global_user_id || '—'}</td>

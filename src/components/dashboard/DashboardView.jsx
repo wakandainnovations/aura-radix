@@ -237,19 +237,14 @@ export default function DashboardView({
       },
     ];
 
-    // Prepare platform distribution data for bar chart visualization
+    // Prepare platform distribution data for bar chart visualization.
+    // Keys must match the backend `mention.platform` values: 'x', 'reddit',
+    // 'instagram', 'youtube'.
     const platformData = [
-      {
-        platform: "Reddit",
-        count: platformStats.reddit || 0,
-        color: "#FF4500",
-      },
-      {
-        platform: "Instagram",
-        count: platformStats.youtube || 0,
-        color: "#E1306C",
-      },
-      { platform: "X", count: platformStats.twitter || 0, color: "#000000" },
+      { platform: "X", count: platformStats.x || 0, color: "#000000" },
+      { platform: "Reddit", count: platformStats.reddit || 0, color: "#FF4500" },
+      { platform: "Instagram", count: platformStats.instagram || 0, color: "#E1306C" },
+      { platform: "YouTube", count: platformStats.youtube || 0, color: "#FF0000" },
     ];
 
     return {

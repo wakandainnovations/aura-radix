@@ -3,6 +3,7 @@ import {
   Search, Loader2, ChevronDown, ChevronUp,
   ThumbsUp, ThumbsDown, Minus, ExternalLink
 } from 'lucide-react';
+import { useSortableRows, SortableHeader } from '../shared';
 
 export const PLATFORM_COLORS = {
   x: 'bg-blue-500/20 text-blue-400',
@@ -110,6 +111,8 @@ export function SmallJsonFallback({ data }) {
 }
 
 export function KeyValueCards({ data, depth = 0 }) {
+  const arr = Array.isArray(data) ? data : [];
+  const { rows, sortState, requestSort } = useSortableRows(arr, null);
   if (!data || typeof data !== 'object') return <span className="text-xs text-foreground">{String(data ?? '—')}</span>;
   if (Array.isArray(data)) {
     if (data.length === 0) return <span className="text-xs text-muted-foreground">Empty list</span>;
@@ -122,16 +125,19 @@ export function KeyValueCards({ data, depth = 0 }) {
     }
     if (data.length <= 20) {
       const cols = Object.keys(data[0]).slice(0, 8);
+      // Only scalar columns are sortable; object columns have no clear order.
+      const sortableCols = new Set(cols.filter((c) => typeof data[0][c] !== 'object' || data[0][c] === null));
+      const sp = (c) => (sortableCols.has(c) ? { sortKey: c, sortState, onSort: requestSort } : {});
       return (
         <div className="overflow-x-auto mt-1">
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-border">
-                {cols.map((c) => <th key={c} className="text-left py-1.5 px-2 text-muted-foreground font-medium">{c}</th>)}
+                {cols.map((c) => <SortableHeader key={c} label={c} compact {...sp(c)} />)}
               </tr>
             </thead>
             <tbody>
-              {data.map((row, i) => (
+              {rows.map((row, i) => (
                 <tr key={i} className="border-b border-border/50 hover:bg-accent/20">
                   {cols.map((c) => (
                     <td key={c} className="py-1.5 px-2 text-foreground">

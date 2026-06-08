@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Boxes, Plus, Pencil, Trash2, Loader2, AlertCircle, Tag } from 'lucide-react';
+import { Boxes, Plus, Pencil, Trash2, Loader2, AlertCircle, Tag, ArrowUp, ArrowDown, ChevronsUpDown } from 'lucide-react';
 import { entityService } from '../../api';
+import { useSortableRows } from '../shared';
 import EntityFormModal from './EntityFormModal';
 import { ENTITY_TYPES, getEntityTypeConfig, normalizeKeywords } from './entityTypes';
 
@@ -31,6 +32,10 @@ export default function EntityManagementView() {
   });
 
   const activeConfig = getEntityTypeConfig(activeType);
+
+  // Only the Name column is meaningfully sortable (Keywords is a chip list,
+  // Actions are buttons). Default order is unchanged until the header is clicked.
+  const { rows: sortedEntities, sortState, requestSort } = useSortableRows(entities, null);
 
   const openCreate = () => {
     setModalMode('create');
@@ -171,13 +176,24 @@ export default function EntityManagementView() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
-                  <th className="px-4 py-3 font-semibold">Name</th>
+                  <th className="px-4 py-3 font-semibold">
+                    <button
+                      type="button"
+                      onClick={() => requestSort('name')}
+                      className="inline-flex items-center gap-1 uppercase tracking-wider hover:text-foreground"
+                    >
+                      Name
+                      {sortState?.key === 'name'
+                        ? (sortState.dir === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)
+                        : <ChevronsUpDown className="w-3 h-3 opacity-30" />}
+                    </button>
+                  </th>
                   <th className="px-4 py-3 font-semibold">Keywords</th>
                   <th className="px-4 py-3 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {entities.map((entity) => {
+                {sortedEntities.map((entity) => {
                   const keywords = normalizeKeywords(entity.keywords);
                   return (
                     <tr key={entity.id} className="border-b border-border last:border-0 hover:bg-accent/30 transition-colors">

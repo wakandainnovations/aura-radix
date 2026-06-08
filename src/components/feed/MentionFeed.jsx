@@ -102,11 +102,10 @@ export default function MentionFeed({
                             : "hover:bg-accent/50"
                         }`}
                         onClick={() => {
+                          // Row click selects the mention for the inspector.
+                          // Opening the original post is an explicit action via
+                          // the "View Post" link below.
                           onSelectMention(mention);
-                          // Open permalink in new tab if available
-                          if (mention.permalink || mention.sourceUrl) {
-                            window.open(mention.permalink || mention.sourceUrl, '_blank', 'noopener,noreferrer');
-                          }
                         }}
                       >
                         <div className="flex items-start gap-3">

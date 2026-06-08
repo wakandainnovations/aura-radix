@@ -6,6 +6,7 @@ import {
   PLATFORM_COLORS, fmt, PlatformBadge,
   Section,
 } from './audienceIntelShared';
+import { useSortableRows, SortableHeader } from '../shared';
 
 // Genre picker: a dropdown of all available genres plus a search button.
 // Mirrors KeywordSearch's onSearch(value) contract so each Section stays unchanged.
@@ -64,11 +65,16 @@ const PAGE_SIZE = 10;
 
 function GenreViewersSpreadersTable({ data, type }) {
   const isSpreaders = type === 'spreaders';
-  const rows = data ? (isSpreaders ? (data.spreaders || []) : (data.viewers || [])) : [];
+  const baseRows = data ? (isSpreaders ? (data.spreaders || []) : (data.viewers || [])) : [];
+  const { rows, sortState, requestSort } = useSortableRows(baseRows, null, {
+    platform: (r) => r.platform_handles?.primary_platform,
+    score: (r) => (isSpreaders ? r.hawkes_alpha : r.genre_interest_score),
+  });
   const total = data ? (isSpreaders ? data.totalSpreaders : data.totalViewers) : 0;
   const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const [page, setPage] = useState(0);
   const safePage = Math.min(page, totalPages - 1);
+  const sp = (sortKey) => ({ sortKey, sortState, onSort: requestSort, compact: true });
   if (!data) return null;
   const pageRows = rows.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
   return (
@@ -83,11 +89,11 @@ function GenreViewersSpreadersTable({ data, type }) {
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">User ID</th>
-                <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">Tribe</th>
-                <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">Platform</th>
-                <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">{isSpreaders ? 'Hawkes Alpha' : 'Interest Score'}</th>
-                <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">Peak Activity</th>
+                <SortableHeader label="User ID" {...sp('global_user_id')} />
+                <SortableHeader label="Tribe" {...sp('tribe_label')} />
+                <SortableHeader label="Platform" {...sp('platform')} />
+                <SortableHeader label={isSpreaders ? 'Hawkes Alpha' : 'Interest Score'} {...sp('score')} />
+                <SortableHeader label="Peak Activity" compact />
               </tr>
             </thead>
             <tbody>

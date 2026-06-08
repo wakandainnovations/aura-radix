@@ -3,10 +3,14 @@ import * as Select from '@radix-ui/react-select';
 import { Check, ChevronDown, Filter } from 'lucide-react';
 
 export default function PlatformMultiSelect({ selectedPlatforms, onPlatformsChange }) {
+  // Platform ids must match the backend `mention.platform` values used everywhere
+  // else (see SocialMediaFeed grouping and audienceIntelShared.PLATFORMS):
+  // 'x', 'reddit', 'instagram', 'youtube'.
   const platforms = [
+    { id: 'x', name: 'X', color: '#000000' },
     { id: 'reddit', name: 'Reddit', color: '#FF4500' },
-    { id: 'youtube', name: 'Instagram', color: '#E1306C' },
-    { id: 'twitter', name: 'X', color: '#000000' }
+    { id: 'instagram', name: 'Instagram', color: '#E1306C' },
+    { id: 'youtube', name: 'YouTube', color: '#FF0000' }
   ];
 
   const togglePlatform = (platformId) => {

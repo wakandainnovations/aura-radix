@@ -15,6 +15,7 @@ import {
 } from 'recharts';
 import { GitBranch } from 'lucide-react';
 import { checkpointService } from '../../api';
+import { useSortableRows, SortableHeader } from '../shared';
 
 export default function CheckpointTrendView({ entityId, entityName }) {
   const { data, isLoading, error } = useQuery({
@@ -24,6 +25,10 @@ export default function CheckpointTrendView({ entityId, entityName }) {
   });
 
   const trendPoints = data?.trendPoints || [];
+
+  // Charts stay chronological; only the table below reorders when sorted.
+  const { rows: sortedTrend, sortState, requestSort } = useSortableRows(trendPoints, null);
+  const sp = (sortKey, align = 'left') => ({ sortKey, sortState, onSort: requestSort, align });
 
   const chartData = trendPoints.map((pt) => ({
     label: pt.description,
@@ -126,18 +131,18 @@ export default function CheckpointTrendView({ entityId, entityName }) {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left py-2 px-3 text-muted-foreground font-medium">Checkpoint</th>
-                    <th className="text-left py-2 px-3 text-muted-foreground font-medium">Date</th>
-                    <th className="text-right py-2 px-3 text-muted-foreground font-medium">Period Mentions</th>
-                    <th className="text-right py-2 px-3 text-muted-foreground font-medium">Cumulative</th>
-                    <th className="text-right py-2 px-3 text-muted-foreground font-medium">Positive %</th>
-                    <th className="text-right py-2 px-3 text-muted-foreground font-medium">Net Sentiment</th>
-                    <th className="text-right py-2 px-3 text-muted-foreground font-medium">Δ Positive %</th>
-                    <th className="text-right py-2 px-3 text-muted-foreground font-medium">Δ Net Sentiment</th>
+                    <SortableHeader label="Checkpoint" {...sp('description')} />
+                    <SortableHeader label="Date" {...sp('checkpointDate')} />
+                    <SortableHeader label="Period Mentions" {...sp('periodMentions', 'right')} />
+                    <SortableHeader label="Cumulative" {...sp('cumulativeMentions', 'right')} />
+                    <SortableHeader label="Positive %" {...sp('positiveRatio', 'right')} />
+                    <SortableHeader label="Net Sentiment" {...sp('netSentiment', 'right')} />
+                    <SortableHeader label="Δ Positive %" {...sp('positiveRatioChangeFromPrevious', 'right')} />
+                    <SortableHeader label="Δ Net Sentiment" {...sp('netSentimentChangeFromPrevious', 'right')} />
                   </tr>
                 </thead>
                 <tbody>
-                  {trendPoints.map((pt, i) => (
+                  {sortedTrend.map((pt, i) => (
                     <tr key={i} className="border-b border-border/50 hover:bg-accent/30">
                       <td className="py-2 px-3 font-medium text-foreground">{pt.description}</td>
                       <td className="py-2 px-3 text-muted-foreground">{pt.checkpointDate}</td>

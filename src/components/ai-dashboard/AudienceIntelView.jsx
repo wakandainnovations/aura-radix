@@ -5,6 +5,7 @@ import {
   ThumbsUp, ThumbsDown, Minus, Tag
 } from 'lucide-react';
 import { auraMathService } from '../../api/auraMathService';
+import { useSortableRows, SortableHeader } from '../shared';
 
 const PLATFORM_COLORS = {
   x: 'bg-blue-500/20 text-blue-400',
@@ -169,24 +170,29 @@ function CollapsibleKV({ title, data }) {
 }
 
 function ViralSeedsTable({ data }) {
-  const rows = Array.isArray(data) ? data : [];
+  const baseRows = Array.isArray(data) ? data : [];
+  const { rows, sortState, requestSort } = useSortableRows(baseRows, null, {
+    platform: (r) => r.primaryPlatform || r.outreachHandle?.platform,
+    reach: (r) => getDominantReach(r.reachSignals).value,
+  });
   const [page, setPage] = useState(0);
   const perPage = 10;
   const totalPages = Math.min(Math.ceil(rows.length / perPage), 5);
   const pageRows = rows.slice(page * perPage, (page + 1) * perPage);
+  const sp = (sortKey) => ({ sortKey, sortState, onSort: requestSort });
   if (rows.length === 0) return <p className="text-xs text-muted-foreground mt-3">No results</p>;
   return (
     <div className="mt-3 overflow-x-auto">
       <table className="w-full text-xs">
         <thead>
           <tr className="border-b border-border">
-            <th className="text-left py-2 px-3 text-muted-foreground font-medium">#</th>
-            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Author</th>
-            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Seed Score</th>
-            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Platform</th>
-            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Tribe</th>
-            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Reach</th>
-            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Link</th>
+            <SortableHeader label="#" />
+            <SortableHeader label="Author" {...sp('author')} />
+            <SortableHeader label="Seed Score" {...sp('seedScore')} />
+            <SortableHeader label="Platform" {...sp('platform')} />
+            <SortableHeader label="Tribe" {...sp('tribe')} />
+            <SortableHeader label="Reach" {...sp('reach')} />
+            <SortableHeader label="Link" />
           </tr>
         </thead>
         <tbody>
@@ -234,25 +240,27 @@ function ViralSeedsTable({ data }) {
 }
 
 function TopSpreadersTable({ data }) {
-  const rows = Array.isArray(data) ? data : [];
+  const baseRows = Array.isArray(data) ? data : [];
+  const { rows, sortState, requestSort } = useSortableRows(baseRows, null);
   const [page, setPage] = useState(0);
   const perPage = 10;
   const totalPages = Math.min(Math.ceil(rows.length / perPage), 5);
   const pageRows = rows.slice(page * perPage, (page + 1) * perPage);
+  const sp = (sortKey, align) => ({ sortKey, sortState, onSort: requestSort, align });
   if (rows.length === 0) return <p className="text-xs text-muted-foreground mt-3">No results</p>;
   return (
     <div className="mt-3 overflow-x-auto">
       <table className="w-full text-xs">
         <thead>
           <tr className="border-b border-border">
-            <th className="text-left py-2 px-3 text-muted-foreground font-medium">#</th>
-            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Author</th>
-            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Viral Score</th>
-            <th className="text-right py-2 px-3 text-muted-foreground font-medium">Views</th>
-            <th className="text-right py-2 px-3 text-muted-foreground font-medium">Likes</th>
-            <th className="text-right py-2 px-3 text-muted-foreground font-medium">Comments</th>
-            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Eng. Rate</th>
-            <th className="text-left py-2 px-3 text-muted-foreground font-medium">Sentiment</th>
+            <SortableHeader label="#" />
+            <SortableHeader label="Author" {...sp('author')} />
+            <SortableHeader label="Viral Score" {...sp('viral_potential_score')} />
+            <SortableHeader label="Views" {...sp('total_views', 'right')} />
+            <SortableHeader label="Likes" {...sp('total_likes', 'right')} />
+            <SortableHeader label="Comments" {...sp('total_comments', 'right')} />
+            <SortableHeader label="Eng. Rate" {...sp('engagement_rate')} />
+            <SortableHeader label="Sentiment" {...sp('average_sentiment_score')} />
           </tr>
         </thead>
         <tbody>
@@ -479,9 +487,11 @@ function LookalikesDisplay({ data }) {
 }
 
 function UsersDisplay({ data }) {
+  const usersList = data?.users || (Array.isArray(data) ? data : []);
+  const { rows: sortedUsers, sortState, requestSort } = useSortableRows(usersList, null);
   if (!data) return null;
-  const usersList = data.users || (Array.isArray(data) ? data : []);
   const totalUsers = data.totalUsers ?? usersList.length;
+  const sp = (sortKey) => ({ sortKey, sortState, onSort: requestSort });
   return (
     <div className="mt-3 space-y-3">
       <div className="flex items-center gap-4">
@@ -503,18 +513,18 @@ function UsersDisplay({ data }) {
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left py-2 px-3 text-muted-foreground font-medium">Author</th>
-                <th className="text-left py-2 px-3 text-muted-foreground font-medium">Classification</th>
-                <th className="text-left py-2 px-3 text-muted-foreground font-medium">Tier</th>
-                <th className="text-left py-2 px-3 text-muted-foreground font-medium">Posting Style</th>
-                <th className="text-left py-2 px-3 text-muted-foreground font-medium">Tone</th>
-                <th className="text-left py-2 px-3 text-muted-foreground font-medium">Platform</th>
-                <th className="text-left py-2 px-3 text-muted-foreground font-medium">Posts</th>
-                <th className="text-left py-2 px-3 text-muted-foreground font-medium">Branch Ratio</th>
+                <SortableHeader label="Author" {...sp('author')} />
+                <SortableHeader label="Classification" {...sp('audience_classification')} />
+                <SortableHeader label="Tier" {...sp('influence_tier')} />
+                <SortableHeader label="Posting Style" {...sp('posting_style')} />
+                <SortableHeader label="Tone" {...sp('dominant_tone')} />
+                <SortableHeader label="Platform" {...sp('primary_platform')} />
+                <SortableHeader label="Posts" {...sp('total_posts')} />
+                <SortableHeader label="Branch Ratio" {...sp('branching_ratio')} />
               </tr>
             </thead>
             <tbody>
-              {usersList.slice(0, 50).map((u, i) => {
+              {sortedUsers.slice(0, 50).map((u, i) => {
                 const tone = TONE_CONFIG[u.dominant_tone] || TONE_CONFIG.neutral;
                 const ToneIcon = tone.icon;
                 return (
@@ -577,10 +587,15 @@ function CategoriesDisplay({ data }) {
 }
 
 function GenreViewersSpreadersTable({ data, type }) {
-  if (!data) return null;
   const isSpreaders = type === 'spreaders';
-  const rows = isSpreaders ? (data.spreaders || []) : (data.viewers || []);
+  const baseRows = data ? (isSpreaders ? (data.spreaders || []) : (data.viewers || [])) : [];
+  const { rows, sortState, requestSort } = useSortableRows(baseRows, null, {
+    platform: (r) => r.platform_handles?.primary_platform,
+    score: (r) => (isSpreaders ? r.hawkes_alpha : r.genre_interest_score),
+  });
+  if (!data) return null;
   const total = isSpreaders ? data.totalSpreaders : data.totalViewers;
+  const sp = (sortKey) => ({ sortKey, sortState, onSort: requestSort, compact: true });
   return (
     <div className="mt-2 space-y-2">
       <div className="flex items-center gap-3">
@@ -593,12 +608,12 @@ function GenreViewersSpreadersTable({ data, type }) {
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">User ID</th>
-                <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">Tribe</th>
-                <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">Platform</th>
-                <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">{isSpreaders ? 'Hawkes Alpha' : 'Interest Score'}</th>
-                <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">MOI</th>
-                <th className="text-left py-1.5 px-2 text-muted-foreground font-medium">Peak Activity</th>
+                <SortableHeader label="User ID" {...sp('global_user_id')} />
+                <SortableHeader label="Tribe" {...sp('tribe_label')} />
+                <SortableHeader label="Platform" {...sp('platform')} />
+                <SortableHeader label={isSpreaders ? 'Hawkes Alpha' : 'Interest Score'} {...sp('score')} />
+                <SortableHeader label="MOI" {...sp('moi_score')} />
+                <SortableHeader label="Peak Activity" compact />
               </tr>
             </thead>
             <tbody>
@@ -680,20 +695,25 @@ function GenreStrategyDisplay({ data }) {
 }
 
 function TargetsDisplay({ data }) {
+  const arr = Array.isArray(data) ? data : [];
+  const { rows, sortState, requestSort } = useSortableRows(arr, null);
   if (!data) return null;
   if (Array.isArray(data)) {
     if (data.length === 0) return <p className="text-xs text-muted-foreground mt-3">No targets found</p>;
     const cols = Object.keys(data[0]).slice(0, 10);
+    // Only scalar columns are sortable; object columns have no clear order.
+    const sortableCols = new Set(cols.filter((c) => typeof data[0][c] !== 'object' || data[0][c] === null));
+    const sp = (c) => (sortableCols.has(c) ? { sortKey: c, sortState, onSort: requestSort } : {});
     return (
       <div className="mt-3 overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-border">
-              {cols.map((c) => <th key={c} className="text-left py-2 px-3 text-muted-foreground font-medium">{c}</th>)}
+              {cols.map((c) => <SortableHeader key={c} label={c} {...sp(c)} />)}
             </tr>
           </thead>
           <tbody>
-            {data.slice(0, 50).map((row, i) => (
+            {rows.slice(0, 50).map((row, i) => (
               <tr key={i} className="border-b border-border/50 hover:bg-accent/20">
                 {cols.map((c) => (
                   <td key={c} className="py-2 px-3 text-foreground">

@@ -14,6 +14,7 @@ import {
   fmt, PlatformBadge, ColoredBadge,
   Section, KeywordSearch, KeyValueCards, FilterSelect,
 } from './audienceIntelShared';
+import { useSortableRows, SortableHeader } from '../shared';
 
 function CopyableId({ id }) {
   const [copied, setCopied] = useState(false);
@@ -745,16 +746,18 @@ function UserProfileDisplay({ data, onViewReport }) {
 const USERS_PER_PAGE = 10;
 
 function UsersDisplay({ data }) {
-  const [page, setPage] = useState(1);
   const usersList = data ? (data.users || (Array.isArray(data) ? data : [])) : [];
+  const { rows: sortedUsers, sortState, requestSort } = useSortableRows(usersList, null);
+  const [page, setPage] = useState(1);
   // Reset to the first page whenever a new result set comes in.
   useEffect(() => { setPage(1); }, [usersList]);
   if (!data) return null;
   const totalUsers = data.totalUsers ?? usersList.length;
-  const pageCount = Math.ceil(usersList.length / USERS_PER_PAGE);
+  const pageCount = Math.ceil(sortedUsers.length / USERS_PER_PAGE);
   const currentPage = Math.min(page, pageCount || 1);
   const startIndex = (currentPage - 1) * USERS_PER_PAGE;
-  const pageUsers = usersList.slice(startIndex, startIndex + USERS_PER_PAGE);
+  const pageUsers = sortedUsers.slice(startIndex, startIndex + USERS_PER_PAGE);
+  const sp = (sortKey) => ({ sortKey, sortState, onSort: requestSort });
   return (
     <div className="mt-3 space-y-3">
       <div className="flex items-center gap-4">
@@ -776,14 +779,14 @@ function UsersDisplay({ data }) {
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left py-2 px-3 text-muted-foreground font-medium">Author</th>
-                <th className="text-left py-2 px-3 text-muted-foreground font-medium">Classification</th>
-                <th className="text-left py-2 px-3 text-muted-foreground font-medium">Tier</th>
-                <th className="text-left py-2 px-3 text-muted-foreground font-medium">Posting Style</th>
-                <th className="text-left py-2 px-3 text-muted-foreground font-medium">Tone</th>
-                <th className="text-left py-2 px-3 text-muted-foreground font-medium">Platform</th>
-                <th className="text-left py-2 px-3 text-muted-foreground font-medium">Posts</th>
-                <th className="text-left py-2 px-3 text-muted-foreground font-medium">Branch Ratio</th>
+                <SortableHeader label="Author" {...sp('author')} />
+                <SortableHeader label="Classification" {...sp('audience_classification')} />
+                <SortableHeader label="Tier" {...sp('influence_tier')} />
+                <SortableHeader label="Posting Style" {...sp('posting_style')} />
+                <SortableHeader label="Tone" {...sp('dominant_tone')} />
+                <SortableHeader label="Platform" {...sp('primary_platform')} />
+                <SortableHeader label="Posts" {...sp('total_posts')} />
+                <SortableHeader label="Branch Ratio" {...sp('branching_ratio')} />
               </tr>
             </thead>
             <tbody>

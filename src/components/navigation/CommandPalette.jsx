@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
 import { Command } from 'cmdk';
 import * as Dialog from '@radix-ui/react-dialog';
-import { 
-  Search, 
-  Filter, 
-  RefreshCw, 
-  MessageSquare, 
-  AlertTriangle,
-  TrendingUp,
-  BarChart
+import {
+  Search,
+  RefreshCw,
+  MessageSquare
 } from 'lucide-react';
 
 export default function CommandPalette({ open, onOpenChange, mentions = [], onSelectMention, onRefresh }) {
@@ -21,23 +17,6 @@ export default function CommandPalette({ open, onOpenChange, mentions = [], onSe
       icon: RefreshCw,
       action: () => {
         if (onRefresh) onRefresh();
-        onOpenChange(false);
-      }
-    },
-    {
-      id: 'filter-anomalies',
-      label: 'Show Only Anomalies',
-      icon: AlertTriangle,
-      action: () => {
-        // This would trigger the anomaly filter
-        onOpenChange(false);
-      }
-    },
-    {
-      id: 'view-analytics',
-      label: 'View Analytics Dashboard',
-      icon: BarChart,
-      action: () => {
         onOpenChange(false);
       }
     }
@@ -165,7 +144,10 @@ export default function CommandPalette({ open, onOpenChange, mentions = [], onSe
                   Select
                 </span>
               </div>
-              <span>Cmd/Ctrl + K to open</span>
+              <span className="flex items-center gap-1">
+                <kbd className="px-1.5 py-0.5 bg-accent rounded">Esc</kbd>
+                Close
+              </span>
             </div>
           </Command>
         </Dialog.Content>

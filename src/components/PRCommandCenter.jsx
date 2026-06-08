@@ -6,7 +6,6 @@ import EntitySelector from './navigation/EntitySelector';
 import PlatformMultiSelect from './navigation/PlatformMultiSelect';
 import SentimentFilter from './navigation/SentimentFilter';
 import TimeRangeFilter from './navigation/TimeRangeFilter';
-import ReplyStatusFilter from './navigation/ReplyStatusFilter';
 import DashboardView from './dashboard/DashboardView';
 import AnalyticsView from './analytics/AnalyticsView';
 import AIAnalyticsView from './analytics/AIAnalyticsView';
@@ -32,7 +31,7 @@ export default function PRCommandCenter() {
   const [selectedPlatforms, setSelectedPlatforms] = useState([]); // Empty = all platforms
   const [selectedSentiments, setSelectedSentiments] = useState([]); // Empty = all sentiments
   const [selectedTimeRange, setSelectedTimeRange] = useState('24h'); // Default to 24 hours
-  const [selectedStatuses, setSelectedStatuses] = useState([]); // Empty = all statuses
+  const [selectedThreatLevels, setSelectedThreatLevels] = useState([]); // Empty = all threat levels
   const [commandOpen, setCommandOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [timeRange, setTimeRange] = useState('60m'); // '60m', '24h', '7d', '30d', '6m', '1y'
@@ -77,13 +76,12 @@ export default function PRCommandCenter() {
     filteredMentions = filteredMentions.filter(m => selectedSentiments.includes(m.aiSentiment));
   }
   
-  // Status filter (simulated - in real app would come from backend)
-  if (selectedStatuses.length > 0) {
+  // Threat-level filter (buckets mentions by AI threat score)
+  if (selectedThreatLevels.length > 0) {
     filteredMentions = filteredMentions.filter(m => {
-      // Simulate reply status based on threat score
-      const status = m.aiThreatScore > 70 ? 'pending' : 
-                     m.aiThreatScore > 40 ? 'replied' : 'no-reply';
-      return selectedStatuses.includes(status);
+      const level = m.aiThreatScore > 70 ? 'critical' :
+                    m.aiThreatScore > 40 ? 'elevated' : 'low';
+      return selectedThreatLevels.includes(level);
     });
   }
 
