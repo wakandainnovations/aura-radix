@@ -49,6 +49,7 @@ const COLUMN_TOOLTIPS = {
   weakness: 'A negative driver to get ahead of with messaging or product fixes.',
   outreachhandle: 'How to reach this author — their platform and public profile. Click to open their page directly for seeding, outreach, or partnerships.',
   reachsignals: 'This author’s audience reach broken down by signal (followers, retweets, views…). Longer bars mean bigger reach on that signal.',
+  evangelists: 'Loyal advocates consistently posting positive sentiment about your keyword — your strongest word-of-mouth amplifiers. Click a name to open their profile for partnerships or seeding.',
 };
 
 const normalizeHeader = (s) => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -386,6 +387,164 @@ function MetricBreakdownCell({ value }) {
   );
 }
 
+// Builds a lookup of an object's values keyed by normalized header, so an
+// evangelist's fields resolve whether the backend sends snake_case, camelCase,
+// or differently-named variants (e.g. `screen_name` vs `username`).
+function normalizedLookup(obj) {
+  const map = {};
+  for (const [k, v] of Object.entries(obj)) map[normalizeHeader(k)] = v;
+  return map;
+}
+
+// Returns the first present value from `map` (built by normalizedLookup) across
+// the candidate keys, in priority order. Skips empty/blank values.
+function pickField(map, candidates) {
+  for (const c of candidates) {
+    const v = map[normalizeHeader(c)];
+    if (v !== null && v !== undefined && v !== '') return v;
+  }
+  return undefined;
+}
+
+// Maps a sentiment score to a tone color. Accepts either a 0–1 fraction or a
+// 0–100 scale (the backend has used both). Green ≥ 70, amber 40–69, red < 40.
+function sentimentTone(score) {
+  if (typeof score !== 'number' || Number.isNaN(score)) return 'text-foreground';
+  const v = score <= 1 ? score * 100 : score;
+  if (v >= 70) return 'text-emerald-400';
+  if (v >= 40) return 'text-amber-400';
+  return 'text-red-400';
+}
+
+// A compact labeled stat shown under an evangelist's name.
+function StatPill({ label, value, tone }) {
+  return (
+    <span className="inline-flex items-baseline gap-1 rounded bg-background px-1.5 py-0.5 text-[10px] leading-none">
+      <span className="text-muted-foreground">{label}</span>
+      <span className={`font-mono tabular-nums ${tone || 'text-foreground'}`}>{value}</span>
+    </span>
+  );
+}
+
+// Renders a single brand evangelist as a readable card: name (linked to their
+// profile when available), a platform badge, and whichever engagement stats are
+// present. Falls back to a key/value dump if the entry has no recognizable
+// identity or metrics (an unexpected shape), so no data is ever hidden.
+function EvangelistCard({ data }) {
+  if (data === null || data === undefined) return null;
+  if (typeof data !== 'object') {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2 py-1">
+        <Heart className="w-3 h-3 text-emerald-400 shrink-0" />
+        <span className="text-xs text-foreground">{String(data)}</span>
+      </span>
+    );
+  }
+
+  const map = normalizedLookup(data);
+  const handle = pickField(map, ['handle', 'username', 'screen_name', 'screenName']);
+  const name = pickField(map, [
+    'name', 'displayName', 'display_name', 'fullName', 'full_name', 'author', 'user',
+  ]) ?? handle ?? pickField(map, ['global_user_id', 'globalUserId', 'user_id', 'userId']);
+  const platform = pickField(map, ['platform', 'primaryPlatform', 'primary_platform', 'source', 'network']);
+  const url = pickField(map, ['profile_url', 'profileUrl', 'url', 'link', 'profile']);
+  const posts = pickField(map, ['post_count', 'postCount', 'posts', 'mentions', 'mention_count', 'mentionCount']);
+  const engagement = pickField(map, ['total_engagement', 'totalEngagement', 'engagement', 'engagement_count', 'engagementCount']);
+  const sentiment = pickField(map, ['average_sentiment_score', 'averageSentimentScore', 'sentiment', 'sentiment_score', 'sentimentScore', 'averageSentiment']);
+  const influence = pickField(map, ['viral_potential_score', 'viralPotentialScore', 'viralScore', 'influence_score', 'influenceScore', 'moi_score', 'moiScore', 'hawkes_alpha', 'hawkesAlpha']);
+  const followers = pickField(map, ['followers', 'follower_count', 'followerCount', 'x_followers_count', 'xFollowersCount']);
+
+  const hasIdentity = name !== undefined;
+  const hasStats = [posts, engagement, sentiment, influence, followers].some((v) => v !== undefined);
+  // Unrecognized shape — show the raw fields rather than swallow them.
+  if (!hasIdentity && !hasStats) {
+    return (
+      <div className="rounded-lg border border-border/50 bg-background/40 px-2 py-1.5">
+        <KeyValueCards data={data} />
+      </div>
+    );
+  }
+
+  const display = handle
+    ? (String(handle).startsWith('@') ? String(handle) : `@${handle}`)
+    : (name !== undefined ? String(name) : 'Unknown');
+
+  const nameNode = url ? (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1 text-primary hover:underline truncate"
+      title={display}
+    >
+      <span className="truncate">{display}</span>
+      <ExternalLink className="w-3 h-3 opacity-70 shrink-0" />
+    </a>
+  ) : (
+    <span className="text-foreground font-medium truncate" title={display}>{display}</span>
+  );
+
+  return (
+    <div className="rounded-lg border border-border/50 bg-background/40 px-2 py-1.5">
+      <div className="flex items-center gap-1.5">
+        <Heart className="w-3 h-3 text-emerald-400 shrink-0" />
+        <span className="min-w-0 flex-1">{nameNode}</span>
+        {platform && <PlatformBadge platform={platform} />}
+      </div>
+      {hasStats && (
+        <div className="flex flex-wrap gap-1 mt-1.5">
+          {posts !== undefined && <StatPill label="posts" value={fmtMetric(posts)} />}
+          {engagement !== undefined && <StatPill label="eng" value={fmtMetric(engagement)} />}
+          {followers !== undefined && <StatPill label="reach" value={fmtMetric(followers)} />}
+          {sentiment !== undefined && (
+            <StatPill label="sentiment" value={fmtMetric(sentiment)} tone={sentimentTone(sentiment)} />
+          )}
+          {influence !== undefined && <StatPill label="influence" value={fmtMetric(influence)} />}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// The `evangelists` cell arrives as a nested array (or object) of advocate
+// records and, rendered raw, dumps an unreadable JSON blob. Present it as a
+// stacked list of evangelist cards with a count header, collapsing long lists
+// behind a show-more toggle so a single row can't run off the screen.
+function EvangelistsCell({ value }) {
+  const [expanded, setExpanded] = useState(false);
+  const PREVIEW = 5;
+
+  let list;
+  if (Array.isArray(value)) list = value;
+  else if (value && typeof value === 'object') {
+    list = Array.isArray(value.evangelists) ? value.evangelists : [value];
+  } else {
+    return <span className="text-foreground">{String(value ?? '—')}</span>;
+  }
+
+  if (list.length === 0) return <span className="text-muted-foreground">None</span>;
+
+  const shown = expanded ? list : list.slice(0, PREVIEW);
+  const hidden = list.length - shown.length;
+
+  return (
+    <div className="flex flex-col gap-1.5 min-w-[220px] max-w-[340px] py-0.5">
+      <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        {list.length} {list.length === 1 ? 'evangelist' : 'evangelists'}
+      </span>
+      {shown.map((ev, i) => <EvangelistCard key={i} data={ev} />)}
+      {(hidden > 0 || expanded) && list.length > PREVIEW && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="self-start text-[11px] font-medium text-primary hover:underline"
+        >
+          {expanded ? 'Show less' : `Show ${hidden} more`}
+        </button>
+      )}
+    </div>
+  );
+}
+
 // Columns that are inherently whole numbers and should never show decimals
 // (a rank of "1.00" reads as a bug). Matched via normalizeHeader.
 const INTEGER_COLUMNS = new Set(['rank']);
@@ -396,6 +555,7 @@ function renderCell(value, col) {
     const nc = normalizeHeader(col);
     if (nc === 'outreachhandle') return <OutreachHandleCell value={value} />;
     if (nc === 'reachsignals') return <MetricBreakdownCell value={value} />;
+    if (nc === 'evangelists') return <EvangelistsCell value={value} />;
     if (INTEGER_COLUMNS.has(nc) && typeof value === 'number') return Math.round(value).toLocaleString();
   }
   if (typeof value === 'object') return JSON.stringify(value);
