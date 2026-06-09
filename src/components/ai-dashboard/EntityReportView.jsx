@@ -287,7 +287,6 @@ function AdvocatesSection({ advocates }) {
               <SortableHeader label="Hawkes α" {...sp('hawkes_alpha')} />
               <SortableHeader label="Posts" {...sp('post_count')} />
               <SortableHeader label="Engagement" {...sp('total_engagement')} />
-              <SortableHeader label="MOI" {...sp('moi_score')} />
             </tr>
           </thead>
           <tbody>
@@ -299,7 +298,6 @@ function AdvocatesSection({ advocates }) {
                 <td className="py-1.5 px-2 text-foreground font-mono">{fmt(a.hawkes_alpha, 4)}</td>
                 <td className="py-1.5 px-2 text-foreground font-mono">{a.post_count ?? '—'}</td>
                 <td className="py-1.5 px-2 text-foreground font-mono">{a.total_engagement?.toLocaleString?.() ?? a.total_engagement ?? '—'}</td>
-                <td className="py-1.5 px-2 text-foreground font-mono">{fmt(a.moi_score, 2)}</td>
               </tr>
             ))}
           </tbody>
