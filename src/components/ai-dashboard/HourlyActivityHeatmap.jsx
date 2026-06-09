@@ -3,6 +3,11 @@ import { Clock, Loader2 } from 'lucide-react';
 import { dashboardService } from '../../api/dashboardService';
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const PERIOD_OPTIONS = [
+  { value: 'WEEK', label: 'Week' },
+  { value: 'MONTH', label: 'Month' },
+  { value: 'DAY90', label: '90 Days' },
+];
 const SHORT_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const SHORT_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 function formatDayLabel(day) {
@@ -103,17 +108,17 @@ export default function HourlyActivityHeatmap({ entityId }) {
           <h3 className="text-lg font-semibold text-foreground">Hourly Activity</h3>
         </div>
         <div className="flex gap-1">
-          {['WEEK', 'MONTH'].map((p) => (
+          {PERIOD_OPTIONS.map(({ value, label }) => (
             <button
-              key={p}
-              onClick={() => setPeriod(p)}
+              key={value}
+              onClick={() => setPeriod(value)}
               className={`px-3 py-1 text-xs rounded-full transition-colors ${
-                period === p
+                period === value
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-accent text-muted-foreground hover:text-foreground'
               }`}
             >
-              {p === 'WEEK' ? 'Week' : 'Month'}
+              {label}
             </button>
           ))}
         </div>

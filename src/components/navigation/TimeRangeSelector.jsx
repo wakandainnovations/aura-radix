@@ -18,6 +18,7 @@ export default function TimeRangeSelector({
     { value: "DAY", label: "Past 7 Days", days: 7, apiParam: "DAY" },
     { value: "DAY15", label: "Past 15 Days", days: 15, apiParam: "DAY15" },
     { value: "DAY30", label: "Past 30 Days", days: 30, apiParam: "DAY30" },
+    { value: "DAY90", label: "Past 90 Days", days: 90, apiParam: "DAY90" },
     { value: "WEEK", label: "Weeks", days: 14, apiParam: "WEEK" },
     { value: "MONTH", label: "Months", days: 28, apiParam: "MONTH" },
   ];
