@@ -611,7 +611,7 @@ function GenreViewersSpreadersTable({ data, type }) {
                 <SortableHeader label="User ID" {...sp('global_user_id')} />
                 <SortableHeader label="Tribe" {...sp('tribe_label')} />
                 <SortableHeader label="Platform" {...sp('platform')} />
-                <SortableHeader label={isSpreaders ? 'Hawkes Alpha' : 'Interest Score'} {...sp('score')} />
+                {!isSpreaders && <SortableHeader label="Interest Score" {...sp('score')} />}
                 <SortableHeader label="Peak Activity" compact />
               </tr>
             </thead>
@@ -628,7 +628,7 @@ function GenreViewersSpreadersTable({ data, type }) {
                     <td className="py-1.5 px-2 text-foreground font-mono text-[10px]">{r.global_user_id || '—'}</td>
                     <td className="py-1.5 px-2"><span className="px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-400 text-[10px]">{r.tribe_label || '—'}</span></td>
                     <td className="py-1.5 px-2"><PlatformBadge platform={primaryPlat} /></td>
-                    <td className="py-1.5 px-2 text-foreground font-mono">{fmt(isSpreaders ? r.hawkes_alpha : r.genre_interest_score, 4)}</td>
+                    {!isSpreaders && <td className="py-1.5 px-2 text-foreground font-mono">{fmt(r.genre_interest_score, 4)}</td>}
                     <td className="py-1.5 px-2 text-foreground text-[10px]">{peakLabel}</td>
                   </tr>
                 );
