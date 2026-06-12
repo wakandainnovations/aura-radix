@@ -9,9 +9,11 @@ import {
   Network,
   ExternalLink,
   MessageSquarePlus,
+  Eye,
 } from "lucide-react";
 import {
   formatTimestamp,
+  formatImpressions,
   getThreatColor,
   getSentimentBg,
 } from "../../utils/helpers";
@@ -161,6 +163,16 @@ export default function MentionFeed({
                                   className={`text-xs font-mono font-semibold ${getThreatColor(mention.aiThreatScore || mention.threatScore || 0)}`}
                                 >
                                   Threat: {mention.aiThreatScore || mention.threatScore}
+                                </span>
+                              )}
+                              {/* Impressions - Only show when the platform reports them */}
+                              {formatImpressions(mention.impressions) && (
+                                <span
+                                  className="flex items-center gap-1 text-xs text-muted-foreground"
+                                  title="Impressions on the source platform"
+                                >
+                                  <Eye className="w-3 h-3" />
+                                  {formatImpressions(mention.impressions)}
                                 </span>
                               )}
                               {/* Engagement Metrics - Only show if available */}

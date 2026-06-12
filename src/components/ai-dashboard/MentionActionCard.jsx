@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   MessageSquare, Send, AlertTriangle, Users, Loader2,
-  ChevronDown, ChevronUp, FileText, Clock, Flag, Ticket, Ban
+  ChevronDown, ChevronUp, FileText, Clock, Flag, Ticket, Ban, Eye
 } from 'lucide-react';
+import { formatImpressions } from '../../utils/helpers';
 import { mentionActionService } from '../../api/mentionActionService';
 import { reportAbuseService, ABUSE_CATEGORIES } from '../../api/reportAbuseService';
 import { abuseStatusMeta, abuseCategoryLabel } from '../../utils/abuseReportStatus';
@@ -158,6 +159,7 @@ export default function MentionActionCard({ mention, onMentionDeleted }) {
   const sentiment = (mention.sentiment || mention.aiSentiment || '').toUpperCase();
   const sentimentColor = SENTIMENT_COLORS[sentiment] || 'text-slate-400';
   const postUrl = mention.sourceUrl || mention.permalink;
+  const impressions = formatImpressions(mention.impressions);
 
   // Removed from the database — drop it from the feed.
   if (deleted) return null;
@@ -192,6 +194,15 @@ export default function MentionActionCard({ mention, onMentionDeleted }) {
             <span className="text-xs text-muted-foreground">
               @{author}
             </span>
+            {impressions && (
+              <span
+                className="flex items-center gap-1 text-xs text-muted-foreground"
+                title="Impressions on the source platform"
+              >
+                <Eye className="w-3 h-3" />
+                {impressions}
+              </span>
+            )}
           </div>
           {postUrl ? (
             <a

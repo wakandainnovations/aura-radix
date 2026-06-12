@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { formatDistanceToNow, format } from 'date-fns';
-import { MessageSquare, Heart, MessageCircle, Share2, AlertTriangle, Star, Send, X, Sparkles, RotateCcw, Check, Loader, Ban, Loader2 } from 'lucide-react';
+import { MessageSquare, Heart, MessageCircle, Share2, AlertTriangle, Star, Send, X, Sparkles, RotateCcw, Check, Loader, Ban, Loader2, Eye } from 'lucide-react';
+import { formatImpressions } from '../../utils/helpers';
 import { interactionService } from '../../api/interactionService';
 import { mentionActionService } from '../../api/mentionActionService';
 import InlineReplyBox from '../feed/InlineReplyBox';
@@ -48,7 +49,8 @@ export default function SocialMediaFeed({ mentions, selectedEntity, onMentionDel
       engagement: { likes: 0, comments: 0, shares: 0 },
       aiThreatScore: 0,
       isRealComment: true,
-      permalink: mention.permalink
+      permalink: mention.permalink,
+      impressions: formatImpressions(mention.impressions)
     }));
   }, [mentions, removedIds]);
 
@@ -340,6 +342,16 @@ export default function SocialMediaFeed({ mentions, selectedEntity, onMentionDel
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  {/* Impressions - only shown when the platform reports them */}
+                  {mention.impressions && (
+                    <span
+                      className="flex items-center gap-1 text-xs text-muted-foreground"
+                      title={`${mention.impressions} impressions on ${mention.platform.toUpperCase()}`}
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      {mention.impressions}
+                    </span>
+                  )}
                   {/* Sentiment Badge */}
                   <span
                     className={`px-2 py-1 rounded text-xs font-medium capitalize ${getSentimentColor(

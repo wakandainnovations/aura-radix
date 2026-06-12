@@ -53,6 +53,21 @@ export function formatCurrency(value) {
   })}`;
 }
 
+// Backend sends impressions as a string count (e.g. "15230"), or "NA" when the
+// source platform exposes no impression metric. Returns a compact display
+// string (e.g. "15.2K") or null when there's nothing meaningful to show.
+export function formatImpressions(impressions) {
+  if (impressions === undefined || impressions === null || impressions === 'NA') return null;
+
+  const numValue = Number(impressions);
+  if (isNaN(numValue)) return null;
+
+  return numValue.toLocaleString('en-US', {
+    notation: 'compact',
+    maximumFractionDigits: 1
+  });
+}
+
 export function getThreatColor(score) {
   if (score >= 80) return 'text-threat-critical';
   if (score >= 60) return 'text-threat-high';
