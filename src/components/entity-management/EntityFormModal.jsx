@@ -6,10 +6,13 @@ import KeywordInput from './KeywordInput';
 import { ENTITY_TYPES, normalizeKeywords } from './entityTypes';
 
 /**
- * Modal for creating a new entity (with keywords) or editing an existing entity's keywords.
+ * Modal for creating a new entity or editing an existing entity's full details.
  *
  * mode === 'create': full form (type, name, type-specific fields, keywords) -> onCreate(entityType, data)
- * mode === 'edit':   keywords-only editor for an existing entity      -> onUpdateKeywords(entityType, id, keywords)
+ * mode === 'edit':   full editor for an existing entity (name, type-specific fields, keywords)
+ *                    -> onUpdate(entityType, id, data). The backend update is a full replace, so the
+ *                    form always submits the complete set of editable values; the entity's `type`
+ *                    cannot be changed and is shown read-only.
  */
 export default function EntityFormModal({
   open,
@@ -18,7 +21,7 @@ export default function EntityFormModal({
   entity = null,
   defaultEntityType = 'movie',
   onCreate,
-  onUpdateKeywords,
+  onUpdate,
 }) {
   const isEdit = mode === 'edit';
 
@@ -26,6 +29,9 @@ export default function EntityFormModal({
   const [name, setName] = useState('');
   const [director, setDirector] = useState('');
   const [actors, setActors] = useState('');
+  const [industry, setIndustry] = useState('');
+  const [genre, setGenre] = useState('');
+  const [releaseDate, setReleaseDate] = useState('');
   const [keywords, setKeywords] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -40,12 +46,20 @@ export default function EntityFormModal({
       setName(entity.name || '');
       setDirector(entity.director || '');
       setActors(Array.isArray(entity.actors) ? entity.actors.join(', ') : entity.actors || '');
+      setIndustry(Array.isArray(entity.industry) ? entity.industry.join(', ') : entity.industry || '');
+      setGenre(Array.isArray(entity.genre) ? entity.genre.join(', ') : entity.genre || '');
+      // releaseDate may arrive as "2024-03-01" or a full ISO timestamp; the
+      // <input type="date"> control needs a bare YYYY-MM-DD value.
+      setReleaseDate(entity.releaseDate ? String(entity.releaseDate).slice(0, 10) : '');
       setKeywords(normalizeKeywords(entity.keywords));
     } else {
       setEntityType(defaultEntityType);
       setName('');
       setDirector('');
       setActors('');
+      setIndustry('');
+      setGenre('');
+      setReleaseDate('');
       setKeywords([]);
     }
   }, [open, isEdit, entity, defaultEntityType]);
@@ -56,25 +70,40 @@ export default function EntityFormModal({
     e.preventDefault();
     setError(null);
 
-    if (!isEdit && !name.trim()) {
+    // Name is required for both create and the full-replace update.
+    if (!name.trim()) {
       setError('Name is required.');
       return;
+    }
+
+    // Build the editable payload shared by create and update. The update is a
+    // full replace, so we always send the complete set of values — fields left
+    // blank are intentionally omitted, which clears them server-side.
+    const data = { name: name.trim(), keywords };
+    if (!isEdit) data.type = entityType;
+    if (typeConfig.hasMovieFields) {
+      if (director.trim()) data.director = director.trim();
+      const actorList = actors
+        .split(',')
+        .map((a) => a.trim())
+        .filter(Boolean);
+      if (actorList.length > 0) data.actors = actorList;
+      // industry is a single string (e.g. "Hollywood").
+      if (industry.trim()) data.industry = industry.trim();
+      // genre is sent as a JSON list; the user types comma-separated values.
+      const genreList = genre
+        .split(',')
+        .map((g) => g.trim())
+        .filter(Boolean);
+      if (genreList.length > 0) data.genre = genreList;
+      if (releaseDate) data.releaseDate = releaseDate;
     }
 
     setSubmitting(true);
     try {
       if (isEdit) {
-        await onUpdateKeywords(entityType, entity.id, keywords);
+        await onUpdate(entityType, entity.id, data);
       } else {
-        const data = { name: name.trim(), type: entityType, keywords };
-        if (typeConfig.hasMovieFields) {
-          if (director.trim()) data.director = director.trim();
-          const actorList = actors
-            .split(',')
-            .map((a) => a.trim())
-            .filter(Boolean);
-          if (actorList.length > 0) data.actors = actorList;
-        }
         await onCreate(entityType, data);
       }
       onOpenChange(false);
@@ -94,11 +123,11 @@ export default function EntityFormModal({
           <div className="flex items-start justify-between mb-6">
             <div>
               <Dialog.Title className="text-lg font-semibold text-foreground">
-                {isEdit ? 'Edit Keywords' : 'Add Entity'}
+                {isEdit ? 'Edit Entity' : 'Add Entity'}
               </Dialog.Title>
               <p className="text-sm text-muted-foreground mt-1">
                 {isEdit
-                  ? `Update the keywords tracked for "${entity?.name}".`
+                  ? `Update the details and keywords tracked for "${entity?.name}".`
                   : 'Create a new entity and the keywords used to track it.'}
               </p>
             </div>
@@ -145,27 +174,18 @@ export default function EntityFormModal({
             )}
 
             {/* Name */}
-            {isEdit ? (
-              <div className="space-y-2">
-                <span className="text-sm font-medium text-foreground">Name</span>
-                <div className="px-3 py-2 bg-background border border-border rounded-lg text-sm text-foreground">
-                  {entity?.name}
-                </div>
-              </div>
-            ) : (
-              <FormInput
-                id="entity-name"
-                label="Name"
-                placeholder={typeConfig.namePlaceholder}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                disabled={submitting}
-              />
-            )}
+            <FormInput
+              id="entity-name"
+              label="Name"
+              placeholder={typeConfig.namePlaceholder}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              disabled={submitting}
+            />
 
-            {/* Movie-specific fields (create only) */}
-            {!isEdit && typeConfig.hasMovieFields && (
+            {/* Movie-specific fields */}
+            {typeConfig.hasMovieFields && (
               <>
                 <FormInput
                   id="entity-director"
@@ -182,6 +202,31 @@ export default function EntityFormModal({
                   value={actors}
                   onChange={(e) => setActors(e.target.value)}
                   helpText="Separate multiple names with commas."
+                  disabled={submitting}
+                />
+                <FormInput
+                  id="entity-industry"
+                  label="Industry"
+                  placeholder="e.g. Hollywood"
+                  value={industry}
+                  onChange={(e) => setIndustry(e.target.value)}
+                  disabled={submitting}
+                />
+                <FormInput
+                  id="entity-genre"
+                  label="Genre"
+                  placeholder="Comma-separated, e.g. Action, Sci-Fi"
+                  value={genre}
+                  onChange={(e) => setGenre(e.target.value)}
+                  helpText="Separate multiple genres with commas."
+                  disabled={submitting}
+                />
+                <FormInput
+                  id="entity-release-date"
+                  label="Release Date"
+                  type="date"
+                  value={releaseDate}
+                  onChange={(e) => setReleaseDate(e.target.value)}
                   disabled={submitting}
                 />
               </>
@@ -216,7 +261,7 @@ export default function EntityFormModal({
                 className="px-4 py-2 h-10 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                {isEdit ? 'Save Keywords' : 'Create Entity'}
+                {isEdit ? 'Save Changes' : 'Create Entity'}
               </button>
             </div>
           </form>

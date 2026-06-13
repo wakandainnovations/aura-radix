@@ -39,7 +39,9 @@ export const entityService = {
 
   // Create new managed entity
   // Path: POST /api/entities/{entityType}
-  // Request: { name, type, director?, actors?, keywords? }
+  // Request: { name, type, director?, actors?, releaseDate?, industry?, genre?, keywords? }
+  //   industry is a string (e.g. "Hollywood"); genre is a string[] (e.g. ["Action", "Sci-Fi"]).
+  //   industry/genre/releaseDate are only applied when entityType is "movie".
   // Response: Created entity object
   create: async (entityType = 'movie', entityData) => {
     try {
@@ -50,6 +52,27 @@ export const entityService = {
       return response;
     } catch (error) {
       console.error(`Failed to create entity of type ${entityType}:`, error);
+      throw error;
+    }
+  },
+
+  // Update an existing managed entity's editable details.
+  // Path: PUT /api/entities/{entityType}/{id}
+  // Request: { name, director?, actors?, releaseDate?, industry?, genre?, keywords? }
+  //   FULL REPLACE of editable fields: any omitted field is cleared by the backend,
+  //   so callers must send the complete set of values the entity should have.
+  //   `name` is required; releaseDate/industry/genre apply only to movies.
+  //   Competitors are managed via updateCompetitors and are NOT affected by this call.
+  // Response: the updated entity (same shape as getById)
+  update: async (entityType = 'movie', entityId, entityData) => {
+    try {
+      const payload = entityData?.keywords
+        ? { ...entityData, keywords: toKeywordDtos(entityData.keywords) }
+        : entityData;
+      const response = await apiClient.put(`/entities/${entityType}/${entityId}`, payload);
+      return response;
+    } catch (error) {
+      console.error(`Failed to update entity ${entityId} of type ${entityType}:`, error);
       throw error;
     }
   },
@@ -82,6 +105,25 @@ export const entityService = {
       return response;
     } catch (error) {
       console.error(`Failed to update keywords for entity ${entityId}:`, error);
+      throw error;
+    }
+  },
+
+  // Generate a branded, downloadable marketing-report PDF for an entity.
+  // Server-rendered via OpenPDF (no upstream PDF call); same aggregation as the
+  // in-app marketing report, laid out as a shareable document.
+  // Path: GET /api/entities/{entityType}/{id}/marketing-report/pdf
+  // Query: period (default DAY30), windowDays (1–30, default 7)
+  // Response: binary application/pdf (returned as a Blob)
+  getMarketingReportPdf: async (entityType = 'movie', entityId, { period, windowDays } = {}) => {
+    try {
+      const blob = await apiClient.get(
+        `/entities/${entityType}/${entityId}/marketing-report/pdf`,
+        { params: { period, windowDays }, responseType: 'blob' }
+      );
+      return blob;
+    } catch (error) {
+      console.error(`Failed to fetch marketing report PDF for entity ${entityId}:`, error);
       throw error;
     }
   },

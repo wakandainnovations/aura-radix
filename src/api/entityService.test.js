@@ -64,4 +64,34 @@ describe('entityService keyword serialization (KeywordDto)', () => {
       keywords: [{ keyword: 'blast' }],
     });
   });
+
+  it('update() PUTs the full editable payload and wraps keywords as KeywordDtos', async () => {
+    await entityService.update('movie', 5, {
+      name: 'Dune: Part Two',
+      director: 'Denis Villeneuve',
+      actors: ['Timothee Chalamet', 'Zendaya'],
+      industry: 'Hollywood',
+      genre: ['Science Fiction', 'Adventure'],
+      releaseDate: '2024-03-01',
+      keywords: ['dune'],
+    });
+
+    expect(apiClient.put).toHaveBeenCalledWith('/entities/movie/5', {
+      name: 'Dune: Part Two',
+      director: 'Denis Villeneuve',
+      actors: ['Timothee Chalamet', 'Zendaya'],
+      industry: 'Hollywood',
+      genre: ['Science Fiction', 'Adventure'],
+      releaseDate: '2024-03-01',
+      keywords: [{ keyword: 'dune' }],
+    });
+  });
+
+  it('update() without keywords leaves the payload untouched', async () => {
+    await entityService.update('celebrity', 9, { name: 'Jane Doe' });
+
+    expect(apiClient.put).toHaveBeenCalledWith('/entities/celebrity/9', {
+      name: 'Jane Doe',
+    });
+  });
 });

@@ -14,6 +14,7 @@ export default function EntityManagementView() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('create');
   const [editingEntity, setEditingEntity] = useState(null);
+  const [editingId, setEditingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [actionError, setActionError] = useState(null);
 
@@ -44,10 +45,23 @@ export default function EntityManagementView() {
     setModalOpen(true);
   };
 
-  const openEdit = (entity) => {
-    setModalMode('edit');
-    setEditingEntity(entity);
+  // The list endpoint returns a minimal entity shape, but the update is a full
+  // replace — so fetch the complete entity first to pre-populate every editable
+  // field (director, actors, industry, genre, releaseDate, keywords). Otherwise
+  // fields missing from the list payload would be cleared on save.
+  const openEdit = async (entity) => {
     setActionError(null);
+    setEditingId(entity.id);
+    try {
+      const full = await entityService.getById(entity.id, activeType);
+      setEditingEntity({ ...entity, ...full, entityType: activeType });
+    } catch {
+      // Fall back to the list row; the user can still edit visible fields.
+      setEditingEntity({ ...entity, entityType: activeType });
+    } finally {
+      setEditingId(null);
+    }
+    setModalMode('edit');
     setModalOpen(true);
   };
 
@@ -59,9 +73,9 @@ export default function EntityManagementView() {
     [queryClient]
   );
 
-  const handleUpdateKeywords = useCallback(
-    async (entityType, entityId, keywords) => {
-      await entityService.updateKeywords(entityType, entityId, keywords);
+  const handleUpdate = useCallback(
+    async (entityType, entityId, data) => {
+      await entityService.update(entityType, entityId, data);
       queryClient.invalidateQueries({ queryKey: ['entities', entityType] });
     },
     [queryClient]
@@ -97,7 +111,7 @@ export default function EntityManagementView() {
             <div>
               <h2 className="text-2xl font-bold text-foreground">Manage Entities</h2>
               <p className="text-sm text-muted-foreground">
-                Add movies, celebrities, politicians, and political parties, and manage the keywords used to track them.
+                Add movies, celebrities, politicians, and political parties, and edit their details and the keywords used to track them.
               </p>
             </div>
           </div>
@@ -202,6 +216,16 @@ export default function EntityManagementView() {
                         {entity.director && (
                           <p className="text-xs text-muted-foreground mt-0.5">Dir. {entity.director}</p>
                         )}
+                        {(entity.industry || entity.genre) && (
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {[
+                              Array.isArray(entity.industry) ? entity.industry.join(', ') : entity.industry,
+                              Array.isArray(entity.genre) ? entity.genre.join(', ') : entity.genre,
+                            ]
+                              .filter(Boolean)
+                              .join(' • ')}
+                          </p>
+                        )}
                       </td>
                       <td className="px-4 py-3 align-top">
                         {keywords.length === 0 ? (
@@ -224,11 +248,16 @@ export default function EntityManagementView() {
                         <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => openEdit(entity)}
-                            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-                            title="Edit keywords"
+                            disabled={editingId === entity.id}
+                            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-colors disabled:opacity-50"
+                            title="Edit entity"
                           >
-                            <Pencil className="w-3.5 h-3.5" />
-                            Keywords
+                            {editingId === entity.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Pencil className="w-3.5 h-3.5" />
+                            )}
+                            Edit
                           </button>
                           <button
                             onClick={() => handleDelete(entity)}
@@ -261,7 +290,7 @@ export default function EntityManagementView() {
         entity={editingEntity}
         defaultEntityType={activeType}
         onCreate={handleCreate}
-        onUpdateKeywords={handleUpdateKeywords}
+        onUpdate={handleUpdate}
       />
     </div>
   );
