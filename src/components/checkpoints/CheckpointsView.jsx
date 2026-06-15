@@ -5,6 +5,8 @@ import CheckpointImpactView from './CheckpointImpactView';
 import CheckpointTrendView from './CheckpointTrendView';
 import SentimentDeltaView from './SentimentDeltaView';
 import { checkpointService } from '../../api';
+import GatedFeature from '../licensing/GatedFeature';
+import { FEATURE_KEYS } from '../../lib/licensing';
 
 export default function CheckpointsView({ selectedEntity }) {
   const entityId = selectedEntity?.id;
@@ -17,6 +19,7 @@ export default function CheckpointsView({ selectedEntity }) {
   });
 
   return (
+    <GatedFeature featureKey={FEATURE_KEYS.CHECKPOINTS} featureName="Checkpoints">
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
       <div>
         <h2 className="text-lg font-bold text-foreground">Checkpoints — {entityName}</h2>
@@ -38,5 +41,6 @@ export default function CheckpointsView({ selectedEntity }) {
         checkpoints={checkpoints}
       />
     </div>
+    </GatedFeature>
   );
 }

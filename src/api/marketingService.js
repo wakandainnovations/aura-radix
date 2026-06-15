@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { unwrapEntitlement, entitlementPayload } from './entitlement';
 
 const marketingClient = axios.create({
   baseURL: '/v1/marketing',
@@ -80,11 +81,16 @@ export const marketingService = {
   // entityId is treated as an opaque string and URL-encoded. The backend translates
   // an unknown entity to 404 and a still-empty (no scored history) entity to a 200
   // payload carrying only { entityId, name, trackedKeywords, message }.
+  // Intelligence Report is a DIAMOND-gated feature. The backend wraps the report in an
+  // EntitledResponse envelope; entitlementPayload yields the real report when entitled
+  // and the masked preview otherwise. Gating (blur) is driven by /license/features.
   getEntityReport: async (entityId) => {
-    return marketingClient.get(`/entity/${encodeURIComponent(entityId)}/report`);
+    const res = await marketingClient.get(`/entity/${encodeURIComponent(entityId)}/report`);
+    return entitlementPayload(unwrapEntitlement(res));
   },
 
   getShareableEntityReport: async (entityId) => {
-    return marketingClient.get(`/entity-report/${encodeURIComponent(entityId)}`);
+    const res = await marketingClient.get(`/entity-report/${encodeURIComponent(entityId)}`);
+    return entitlementPayload(unwrapEntitlement(res));
   },
 };

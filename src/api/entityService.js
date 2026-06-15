@@ -14,9 +14,12 @@ export const entityService = {
   // Get all entities of a specific type
   // Path: GET /api/entities/{entityType}
   // Response: Array of entities
-  getAll: async (entityType = 'movie') => {
+  // F2: admins may pass { ownerId } to scope the list to one user's entities.
+  getAll: async (entityType = 'movie', { ownerId } = {}) => {
     try {
-      const response = await apiClient.get(`/entities/${entityType}`);
+      const params = {};
+      if (ownerId != null) params.ownerId = ownerId;
+      const response = await apiClient.get(`/entities/${entityType}`, { params });
       return response;
     } catch (error) {
       console.error(`Failed to fetch all entities of type ${entityType}:`, error);

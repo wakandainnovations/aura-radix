@@ -61,6 +61,36 @@ export const analyticsService = {
     }
   },
 
+  // List CELEBRITY entities available for analytics
+  // Path: GET /api/analytics/celebrity
+  // Response: array of celebrity entities (or { celebrities: [...] })
+  getCelebrityEntities: async () => {
+    try {
+      const response = await apiClient.get('/analytics/celebrity');
+      return response;
+    } catch (error) {
+      console.error('Failed to fetch celebrity entities:', error);
+      throw error;
+    }
+  },
+
+  // Get full analytics for a single CELEBRITY entity
+  // Path: GET /api/analytics/celebrity/{entityId}
+  // Response: { socialReach, brandValue, endorsementScore, fanEngagement,
+  //             trend, recentProjects: [{ title, status, buzz }],
+  //             metrics: [{ name, score, impact }] }
+  getCelebrityAnalytics: async (entityId) => {
+    try {
+      const response = await apiClient.get(
+        `/analytics/celebrity/${encodeURIComponent(entityId)}`,
+      );
+      return response;
+    } catch (error) {
+      console.error(`Failed to fetch celebrity analytics for ${entityId}:`, error);
+      throw error;
+    }
+  },
+
   // Get top box office movie for a specific date (Mock analytics)
   // Path: GET /api/analytics/top-box-office
   // Query Params: date (ISO format, e.g., 2025-11-08)

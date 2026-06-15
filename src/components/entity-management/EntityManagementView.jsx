@@ -5,11 +5,38 @@ import { entityService } from '../../api';
 import { useSortableRows } from '../shared';
 import EntityFormModal from './EntityFormModal';
 import { ENTITY_TYPES, getEntityTypeConfig, normalizeKeywords } from './entityTypes';
+import { useLicense } from '../../contexts/LicenseContext';
+import UpgradeModal from '../licensing/UpgradeModal';
+import { formatCollectionFrequency } from '../../lib/licensing';
 
 const QUERY_STALE_TIME = 1000 * 60 * 5; // 5 minutes
 
+// A labelled usage bar (e.g. "Entities 3 / 5").
+function UsageBar({ label, used, max }) {
+  const hasMax = typeof max === 'number' && max > 0;
+  const pct = hasMax ? Math.min(100, Math.round((used / max) * 100)) : 0;
+  const atLimit = hasMax && used >= max;
+  return (
+    <div className="flex-1 min-w-[160px]">
+      <div className="flex items-center justify-between text-xs mb-1">
+        <span className="text-muted-foreground">{label}</span>
+        <span className={atLimit ? 'text-amber-500 font-medium' : 'text-foreground'}>
+          {used ?? 0}{hasMax ? ` / ${max}` : ''}
+        </span>
+      </div>
+      <div className="h-1.5 rounded-full bg-border overflow-hidden">
+        <div
+          className={`h-full rounded-full ${atLimit ? 'bg-amber-500' : 'bg-primary'}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function EntityManagementView() {
   const queryClient = useQueryClient();
+  const { license, usage, viewAsUserId } = useLicense();
   const [activeType, setActiveType] = useState('movie');
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('create');
@@ -17,6 +44,25 @@ export default function EntityManagementView() {
   const [editingId, setEditingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [actionError, setActionError] = useState(null);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [limitContext, setLimitContext] = useState(null);
+
+  // F4: a 409 from create/keyword-update carries { limitType, limit, current }.
+  // Surface an upgrade prompt instead of a raw error. Returns true when handled.
+  const handleLimitError = useCallback((err) => {
+    if (err?.status === 409 && err?.data?.limitType) {
+      setLimitContext({
+        type: 'limit',
+        limitType: err.data.limitType,
+        limit: err.data.limit,
+        current: err.data.current,
+      });
+      setUpgradeOpen(true);
+      setModalOpen(false);
+      return true;
+    }
+    return false;
+  }, []);
 
   const {
     data: entities = [],
@@ -25,8 +71,8 @@ export default function EntityManagementView() {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['entities', activeType],
-    queryFn: () => entityService.getAll(activeType),
+    queryKey: ['entities', activeType, viewAsUserId ?? 'self'],
+    queryFn: () => entityService.getAll(activeType, { ownerId: viewAsUserId ?? undefined }),
     staleTime: QUERY_STALE_TIME,
     select: (data) =>
       (Array.isArray(data) ? data : []).map((entity) => ({ ...entity, entityType: activeType })),
@@ -67,18 +113,31 @@ export default function EntityManagementView() {
 
   const handleCreate = useCallback(
     async (entityType, data) => {
-      await entityService.create(entityType, data);
-      queryClient.invalidateQueries({ queryKey: ['entities', entityType] });
+      try {
+        await entityService.create(entityType, data);
+        queryClient.invalidateQueries({ queryKey: ['entities', entityType] });
+        queryClient.invalidateQueries({ queryKey: ['license', 'usage'] });
+      } catch (err) {
+        // On a limit hit we open the upgrade prompt and let the form close.
+        if (handleLimitError(err)) return;
+        throw err; // other errors surface inline in the form modal
+      }
     },
-    [queryClient]
+    [queryClient, handleLimitError]
   );
 
   const handleUpdate = useCallback(
     async (entityType, entityId, data) => {
-      await entityService.update(entityType, entityId, data);
-      queryClient.invalidateQueries({ queryKey: ['entities', entityType] });
+      try {
+        await entityService.update(entityType, entityId, data);
+        queryClient.invalidateQueries({ queryKey: ['entities', entityType] });
+        queryClient.invalidateQueries({ queryKey: ['license', 'usage'] });
+      } catch (err) {
+        if (handleLimitError(err)) return;
+        throw err;
+      }
     },
-    [queryClient]
+    [queryClient, handleLimitError]
   );
 
   const handleDelete = useCallback(
@@ -123,6 +182,31 @@ export default function EntityManagementView() {
             Add Entity
           </button>
         </div>
+
+        {/* Plan usage (F4/F5) — limits are per-user across all entity types. */}
+        {(usage || license) && (
+          <div className="rounded-xl border border-border bg-card p-4">
+            <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+              {usage && (
+                <>
+                  <UsageBar label="Entities" used={usage.entitiesUsed} max={usage.entitiesMax} />
+                  <UsageBar label="Keywords" used={usage.keywordsUsed} max={usage.keywordsMax} />
+                </>
+              )}
+              {license && (
+                <div className="text-xs text-muted-foreground space-y-0.5">
+                  <div>
+                    Plan: <span className="font-semibold text-foreground">{license.tier}</span>
+                  </div>
+                  <div>
+                    Mentions/mo: {license.maxMentionsPerMonth?.toLocaleString?.() ?? license.maxMentionsPerMonth}
+                  </div>
+                  <div>Collection {formatCollectionFrequency(license.collectionFrequency)}</div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Type tabs */}
         <div className="flex flex-wrap items-center gap-2">
@@ -291,6 +375,12 @@ export default function EntityManagementView() {
         defaultEntityType={activeType}
         onCreate={handleCreate}
         onUpdate={handleUpdate}
+      />
+
+      <UpgradeModal
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        context={limitContext || {}}
       />
     </div>
   );

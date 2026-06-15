@@ -1,14 +1,39 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, BarChart3, AlertTriangle, Boxes, Users, Flag, Wrench, Briefcase, FileText, ChevronDown, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, BarChart3, AlertTriangle, Boxes, Users, Flag, Wrench, Briefcase, FileText, ChevronDown, ChevronRight, Lock, UserCircle, ShieldCheck } from 'lucide-react';
+import { useLicense } from '../../contexts/LicenseContext';
+import { FEATURE_KEYS } from '../../lib/licensing';
+
+// Maps a nav item id to the premium feature it unlocks. Items without an entry are
+// always available. Used to render lock badges on features the user isn't entitled to.
+const NAV_FEATURE = {
+  checkpoints: FEATURE_KEYS.CHECKPOINTS,
+  'entity-report': FEATURE_KEYS.INTELLIGENCE_REPORT,
+  'crisis-management': FEATURE_KEYS.CRISIS,
+  'user-intelligence': FEATURE_KEYS.AUDIENCE_CONTENT,
+  'spreader-analysis': FEATURE_KEYS.AUDIENCE_CONTENT,
+  'content-analysis': FEATURE_KEYS.AUDIENCE_CONTENT,
+  'genre-intelligence': FEATURE_KEYS.AUDIENCE_CONTENT,
+  'marketing-aggregation': FEATURE_KEYS.AGGREGATED_INTEL,
+};
 
 export default function LeftNavbar({ activeTab, onTabChange, isAdmin = false }) {
+  const { hasFeature, featureByKey } = useLicense();
   const [expandedMenu, setExpandedMenu] = useState({
     'ai-insights': true,
     'audience-content': true,
     tools: true,
     crisis: true,
     workspace: true,
+    account: true,
+    administration: true,
   });
+
+  // Returns the required tier label for a locked nav item, or null when unlocked.
+  const lockTier = (id) => {
+    const key = NAV_FEATURE[id];
+    if (!key || hasFeature(key)) return null;
+    return featureByKey(key)?.requiredTier || 'upgrade';
+  };
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -37,7 +62,7 @@ export default function LeftNavbar({ activeTab, onTabChange, isAdmin = false }) 
     },
     {
       id: 'crisis',
-      label: 'Crisis Management', 
+      label: 'Crisis Management',
       icon: AlertTriangle,
       subTabs: [
         { id: 'alert-management', label: 'Alert Management' },
@@ -64,8 +89,38 @@ export default function LeftNavbar({ activeTab, onTabChange, isAdmin = false }) 
       subTabs: [
         { id: 'marketing-aggregation', label: 'Aggregated Intel' },
       ]
+    },
+    {
+      id: 'administration',
+      label: 'Administration',
+      icon: ShieldCheck,
+      adminOnly: true,
+      subTabs: [
+        { id: 'admin-licenses', label: 'Licenses' },
+        { id: 'admin-offer-keys', label: 'Offer Keys' },
+        { id: 'admin-prices', label: 'Tier Prices' },
+      ]
+    },
+    {
+      id: 'account',
+      label: 'Account',
+      icon: UserCircle,
+      subTabs: [
+        { id: 'license', label: 'License' },
+      ]
     }
   ];
+
+  // Small "locked" pill shown next to gated items the user can't access.
+  const LockBadge = ({ tier }) => (
+    <span
+      className="ml-auto inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium bg-amber-500/15 text-amber-500"
+      title={`Requires ${tier}`}
+    >
+      <Lock className="w-3 h-3" />
+      {tier}
+    </span>
+  );
 
   const toggleMenu = (menuId) => {
     setExpandedMenu(prev => ({
@@ -108,9 +163,10 @@ export default function LeftNavbar({ activeTab, onTabChange, isAdmin = false }) 
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />
                 <span className="font-medium text-sm flex-1 text-left">{tab.label}</span>
+                {!hasSubTabs && lockTier(tab.id) && <LockBadge tier={lockTier(tab.id)} />}
                 {hasSubTabs && (
-                  isExpanded ? 
-                    <ChevronDown className="w-4 h-4 flex-shrink-0 transition-transform" /> : 
+                  isExpanded ?
+                    <ChevronDown className="w-4 h-4 flex-shrink-0 transition-transform" /> :
                     <ChevronRight className="w-4 h-4 flex-shrink-0 transition-transform" />
                 )}
               </button>
@@ -130,7 +186,8 @@ export default function LeftNavbar({ activeTab, onTabChange, isAdmin = false }) 
                             : 'text-muted-foreground hover:bg-accent/40 hover:text-foreground'
                         }`}
                       >
-                        <span className="text-left">{subTab.label}</span>
+                        <span className="flex-1 text-left">{subTab.label}</span>
+                        {lockTier(subTab.id) && <LockBadge tier={lockTier(subTab.id)} />}
                       </button>
                     );
                   })}

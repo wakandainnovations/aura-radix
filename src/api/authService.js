@@ -24,15 +24,10 @@ export const authService = {
       if (!response?.jwtToken) {
         throw new Error('Invalid response format: missing jwtToken');
       }
-      // Store token in localStorage for subsequent requests
+      // Store token in localStorage for subsequent requests.
+      // Admin status is no longer inferred from credentials — it is derived from the
+      // backend role via the admin probe in LicenseContext (see LicenseProvider).
       localStorage.setItem('jwtToken', response.jwtToken);
-      // Gate the in-development AI Insights area behind the admin account.
-      // (Backend has no role contract yet, so this is tracked client-side.)
-      if (username === 'admin' && password === 'admin') {
-        localStorage.setItem('isAdmin', 'true');
-      } else {
-        localStorage.removeItem('isAdmin');
-      }
       return response;
     } catch (error) {
       console.error('Failed to login user:', error);
@@ -43,21 +38,9 @@ export const authService = {
   logout: () => {
     try {
       localStorage.removeItem('jwtToken');
-      localStorage.removeItem('isAdmin');
+      localStorage.removeItem('isAdmin'); // clean up the legacy client-side admin flag
     } catch (error) {
       console.error('Failed to logout user:', error);
-      throw error;
-    }
-  },
-
-  // Get current user profile
-  // Response: User profile object
-  getCurrentUser: async () => {
-    try {
-      const response = await apiClient.get('/auth/profile');
-      return response;
-    } catch (error) {
-      console.error('Failed to fetch current user profile:', error);
       throw error;
     }
   },

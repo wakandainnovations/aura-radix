@@ -1,6 +1,7 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import PRCommandCenter from './components/PRCommandCenter.api';
+import { LicenseProvider } from './contexts/LicenseContext';
 import './styles/global.css';
 
 const queryClient = new QueryClient({
@@ -15,9 +16,11 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="dark">
-        <PRCommandCenter />
-      </div>
+      <LicenseProvider>
+        <div className="dark">
+          <PRCommandCenter />
+        </div>
+      </LicenseProvider>
     </QueryClientProvider>
   );
 }

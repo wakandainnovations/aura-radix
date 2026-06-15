@@ -2,13 +2,16 @@ import React, { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   FileText, Loader2, Sparkles, Share2, AlertTriangle, Lightbulb, X,
-  Activity, Radio, Hash, Gauge, Megaphone, Users, Copy, Check, RefreshCw,
+  Activity, Radio, Hash, Gauge, Megaphone, Users, Copy, Check, RefreshCw, FileDown,
 } from 'lucide-react';
 import { marketingService } from '../../api/marketingService';
+import { entityService } from '../../api/entityService';
 import {
   fmt, PlatformBadge, ColoredBadge, Section,
 } from './audienceIntelShared';
 import { useSortableRows, SortableHeader } from '../shared';
+import GatedFeature from '../licensing/GatedFeature';
+import { FEATURE_KEYS } from '../../lib/licensing';
 
 const SEVERITY_COLORS = {
   HIGH: 'bg-red-500/20 text-red-400',
@@ -270,10 +273,19 @@ function RecommendationsSection({ rec }) {
 
 function AdvocatesSection({ advocates }) {
   const list = Array.isArray(advocates) ? advocates : [];
+  const asNumber = (v) => (typeof v === 'number' ? v : Number(v) || null);
   const { rows, sortState, requestSort } = useSortableRows(list, null, {
-    total_engagement: (a) => (typeof a.total_engagement === 'number' ? a.total_engagement : Number(a.total_engagement) || null),
+    total_likes: (a) => asNumber(a.total_likes),
+    total_comments: (a) => asNumber(a.total_comments),
+    total_views: (a) => asNumber(a.total_views),
+    total_engagement: (a) => asNumber(a.total_engagement),
   });
   const sp = (sortKey) => ({ sortKey, sortState, onSort: requestSort, compact: true });
+  // Engagement-detail columns only render when the backend supplies them (older
+  // payloads omit them; views is not part of the current advocate aggregation).
+  const hasLikes = list.some((a) => a.total_likes != null);
+  const hasComments = list.some((a) => a.total_comments != null);
+  const hasViews = list.some((a) => a.total_views != null);
   if (list.length === 0) return null;
   return (
     <Section icon={Users} title="Top Advocates" subtitle="Highest-amplification voices in the conversation" color="text-amber-400">
@@ -285,6 +297,9 @@ function AdvocatesSection({ advocates }) {
               <SortableHeader label="User" {...sp('global_user_id')} />
               <SortableHeader label="Tribe" {...sp('tribe_label')} />
               <SortableHeader label="Posts" {...sp('post_count')} />
+              {hasLikes && <SortableHeader label="Likes" {...sp('total_likes')} />}
+              {hasComments && <SortableHeader label="Comments" {...sp('total_comments')} />}
+              {hasViews && <SortableHeader label="Views" {...sp('total_views')} />}
               <SortableHeader label="Engagement" {...sp('total_engagement')} />
             </tr>
           </thead>
@@ -295,6 +310,9 @@ function AdvocatesSection({ advocates }) {
                 <td className="py-1.5 px-2 text-foreground font-mono text-[10px]">{a.global_user_id || '—'}</td>
                 <td className="py-1.5 px-2"><span className="px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-400 text-[10px]">{a.tribe_label || '—'}</span></td>
                 <td className="py-1.5 px-2 text-foreground font-mono">{a.post_count ?? '—'}</td>
+                {hasLikes && <td className="py-1.5 px-2 text-foreground font-mono">{a.total_likes?.toLocaleString?.() ?? a.total_likes ?? '—'}</td>}
+                {hasComments && <td className="py-1.5 px-2 text-foreground font-mono">{a.total_comments?.toLocaleString?.() ?? a.total_comments ?? '—'}</td>}
+                {hasViews && <td className="py-1.5 px-2 text-foreground font-mono">{a.total_views?.toLocaleString?.() ?? a.total_views ?? '—'}</td>}
                 <td className="py-1.5 px-2 text-foreground font-mono">{a.total_engagement?.toLocaleString?.() ?? a.total_engagement ?? '—'}</td>
               </tr>
             ))}
@@ -482,10 +500,37 @@ export default function EntityReportView({ selectedEntity }) {
     }
   }, [entityId]);
 
+  // Aggregated Report: a server-rendered, branded PDF of the same marketing
+  // intelligence. We fetch the binary, open it in a new tab for viewing, and
+  // revoke the object URL once the tab has had time to load it.
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState(null);
+
+  const openAggregatedReport = useCallback(async () => {
+    if (!entityId) return;
+    setPdfLoading(true);
+    setPdfError(null);
+    try {
+      const blob = await entityService.getMarketingReportPdf(
+        selectedEntity?.entityType || 'movie',
+        entityId,
+        { period: 'DAY30', windowDays: 7 },
+      );
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank', 'noopener,noreferrer');
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (err) {
+      setPdfError(errorMessage(err));
+    } finally {
+      setPdfLoading(false);
+    }
+  }, [entityId, selectedEntity?.entityType]);
+
   const profile = report?.entityProfile;
   const noHistory = report && !profile && report.message; // valid empty result
 
   return (
+    <GatedFeature featureKey={FEATURE_KEYS.INTELLIGENCE_REPORT} featureName="Intelligence Report">
     <div className="h-full overflow-y-auto bg-background">
       <div className="p-6 space-y-4">
         <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -515,8 +560,20 @@ export default function EntityReportView({ selectedEntity }) {
               <Share2 className="w-4 h-4" />
               Shareable Report
             </button>
+            <button
+              onClick={openAggregatedReport}
+              disabled={pdfLoading || !entityId}
+              className="px-4 py-2 text-sm rounded-lg border border-border text-foreground hover:bg-accent/20 disabled:opacity-50 flex items-center gap-1.5"
+            >
+              {pdfLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+              {pdfLoading ? 'Preparing…' : 'Aggregated Report'}
+            </button>
           </div>
         </div>
+
+        {pdfError && (
+          <p className="text-xs text-red-400">{pdfError}</p>
+        )}
 
         {report?.generatedAt && (
           <p className="text-[11px] text-muted-foreground">Generated {report.generatedAt}</p>
@@ -586,5 +643,6 @@ export default function EntityReportView({ selectedEntity }) {
         />
       )}
     </div>
+    </GatedFeature>
   );
 }

@@ -1,29 +1,27 @@
 import { useEffect, useState } from 'react';
 
 /**
- * Custom hook for managing authentication state
- * Syncs with localStorage JWT token
+ * Custom hook for managing authentication state.
+ * Syncs with the localStorage JWT token.
+ *
+ * NOTE: admin status is no longer tracked here. It is derived from the backend
+ * role via the admin probe in LicenseContext — use `useLicense().isAdmin` instead.
  */
 export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     // Initialize from localStorage
     return !!localStorage.getItem('jwtToken');
   });
-  const [isAdmin, setIsAdmin] = useState(() => {
-    // Admin gate for in-development areas (admin/admin login)
-    return localStorage.getItem('isAdmin') === 'true';
-  });
 
   // Listen for storage changes (e.g., from other tabs/windows)
   useEffect(() => {
     const handleStorageChange = () => {
       setIsAuthenticated(!!localStorage.getItem('jwtToken'));
-      setIsAdmin(localStorage.getItem('isAdmin') === 'true');
     };
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  return { isAuthenticated, setIsAuthenticated, isAdmin, setIsAdmin };
+  return { isAuthenticated, setIsAuthenticated };
 }

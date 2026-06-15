@@ -1,7 +1,56 @@
 import React from 'react';
-import { Star, Users, Activity } from 'lucide-react';
+import { Star, Users, Activity, Loader2, AlertCircle } from 'lucide-react';
 
-export default function CelebrityAnalytics({ celebrityData, formatCurrency }) {
+function CelebrityAnalyticsShell({ children }) {
+  return (
+    <div className="bg-card border border-border rounded-xl p-6">
+      <div className="flex items-center gap-2 mb-4">
+        <Star className="w-5 h-5 text-primary" />
+        <h3 className="text-lg font-semibold text-foreground">Celebrity Analytics</h3>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+export default function CelebrityAnalytics({ celebrityData, isLoading, error, formatCurrency }) {
+  // Loading state — analytics request in flight.
+  if (isLoading) {
+    return (
+      <CelebrityAnalyticsShell>
+        <div className="flex items-center gap-2 text-muted-foreground py-8 justify-center">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span className="text-sm">Loading celebrity analytics…</span>
+        </div>
+      </CelebrityAnalyticsShell>
+    );
+  }
+
+  // Error state — surface failure instead of silently showing placeholder values.
+  if (error) {
+    return (
+      <CelebrityAnalyticsShell>
+        <div className="flex items-center gap-2 text-red-500 py-8 justify-center">
+          <AlertCircle className="w-4 h-4" />
+          <span className="text-sm">
+            {error.message || 'Failed to load celebrity analytics.'}
+          </span>
+        </div>
+      </CelebrityAnalyticsShell>
+    );
+  }
+
+  // No data available for this entity.
+  if (!celebrityData) {
+    return (
+      <CelebrityAnalyticsShell>
+        <div className="text-sm text-muted-foreground py-8 text-center">
+          No celebrity analytics available for this entity yet.
+        </div>
+      </CelebrityAnalyticsShell>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Main Celebrity Card */}

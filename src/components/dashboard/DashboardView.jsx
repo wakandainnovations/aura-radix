@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Sparkles } from "lucide-react";
-import { celebrityAnalytics, movies } from "../../dummydata";
+import { analyticsService } from "../../api";
 import { transformStatsToCards, calculateStatsFromMentions } from "../../utils/statsTransformer";
 import { formatCurrency } from "../../utils/helpers";
 import WhatsNewCards from "../ai-dashboard/WhatsNewCards";
@@ -15,6 +15,26 @@ import SentimentDistributionChart from "../analytics/SentimentDistributionChart"
 import SentimentGraphsGrid from "../analytics/SentimentGraphsGrid";
 import PlatformBreakdownChart from "../analytics/PlatformBreakdownChart";
 import TimeRangeSelector from "../navigation/TimeRangeSelector";
+
+/**
+ * Normalize the backend celebrity-analytics payload into the shape the
+ * CelebrityAnalytics card renders. The backend "full analytics" response is
+ * expected to follow the same contract (socialReach, brandValue,
+ * endorsementScore, fanEngagement, recentProjects, metrics); this guards
+ * against missing/partial fields so the card never crashes on a thin payload.
+ */
+function normalizeCelebrityAnalytics(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  return {
+    socialReach: Number(raw.socialReach) || 0,
+    brandValue: Number(raw.brandValue) || 0,
+    endorsementScore: Number(raw.endorsementScore) || 0,
+    fanEngagement: Number(raw.fanEngagement) || 0,
+    trend: raw.trend || "neutral",
+    recentProjects: Array.isArray(raw.recentProjects) ? raw.recentProjects : [],
+    metrics: Array.isArray(raw.metrics) ? raw.metrics : [],
+  };
+}
 
 /**
  * DashboardView Component
@@ -276,27 +296,43 @@ export default function DashboardView({
     return { score, label: "Negative", color: "#ef4444" };
   }, [analytics]);
 
-  // Get celebrity analytics for selected entity (celebrities)
-  const celebrityData =
-    isCelebrity && selectedEntity?.id && celebrityAnalytics[selectedEntity.id]
-      ? celebrityAnalytics[selectedEntity.id]
-      : {
-          socialReach: 25000000,
-          brandValue: 2000000000,
-          endorsementScore: 80,
-          fanEngagement: 75,
-          trend: "neutral",
-          recentProjects: [
-            { title: "Upcoming Film", status: "Development", buzz: 75 },
-          ],
-          metrics: [
-            { name: "Social Media Influence", score: 75, impact: "neutral" },
-            { name: "Brand Power", score: 80, impact: "positive" },
-            { name: "Fan Loyalty", score: 78, impact: "positive" },
-            { name: "Box Office Track Record", score: 75, impact: "neutral" },
-            { name: "Controversy Risk", score: 30, impact: "neutral" },
-          ],
-        };
+  // Fetch celebrity analytics from the backend for the selected celebrity entity.
+  // GET /api/analytics/celebrity/{entityId} — replaces the previous dummy data.
+  const [celebrityData, setCelebrityData] = useState(null);
+  const [celebrityLoading, setCelebrityLoading] = useState(false);
+  const [celebrityError, setCelebrityError] = useState(null);
+
+  useEffect(() => {
+    if (!isCelebrity || !selectedEntity?.id) {
+      setCelebrityData(null);
+      setCelebrityError(null);
+      setCelebrityLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setCelebrityLoading(true);
+    setCelebrityError(null);
+
+    analyticsService
+      .getCelebrityAnalytics(selectedEntity.id)
+      .then((data) => {
+        if (cancelled) return;
+        setCelebrityData(normalizeCelebrityAnalytics(data));
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setCelebrityError(err);
+        setCelebrityData(null);
+      })
+      .finally(() => {
+        if (!cancelled) setCelebrityLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isCelebrity, selectedEntity?.id]);
 
   return (
     <div className="h-full overflow-y-auto bg-background">
@@ -367,7 +403,14 @@ export default function DashboardView({
 
         {/* Celebrity-Specific Analytics - Only rendered for celebrity entities */}
         {/* Includes social reach, brand value, fan engagement, and controversy metrics */}
-        {isCelebrity && <CelebrityAnalytics celebrityData={celebrityData} formatCurrency={formatCurrency} />}
+        {isCelebrity && (
+          <CelebrityAnalytics
+            celebrityData={celebrityData}
+            isLoading={celebrityLoading}
+            error={celebrityError}
+            formatCurrency={formatCurrency}
+          />
+        )}
       </div>
     </div>
   );

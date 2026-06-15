@@ -1,29 +1,37 @@
 import apiClient from './client';
+import { unwrapEntitlement, entitlementPayload } from './entitlement';
+
+// Aggregated Intel is a DIAMOND-gated feature. Each endpoint returns an
+// EntitledResponse envelope; `payload()` yields the real data when entitled and the
+// masked preview otherwise. Gating (blur) is driven by the /license/features catalog.
+const payload = (res) => entitlementPayload(unwrapEntitlement(res));
 
 export const marketingAggregationService = {
   getTopSpreaders: async (filters = {}, groupBy) => {
     const params = buildParams(filters, groupBy);
-    return apiClient.get('/marketing/aggregate/top-spreaders', { params });
+    return payload(await apiClient.get('/marketing/aggregate/top-spreaders', { params }));
   },
 
   getViralSeeds: async (filters = {}, groupBy) => {
     const params = buildParams(filters, groupBy);
-    return apiClient.get('/marketing/aggregate/viral-seeds', { params });
+    return payload(await apiClient.get('/marketing/aggregate/viral-seeds', { params }));
   },
 
   getAspectDrivers: async (filters = {}, groupBy) => {
     const params = buildParams(filters, groupBy);
-    return apiClient.get('/marketing/aggregate/aspect-drivers', { params });
+    return payload(await apiClient.get('/marketing/aggregate/aspect-drivers', { params }));
   },
 
   getBrandEvangelists: async (filters = {}, groupBy) => {
     const params = buildParams(filters, groupBy);
-    return apiClient.get('/marketing/aggregate/brand-evangelists', { params });
+    return payload(await apiClient.get('/marketing/aggregate/brand-evangelists', { params }));
   },
 
   getGenreData: async (subType, filters = {}, groupBy) => {
     const params = buildParams(filters, groupBy === 'genre' ? 'genre' : groupBy);
-    return apiClient.get(`/marketing/aggregate/genre/${encodeURIComponent(subType)}`, { params });
+    return payload(
+      await apiClient.get(`/marketing/aggregate/genre/${encodeURIComponent(subType)}`, { params }),
+    );
   },
 };
 

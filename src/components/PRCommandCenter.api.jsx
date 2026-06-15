@@ -34,6 +34,14 @@ import { entityService, dashboardService, analyticsService, authService } from '
 // Import utilities and hooks
 import { filterMentions } from '../utils/filterMentions';
 import { useAuth } from '../hooks/useAuth';
+import { useLicense } from '../contexts/LicenseContext';
+import GatedFeature from './licensing/GatedFeature';
+import LicenseView from './licensing/LicenseView';
+import LicenseAdminView from './admin/LicenseAdminView';
+import OfferKeyAdminView from './admin/OfferKeyAdminView';
+import PriceAdminView from './admin/PriceAdminView';
+import AdminUserSelector from './admin/AdminUserSelector';
+import { FEATURE_KEYS } from '../lib/licensing';
 
 // Constants
 const REFETCH_INTERVAL = 300000; // 5 minutes
@@ -66,7 +74,8 @@ const VIEW_REGISTRY = {
 
 export default function PRCommandCenter() {
   const queryClient = useQueryClient();
-  const { isAuthenticated, setIsAuthenticated, isAdmin, setIsAdmin } = useAuth();
+  const { isAuthenticated, setIsAuthenticated } = useAuth();
+  const { isAdmin, viewAsUserId, refresh: refreshLicense } = useLicense();
   const [selectedMention, setSelectedMention] = useState(null);
   const [activeView, setActiveView] = useState('dashboard');
   // REWORKED: New entity selection using array of entities
@@ -106,10 +115,10 @@ export default function PRCommandCenter() {
   // For queries: use cluster IDs if in cluster mode, otherwise use primary entity ID
   const entityIdsForQueries = clusterMode ? clusterEntityIds : (primaryEntity?.id ? [primaryEntity.id] : []);
 
-  // Fetch all movie entities
+  // Fetch all movie entities (admins may scope to another user via viewAsUserId/ownerId).
   const { data: movieEntities = [], isLoading: moviesLoading } = useQuery({
-    queryKey: ['entities', 'movie'],
-    queryFn: () => entityService.getAll('movie'),
+    queryKey: ['entities', 'movie', viewAsUserId ?? 'self'],
+    queryFn: () => entityService.getAll('movie', { ownerId: viewAsUserId ?? undefined }),
     staleTime: QUERY_STALE_TIME,
     enabled: isAuthenticated,
     select: (data) => data.map(entity => ({ ...entity, entityType: 'movie' })),
@@ -117,8 +126,8 @@ export default function PRCommandCenter() {
 
   // Fetch all celebrity entities
   const { data: celebrityEntities = [], isLoading: celebritiesLoading } = useQuery({
-    queryKey: ['entities', 'celebrity'],
-    queryFn: () => entityService.getAll('celebrity'),
+    queryKey: ['entities', 'celebrity', viewAsUserId ?? 'self'],
+    queryFn: () => entityService.getAll('celebrity', { ownerId: viewAsUserId ?? undefined }),
     staleTime: QUERY_STALE_TIME,
     enabled: isAuthenticated,
     select: (data) => data.map(entity => ({ ...entity, entityType: 'celebrity' })),
@@ -502,6 +511,7 @@ export default function PRCommandCenter() {
               </button>
             ) : (
               <>
+                <AdminUserSelector />
                 <NotificationBell onViewAll={() => setActiveView('alert-management')} />
                 <button
                   onClick={handleRefreshCurrentEntities}
@@ -517,7 +527,7 @@ export default function PRCommandCenter() {
                   onClick={() => {
                     authService.logout();
                     setIsAuthenticated(false);
-                    setIsAdmin(false);
+                    refreshLicense();
                     if (activeView === 'ai-analytics') {
                       setActiveView('dashboard');
                     }
@@ -561,7 +571,7 @@ export default function PRCommandCenter() {
         )}
 
         {/* Welcome Screen - Show when no entity is selected yet (except standalone views) */}
-        {isAuthenticated && hasLoadedEntities && selectedEntities.length === 0 && !isLoadingEntities && !['entity-management', 'spreader-analysis', 'user-intelligence', 'content-analysis', 'genre-intelligence', 'marketing-aggregation', 'reply-templates', 'alert-rules', 'crisis-playbooks', 'abuse-reports', 'workspace-export'].includes(activeView) && (
+        {isAuthenticated && hasLoadedEntities && selectedEntities.length === 0 && !isLoadingEntities && !['entity-management', 'spreader-analysis', 'user-intelligence', 'content-analysis', 'genre-intelligence', 'marketing-aggregation', 'reply-templates', 'alert-rules', 'crisis-playbooks', 'abuse-reports', 'workspace-export', 'license', 'admin-licenses', 'admin-offer-keys', 'admin-prices'].includes(activeView) && (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <h2 className="text-5xl font-bold text-foreground mb-4">Welcome to Project Aura</h2>
@@ -572,12 +582,34 @@ export default function PRCommandCenter() {
 
         {/* Standalone views that don't require entity selection */}
         {isAuthenticated && activeView === 'entity-management' && <EntityManagementView />}
-        {isAuthenticated && activeView === 'spreader-analysis' && <SpreaderAnalysisView selectedEntity={primaryEntity} />}
-        {isAuthenticated && activeView === 'user-intelligence' && <UserIntelligenceView selectedEntity={primaryEntity} />}
-        {isAuthenticated && activeView === 'content-analysis' && <ContentAnalysisView selectedEntity={primaryEntity} />}
-        {isAuthenticated && activeView === 'genre-intelligence' && <GenreIntelligenceView />}
+        {isAuthenticated && activeView === 'license' && <LicenseView />}
+        {isAuthenticated && isAdmin && activeView === 'admin-licenses' && <LicenseAdminView />}
+        {isAuthenticated && isAdmin && activeView === 'admin-offer-keys' && <OfferKeyAdminView />}
+        {isAuthenticated && isAdmin && activeView === 'admin-prices' && <PriceAdminView />}
+        {isAuthenticated && activeView === 'spreader-analysis' && (
+          <GatedFeature featureKey={FEATURE_KEYS.AUDIENCE_CONTENT} featureName="Spreader Analysis">
+            <SpreaderAnalysisView selectedEntity={primaryEntity} />
+          </GatedFeature>
+        )}
+        {isAuthenticated && activeView === 'user-intelligence' && (
+          <GatedFeature featureKey={FEATURE_KEYS.AUDIENCE_CONTENT} featureName="User Intelligence">
+            <UserIntelligenceView selectedEntity={primaryEntity} />
+          </GatedFeature>
+        )}
+        {isAuthenticated && activeView === 'content-analysis' && (
+          <GatedFeature featureKey={FEATURE_KEYS.AUDIENCE_CONTENT} featureName="Content Analysis">
+            <ContentAnalysisView selectedEntity={primaryEntity} />
+          </GatedFeature>
+        )}
+        {isAuthenticated && activeView === 'genre-intelligence' && (
+          <GatedFeature featureKey={FEATURE_KEYS.AUDIENCE_CONTENT} featureName="Genre Intelligence">
+            <GenreIntelligenceView />
+          </GatedFeature>
+        )}
         {isAuthenticated && activeView === 'marketing-aggregation' && (
-          <MarketingAggregationView />
+          <GatedFeature featureKey={FEATURE_KEYS.AGGREGATED_INTEL} featureName="Aggregated Intel">
+            <MarketingAggregationView />
+          </GatedFeature>
         )}
         {isAuthenticated && activeView === 'reply-templates' && <ReplyTemplatesView />}
         {isAuthenticated && activeView === 'alert-rules' && (
@@ -799,9 +831,9 @@ export default function PRCommandCenter() {
         onLoginSuccess={() => {
           // Set authenticated state
           setIsAuthenticated(true);
-          // Sync admin gate (set by authService.login for admin/admin)
-          setIsAdmin(localStorage.getItem('isAdmin') === 'true');
-          
+          // Load license/entitlements/admin status for the now-authenticated user.
+          refreshLicense();
+
           // Refetch entities and other queries now that we're authenticated
           handleFetchData();
         }}
