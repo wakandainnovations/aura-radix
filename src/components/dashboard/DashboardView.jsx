@@ -62,6 +62,9 @@ export default function DashboardView({
   entities,
   onAddCompetitor,
   mentions,
+  mentionsLoading,
+  mentionsError,
+  onRetryMentions,
   platformData,
   stats,
   sentimentData,
@@ -399,7 +402,14 @@ export default function DashboardView({
 
         {/* Social Media Feed - Full Width */}
         {/* Displays recent mentions and posts from all platforms for selected entity */}
-        <SocialMediaFeed mentions={mentions} selectedEntity={selectedEntity} onMentionDeleted={onMentionDeleted} />
+        <SocialMediaFeed
+          mentions={mentions}
+          selectedEntity={selectedEntity}
+          onMentionDeleted={onMentionDeleted}
+          loading={mentionsLoading}
+          error={mentionsError}
+          onRetry={onRetryMentions}
+        />
 
         {/* Celebrity-Specific Analytics - Only rendered for celebrity entities */}
         {/* Includes social reach, brand value, fan engagement, and controversy metrics */}

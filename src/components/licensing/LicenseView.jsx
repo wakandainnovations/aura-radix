@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
-import { Gem, Loader2, Check, KeyRound, ShieldCheck } from 'lucide-react';
+import { Gem, Loader2, Check, KeyRound, ShieldCheck, ArrowUpCircle } from 'lucide-react';
 import { useLicense } from '../../contexts/LicenseContext';
 import { licenseService } from '../../api/licenseService';
-import { TIER_COLORS, formatCollectionFrequency } from '../../lib/licensing';
+import {
+  TIERS,
+  TIER_LIMITS,
+  TIER_COLORS,
+  formatCollectionFrequency,
+} from '../../lib/licensing';
 
 const OFFER_ERROR_COPY = {
   INVALID: 'That offer code is not valid.',
@@ -30,8 +35,27 @@ export default function LicenseView() {
   const [redeeming, setRedeeming] = useState(false);
   const [redeemError, setRedeemError] = useState(null);
   const [redeemSuccess, setRedeemSuccess] = useState(null);
+  const [requestingTier, setRequestingTier] = useState(null);
+  const [requestError, setRequestError] = useState(null);
+  const [requestSuccess, setRequestSuccess] = useState(null);
 
   const tier = license?.tier;
+
+  const handleRequest = async (chosenTier) => {
+    if (requestingTier) return;
+    setRequestingTier(chosenTier);
+    setRequestError(null);
+    setRequestSuccess(null);
+    try {
+      const res = await licenseService.requestLicense(chosenTier);
+      setRequestSuccess({ tier: chosenTier, licenseKey: res?.licenseKey });
+      refresh();
+    } catch (err) {
+      setRequestError(err?.message || 'Could not issue that license. Please try again.');
+    } finally {
+      setRequestingTier(null);
+    }
+  };
 
   const handleRedeem = async (e) => {
     e.preventDefault();
@@ -109,6 +133,77 @@ export default function LicenseView() {
             </div>
           </div>
         )}
+
+        {/* Request / change license tier (self-service POST /licenses/me) */}
+        <div className="rounded-xl border border-border bg-card p-5">
+          <div className="flex items-center gap-2 mb-1">
+            <ArrowUpCircle className="w-4 h-4 text-primary" />
+            <h3 className="text-sm font-semibold text-foreground">Choose your plan</h3>
+          </div>
+          <p className="text-xs text-muted-foreground mb-4">
+            Request a new license at the tier you need. This replaces your current license and takes
+            effect right away.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {TIERS.map((t) => {
+              const limits = TIER_LIMITS[t];
+              const isCurrent = t === tier;
+              const isBusy = requestingTier === t;
+              return (
+                <div
+                  key={t}
+                  className={`flex flex-col rounded-lg border bg-background/50 p-4 ${
+                    isCurrent ? 'border-primary/60 ring-1 ring-primary/30' : 'border-border'
+                  }`}
+                >
+                  <span className={`text-lg font-bold ${TIER_COLORS[t] || 'text-foreground'}`}>
+                    {t}
+                  </span>
+                  <ul className="mt-2 space-y-1 text-xs text-muted-foreground flex-1">
+                    <li>{limits.maxEntities} entities</li>
+                    <li>{limits.maxKeywords} keywords</li>
+                    <li>{limits.maxMentionsPerMonth.toLocaleString()} mentions / mo</li>
+                    <li>Collection {formatCollectionFrequency(limits.collectionFrequency)}</li>
+                  </ul>
+                  <button
+                    type="button"
+                    disabled={isCurrent || !!requestingTier}
+                    onClick={() => handleRequest(t)}
+                    className={`mt-3 w-full px-3 py-2 h-9 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 ${
+                      isCurrent
+                        ? 'bg-muted text-muted-foreground cursor-default'
+                        : 'bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed'
+                    }`}
+                  >
+                    {isBusy && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {isCurrent ? 'Current plan' : 'Request'}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+
+          {requestError && (
+            <div className="mt-3 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30">
+              <p className="text-sm text-red-500">{requestError}</p>
+            </div>
+          )}
+          {requestSuccess && (
+            <div className="mt-3 px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+              <p className="text-sm text-emerald-500 flex items-center gap-2 flex-wrap">
+                <Check className="w-4 h-4" />
+                Your license is now{' '}
+                <span className="font-semibold">{requestSuccess.tier}</span>.
+              </p>
+              {requestSuccess.licenseKey && (
+                <p className="mt-1 text-xs text-muted-foreground break-all">
+                  License key: <span className="font-mono">{requestSuccess.licenseKey}</span>
+                </p>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Offer code redemption (F7) */}
         <div className="rounded-xl border border-border bg-card p-5">

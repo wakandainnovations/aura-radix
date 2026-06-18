@@ -36,6 +36,20 @@ export const licenseService = {
     }
   },
 
+  // POST /api/licenses/me { tier }  (tier: BRONZE|SILVER|GOLD|DIAMOND)
+  // → { licenseKey }
+  // Self-service: issues a new active license at the chosen tier for the current
+  // user, replacing any license they already held. Never expires. No price.
+  // On failure: 400 if tier is missing/invalid, 403 if unauthenticated.
+  requestLicense: async (tier) => {
+    try {
+      return await apiClient.post('/licenses/me', { tier });
+    } catch (error) {
+      console.error('Failed to request license:', error);
+      throw error;
+    }
+  },
+
   // POST /api/license/redeem-offer { code }
   // → { baseTier, overrideTier, effectiveTier, overrideExpiresAt }
   // On failure: 400 with { reason: INVALID|INACTIVE|EXPIRED|EXHAUSTED, message }

@@ -78,12 +78,12 @@ export function ColoredBadge({ value, colorMap }) {
   return <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium ${cls}`}>{value || '—'}</span>;
 }
 
-export function ScoreBar({ value, max = 2, color = 'bg-amber-400' }) {
+export function ScoreBar({ value, max = 2, color = 'bg-amber-400', percent = false }) {
   if (value === null || value === undefined) return <span className="text-muted-foreground">—</span>;
   const pct = Math.min((value / max) * 100, 100);
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs font-mono w-12 text-right">{fmt(value)}</span>
+      <span className="text-xs font-mono w-12 text-right">{percent ? (value * 100).toFixed(1) + '%' : fmt(value)}</span>
       <div className="flex-1 h-2 bg-background rounded-full overflow-hidden max-w-[80px]">
         <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
       </div>

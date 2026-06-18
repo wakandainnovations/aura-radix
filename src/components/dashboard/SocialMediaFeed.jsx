@@ -7,7 +7,7 @@ import { mentionActionService } from '../../api/mentionActionService';
 import InlineReplyBox from '../feed/InlineReplyBox';
 import { PLATFORM_LOGOS } from '../../constants/platformLogos';
 
-export default function SocialMediaFeed({ mentions, selectedEntity, onMentionDeleted }) {
+export default function SocialMediaFeed({ mentions, selectedEntity, onMentionDeleted, loading = false, error = null, onRetry }) {
   const [selectedPlatform, setSelectedPlatform] = useState('all');
   const [sortBy, setSortBy] = useState('postDate'); // 'postDate' or 'sentiment'
   const [sortOrder, setSortOrder] = useState('desc'); // 'asc' or 'desc'
@@ -399,10 +399,7 @@ export default function SocialMediaFeed({ mentions, selectedEntity, onMentionDel
 
               {/* Inline confirmation — deleting a mention is irreversible (README 26b) */}
               {confirmDeleteId === mention.id && (
-                <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                  <p className="text-xs text-red-400">
-                    Remove this post permanently? This deletes it from the mentions database and can't be undone.
-                  </p>
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <button
                       onClick={() => handleConfirmNotRelevant(mention.id)}
@@ -420,6 +417,9 @@ export default function SocialMediaFeed({ mentions, selectedEntity, onMentionDel
                       Cancel
                     </button>
                   </div>
+                  <p className="text-xs text-red-400">
+                    Remove this post permanently? This deletes it from the mentions database and can't be undone.
+                  </p>
                 </div>
               )}
 
@@ -451,6 +451,25 @@ export default function SocialMediaFeed({ mentions, selectedEntity, onMentionDel
               )}
             </div>
           ))
+        ) : loading ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <Loader2 className="w-8 h-8 mx-auto mb-3 animate-spin text-primary" />
+            <p className="text-sm">Loading posts…</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <AlertTriangle className="w-10 h-10 mx-auto mb-3 text-red-400/70" />
+            <p className="text-sm">Couldn't load posts. The mentions service may be slow or unavailable.</p>
+            {onRetry && (
+              <button
+                onClick={onRetry}
+                className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded text-xs font-medium bg-accent text-foreground hover:bg-accent/70 transition-all"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                Retry
+              </button>
+            )}
+          </div>
         ) : (
           <div className="text-center py-12 text-muted-foreground">
             <MessageSquare className="w-10 h-10 mx-auto mb-3 opacity-50" />

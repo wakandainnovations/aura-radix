@@ -75,7 +75,10 @@ const VIEW_REGISTRY = {
 export default function PRCommandCenter() {
   const queryClient = useQueryClient();
   const { isAuthenticated, setIsAuthenticated } = useAuth();
-  const { isAdmin, viewAsUserId, refresh: refreshLicense } = useLicense();
+  const { isAdmin, viewAsUserId, refresh: refreshLicense, license, usage } = useLicense();
+  // Max entities the current license tier allows. Prefer the backend usage cap, fall
+  // back to the license payload's per-tier limit, then a safe default while loading.
+  const maxEntities = usage?.entitiesMax ?? license?.maxEntities ?? 5;
   const [selectedMention, setSelectedMention] = useState(null);
   const [activeView, setActiveView] = useState('dashboard');
   // REWORKED: New entity selection using array of entities
@@ -134,7 +137,7 @@ export default function PRCommandCenter() {
   });
 
   // Fetch mentions for primary or cluster - supports cluster mode
-  const { data: mentionsData = {}, refetch: refetchMentions, isLoading: mentionsLoading } = useQuery({
+  const { data: mentionsData = {}, refetch: refetchMentions, isLoading: mentionsLoading, error: mentionsError } = useQuery({
     queryKey: ['mentions', entityIdsForQueries.join(','), selectedTimeRange],
     queryFn: () => {
       return dashboardService.getClusterMentions(entityIdsForQueries, {
@@ -365,7 +368,11 @@ export default function PRCommandCenter() {
   // Derived state: hasLoadedEntities
   const hasLoadedEntities = (movieEntities.length > 0 || celebrityEntities.length > 0) && (!moviesLoading && !celebritiesLoading);
   const isLoadingEntities = (moviesLoading || celebritiesLoading) && !hasLoadedEntities;
-  const isLoading = (mentionsLoading || metricsLoading) && hasLoadedEntities;
+  // NOTE: We intentionally do NOT block the whole dashboard on the data queries
+  // (mentions/metrics). The cluster/mentions endpoint can be slow or time out
+  // (40s × retry), which previously froze every panel behind a single
+  // "Loading data..." spinner. Instead each panel renders as soon as its own
+  // data is available and shows its own loading/error state (see SocialMediaFeed).
 
   // Handle adding competitors (accepts array of entities)
   const handleAddCompetitor = useCallback(async (entitiesToAdd) => {
@@ -403,21 +410,21 @@ export default function PRCommandCenter() {
     }
   }, [queryClient, entityType, primaryEntity?.id, competitiveData]);
 
-  // Handle adding a new entity to the selected entities (max 5)
+  // Handle adding a new entity to the selected entities (capped by license tier)
   const handleAddEntity = useCallback((entity) => {
     setSelectedEntities(prev => {
       // Check if entity is already selected
       if (prev.some(e => e.id === entity.id)) {
         return prev;
       }
-      // Check if max entities reached (5)
-      if (prev.length >= 5) {
-        alert('Maximum 5 entities can be selected');
+      // Check if max entities reached for the current license tier
+      if (prev.length >= maxEntities) {
+        alert(`Maximum ${maxEntities} entities can be selected`);
         return prev;
       }
       return [...prev, entity];
     });
-  }, []);
+  }, [maxEntities]);
 
   // Handle removing an entity from selection
   const handleRemoveEntity = useCallback((entityId) => {
@@ -488,9 +495,9 @@ export default function PRCommandCenter() {
             {isAuthenticated && (
               <button
                 onClick={() => setAddEntityModalOpen(true)}
-                disabled={selectedEntities.length >= 5}
+                disabled={selectedEntities.length >= maxEntities}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 transition-colors text-sm font-medium border border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
-                title={selectedEntities.length >= 5 ? 'Maximum 5 entities allowed' : 'Add entity'}
+                title={selectedEntities.length >= maxEntities ? `Maximum ${maxEntities} entities allowed` : 'Add entity'}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="12" y1="5" x2="12" y2="19" />
@@ -621,18 +628,10 @@ export default function PRCommandCenter() {
         {isAuthenticated && activeView === 'abuse-reports' && <AbuseReportsView />}
         {isAuthenticated && activeView === 'workspace-export' && <WorkspaceExportView />}
 
-        {/* Loading state for data after entity is selected */}
-        {isLoading && selectedEntities.length > 0 && (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Loading data...</p>
-            </div>
-          </div>
-        )}
-
-        {/* Views Router */}
-        {isAuthenticated && !isLoading && selectedEntities.length > 0 && (
+        {/* Views Router — renders as soon as an entity is selected. Individual
+            panels (mentions feed, KPI cards, charts) show their own loading /
+            error states so a single slow query no longer blocks everything. */}
+        {isAuthenticated && selectedEntities.length > 0 && (
           <>
             {activeView === 'dashboard' && !primaryEntity && (
               <div className="h-full flex items-center justify-center bg-background">
@@ -650,6 +649,9 @@ export default function PRCommandCenter() {
                 entities={combinedEntities}
                 onAddCompetitor={handleAddCompetitor}
                 mentions={filteredMentions}
+                mentionsLoading={mentionsLoading}
+                mentionsError={mentionsError}
+                onRetryMentions={refetchMentions}
                 platformData={platformData}
                 stats={metricsData}
                 sentimentData={sentimentTrend}
@@ -821,6 +823,7 @@ export default function PRCommandCenter() {
           movieEntities={movieEntities}
           celebrityEntities={celebrityEntities}
           currentEntityIds={selectedEntities.map(e => e.id)}
+          maxEntities={maxEntities}
         />
       )}
 

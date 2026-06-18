@@ -8,7 +8,8 @@ export default function AddEntityModal({
   onEntitySelect, 
   movieEntities = [],
   celebrityEntities = [],
-  currentEntityIds = [] // IDs of already-selected entities to disable in selection
+  currentEntityIds = [], // IDs of already-selected entities to disable in selection
+  maxEntities = 5 // entity limit derived from the user's license tier
 }) {
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -58,7 +59,7 @@ export default function AddEntityModal({
             <div>
               <Dialog.Title className="text-lg font-semibold text-foreground">Add Entity</Dialog.Title>
               <p className="text-sm text-muted-foreground mt-1">
-                Click any entity to add ({currentEntityIds.length}/5)
+                Click any entity to add ({currentEntityIds.length}/{maxEntities})
               </p>
             </div>
             <button

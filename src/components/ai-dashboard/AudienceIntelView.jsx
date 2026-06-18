@@ -57,12 +57,12 @@ function ColoredBadge({ value, colorMap }) {
   return <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium ${cls}`}>{value || '—'}</span>;
 }
 
-function ScoreBar({ value, max = 2, color = 'bg-amber-400' }) {
+function ScoreBar({ value, max = 2, color = 'bg-amber-400', percent = false }) {
   if (value === null || value === undefined) return <span className="text-muted-foreground">—</span>;
   const pct = Math.min((value / max) * 100, 100);
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs font-mono w-12 text-right">{fmt(value)}</span>
+      <span className="text-xs font-mono w-12 text-right">{percent ? (value * 100).toFixed(1) + '%' : fmt(value)}</span>
       <div className="flex-1 h-2 bg-background rounded-full overflow-hidden max-w-[80px]">
         <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
       </div>
@@ -259,7 +259,7 @@ function TopSpreadersTable({ data }) {
             <SortableHeader label="Views" {...sp('total_views', 'right')} />
             <SortableHeader label="Likes" {...sp('total_likes', 'right')} />
             <SortableHeader label="Comments" {...sp('total_comments', 'right')} />
-            <SortableHeader label="Eng. Rate" {...sp('engagement_rate')} />
+            <SortableHeader label="Eng. Rate" tip="The share of viewers who actively interacted (likes + comments + shares ÷ views) — e.g. 3% means 3 of every 100 people who saw the post engaged with it. It measures audience responsiveness, not reach: a high rate signals a small but highly engaged audience, ideal for niche, high-conversion campaigns. Most channels sit in the 1–3% range, so 3% is at the healthy end of typical." {...sp('engagement_rate')} />
             <SortableHeader label="Sentiment" {...sp('average_sentiment_score')} />
           </tr>
         </thead>
@@ -272,7 +272,7 @@ function TopSpreadersTable({ data }) {
               <td className="py-2 px-3 text-right text-foreground font-mono">{row.total_views?.toLocaleString() ?? '—'}</td>
               <td className="py-2 px-3 text-right text-foreground font-mono">{row.total_likes?.toLocaleString() ?? '—'}</td>
               <td className="py-2 px-3 text-right text-foreground font-mono">{row.total_comments?.toLocaleString() ?? '—'}</td>
-              <td className="py-2 px-3"><ScoreBar value={row.engagement_rate} max={1} color="bg-cyan-400" /></td>
+              <td className="py-2 px-3"><ScoreBar value={row.engagement_rate} max={1} color="bg-cyan-400" percent /></td>
               <td className="py-2 px-3">
                 <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${
                   (row.average_sentiment_score ?? 0) >= 70 ? 'bg-emerald-500/20 text-emerald-400' :
