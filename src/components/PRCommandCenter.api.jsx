@@ -439,9 +439,15 @@ export default function PRCommandCenter() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
+      {/* min-w-0 lets this flex column shrink to the viewport instead of being
+          held open by its widest child (the header), which would otherwise force
+          page-level horizontal scroll on windows narrower than the header. */}
+      <div className="flex-1 flex flex-col min-w-0">
       {/* Header with Entity Selection - REWORKED */}
-        <div className="border-b border-border bg-card px-6 py-4 flex items-center justify-between">
+      {/* flex-wrap + gap-y let the right-hand controls (user selector, bell,
+          refresh, logout) drop to a second line on narrow windows rather than
+          forcing a min-width wider than the viewport. */}
+        <div className="border-b border-border bg-card px-6 py-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-xl font-bold text-foreground">Command Center</h1>
             <div className="h-6 w-px bg-border" />
