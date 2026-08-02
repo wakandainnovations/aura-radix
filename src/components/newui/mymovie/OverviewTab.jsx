@@ -5,10 +5,8 @@ import BuzzOverTimeChart from '../BuzzOverTimeChart';
 import SentimentOverTimeChart from '../SentimentOverTimeChart';
 import TopPositiveThemes from '../TopPositiveThemes';
 import InsightCards from '../InsightCards';
-import { dummyMovieOverview } from '../dummyMovieData';
 
-export default function OverviewTab() {
-  const data = dummyMovieOverview;
+export default function OverviewTab({ data }) {
   return (
     <div className="p-6 space-y-4">
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-4 items-stretch">

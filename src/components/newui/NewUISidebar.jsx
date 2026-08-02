@@ -9,6 +9,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { SIDEBAR_BG } from './theme';
+import SwitchMovieMenu from './SwitchMovieMenu';
 
 const NAV_ITEMS = [
   { key: 'command-center', label: 'Command Center', icon: LayoutGrid },
@@ -20,7 +21,16 @@ const NAV_ITEMS = [
   { key: 'ai-producer', label: 'AI Producer', icon: Bot },
 ];
 
-export default function NewUISidebar({ activeItem = 'my-movie', onSelect, movieTitle, releaseInDays, producerName = 'Producer' }) {
+export default function NewUISidebar({
+  activeItem = 'my-movie',
+  onSelect,
+  movieTitle,
+  releaseInDays,
+  movies,
+  selectedMovie,
+  onSelectMovie,
+  producerName = 'Producer',
+}) {
   return (
     <div className={`w-64 shrink-0 h-full flex flex-col ${SIDEBAR_BG}`}>
       <div className="px-5 pt-6 pb-5">
@@ -51,14 +61,13 @@ export default function NewUISidebar({ activeItem = 'my-movie', onSelect, movieT
 
       <div className="px-3 pb-3">
         <div className="px-3 py-2 text-[11px] font-semibold tracking-wide text-white/35">SWITCH MOVIE</div>
-        <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/[0.04] transition-colors">
-          <div className="w-8 h-10 rounded bg-gradient-to-br from-slate-700 to-slate-800 border border-white/10 shrink-0" />
-          <div className="flex-1 min-w-0 text-left">
-            <div className="text-sm text-white/90 truncate">{movieTitle}</div>
-            <div className="text-xs text-white/40">Releasing in {releaseInDays} days</div>
-          </div>
-          <ChevronDown className="w-4 h-4 text-white/30 shrink-0" />
-        </button>
+        <SwitchMovieMenu
+          movies={movies}
+          selectedMovie={selectedMovie}
+          onSelect={onSelectMovie}
+          fallbackTitle={movieTitle}
+          releaseInDays={releaseInDays}
+        />
       </div>
 
       <div className="border-t border-white/[0.07] px-4 py-3">

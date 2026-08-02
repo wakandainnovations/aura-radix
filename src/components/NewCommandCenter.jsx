@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import NewUISidebar from './newui/NewUISidebar';
 import MyMovieSection from './newui/mymovie/MyMovieSection';
 import AudienceIntelligenceSection from './newui/audience/AudienceIntelligenceSection';
@@ -8,6 +9,9 @@ import WarRoomSection from './newui/warroom/WarRoomSection';
 import AIProducerSection from './newui/aiproducer/AIProducerSection';
 import { dummyMovieOverview } from './newui/dummyMovieData';
 import { PAGE_BG } from './newui/theme';
+import { entityService } from '../api/entityService';
+import { useLicense } from '../hooks/useLicense';
+import { daysUntilRelease } from './newui/dateUtils';
 
 const SECTIONS = {
   'command-center': MyMovieSection,
@@ -19,14 +23,27 @@ const SECTIONS = {
   'ai-producer': AIProducerSection,
 };
 
-// New UI preview, built from the provided design mocks. Every section runs
-// on static dummy data (see each section's *Data.js) — no entity/movie
-// selection exists in this shell yet, so nothing here is wired to the real
-// dashboardService/analyticsService APIs. That's the natural next step once
-// the visual design is signed off.
+// New UI preview, built from the provided design mocks. Section content
+// still runs on static dummy data (see each section's *Data.js) — only the
+// "Switch Movie" picker is wired to the real entity list so far. That's the
+// natural next step once the visual design is signed off: thread the
+// selected movie into each section instead of the dummy dataset.
 export default function NewCommandCenter() {
   const [activeSection, setActiveSection] = useState('my-movie');
+  const [selectedMovie, setSelectedMovie] = useState(null);
+  const { viewAsUserId } = useLicense();
+
+  const { data: movies = [] } = useQuery({
+    queryKey: ['entities', 'movie', viewAsUserId ?? 'self'],
+    queryFn: () => entityService.getAll('movie', { ownerId: viewAsUserId ?? undefined }),
+  });
+
+  // Default to the first movie entity once the list loads, without
+  // clobbering a choice the user already made from the switcher.
+  const activeMovie = selectedMovie ?? movies[0] ?? null;
+
   const data = dummyMovieOverview;
+  const releaseInDays = daysUntilRelease(activeMovie?.releaseDate) ?? data.releaseInDays;
   const SectionComponent = SECTIONS[activeSection] ?? MyMovieSection;
 
   return (
@@ -35,11 +52,14 @@ export default function NewCommandCenter() {
         activeItem={activeSection}
         onSelect={setActiveSection}
         movieTitle={data.title}
-        releaseInDays={data.releaseInDays}
+        releaseInDays={releaseInDays}
+        movies={movies}
+        selectedMovie={activeMovie}
+        onSelectMovie={setSelectedMovie}
       />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        <SectionComponent />
+        <SectionComponent selectedMovie={activeMovie} />
       </div>
     </div>
   );

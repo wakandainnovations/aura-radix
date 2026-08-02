@@ -1,5 +1,6 @@
 import { Clapperboard, Tag, Languages, Clock, Wallet, Building2, MonitorPlay, CalendarDays, ArrowRight } from 'lucide-react';
 import { CARD } from './theme';
+import useEntityImage from '../../hooks/useEntityImage';
 
 const META_ROWS = (poster) => [
   { icon: Tag, label: 'Genre', value: poster.genre },
@@ -12,14 +13,21 @@ const META_ROWS = (poster) => [
 ];
 
 export default function MoviePosterPanel({ title, poster }) {
+  const posterSrc = useEntityImage(poster.imageUrl);
+
   return (
     <div className={`${CARD} p-4 h-full flex flex-col`}>
-      {/* Placeholder poster art — swap for the real poster image once available */}
       <div className="relative w-full aspect-[3/4] rounded-xl overflow-hidden bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-white/10 flex items-center justify-center shrink-0">
-        <Clapperboard className="w-12 h-12 text-white/20" />
-        <span className="absolute bottom-3 left-0 right-0 text-center text-xs text-white/30 px-3">
-          Poster placeholder
-        </span>
+        {posterSrc ? (
+          <img src={posterSrc} alt={`${title} poster`} className="w-full h-full object-cover" />
+        ) : (
+          <>
+            <Clapperboard className="w-12 h-12 text-white/20" />
+            <span className="absolute bottom-3 left-0 right-0 text-center text-xs text-white/30 px-3">
+              Poster placeholder
+            </span>
+          </>
+        )}
       </div>
 
       <div className="mt-4 space-y-3">

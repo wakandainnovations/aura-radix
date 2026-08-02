@@ -16,7 +16,8 @@ function BuzzTooltip({ active, payload, label }) {
 
 export default function BuzzOverTimeChart({ buzzOverTime }) {
   const maxValue = Math.max(...buzzOverTime.series.map((d) => d.value));
-  const ticks = niceAxisTicks(maxValue);
+  const yTicks = niceAxisTicks(maxValue);
+  const xTicks = buzzOverTime.ticks ?? AXIS_TICKS;
 
   return (
     <div className={`${CARD} p-5`}>
@@ -51,15 +52,15 @@ export default function BuzzOverTimeChart({ buzzOverTime }) {
           <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.06)" />
           <XAxis
             dataKey="date"
-            ticks={AXIS_TICKS}
+            ticks={xTicks}
             interval="preserveStartEnd"
             tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }}
             axisLine={{ stroke: 'rgba(255,255,255,0.08)' }}
             tickLine={false}
           />
           <YAxis
-            domain={[0, Math.max(1, ticks[ticks.length - 1])]}
-            ticks={ticks}
+            domain={[0, Math.max(1, yTicks[yTicks.length - 1])]}
+            ticks={yTicks}
             tickFormatter={formatCompact}
             tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }}
             axisLine={false}

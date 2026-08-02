@@ -131,6 +131,20 @@ export const entityService = {
     }
   },
 
+  // Fetch an entity's poster image as a Blob. `imageUrl` is the relative path returned by the
+  // backend on the entity object (e.g. `/entities/movie/123/image`) — null if no image is matched.
+  // A plain <img src> can't carry the JWT the endpoint requires, so callers fetch the blob
+  // themselves and render it via an object URL (see useEntityImage).
+  getImage: async (imageUrl) => {
+    try {
+      const blob = await apiClient.get(imageUrl, { responseType: 'blob' });
+      return blob;
+    } catch (error) {
+      console.error(`Failed to fetch entity image ${imageUrl}:`, error);
+      throw error;
+    }
+  },
+
   // Delete an entity
   // Path: DELETE /api/entities/{entityType}/{id}
   // Response: No content (204)

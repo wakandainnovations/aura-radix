@@ -34,7 +34,8 @@ export default function SentimentOverTimeChart({ sentimentOverTime }) {
   const maxValue = Math.max(
     ...sentimentOverTime.series.map((d) => Math.max(d.positive, d.neutral, d.negative))
   );
-  const ticks = niceAxisTicks(maxValue);
+  const yTicks = niceAxisTicks(maxValue);
+  const xTicks = sentimentOverTime.ticks ?? AXIS_TICKS;
 
   const totals = {
     positive: sentimentOverTime.positiveTotal,
@@ -70,15 +71,15 @@ export default function SentimentOverTimeChart({ sentimentOverTime }) {
           <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.06)" />
           <XAxis
             dataKey="date"
-            ticks={AXIS_TICKS}
+            ticks={xTicks}
             interval="preserveStartEnd"
             tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }}
             axisLine={{ stroke: 'rgba(255,255,255,0.08)' }}
             tickLine={false}
           />
           <YAxis
-            domain={[0, Math.max(1, ticks[ticks.length - 1])]}
-            ticks={ticks}
+            domain={[0, Math.max(1, yTicks[yTicks.length - 1])]}
+            ticks={yTicks}
             tickFormatter={formatCompact}
             tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }}
             axisLine={false}

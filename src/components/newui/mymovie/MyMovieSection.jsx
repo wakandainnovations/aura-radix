@@ -5,20 +5,19 @@ import PerformanceTab from './PerformanceTab';
 import TimelineTab from './TimelineTab';
 import AssetsTab from './AssetsTab';
 import ReportsTab from './ReportsTab';
-import { dummyMovieOverview } from '../dummyMovieData';
+import useMovieOverviewData from './useMovieOverviewData';
 
-const TABS = {
-  Overview: OverviewTab,
+const OTHER_TABS = {
   Performance: PerformanceTab,
   Timeline: TimelineTab,
   Assets: AssetsTab,
   Reports: ReportsTab,
 };
 
-export default function MyMovieSection() {
+export default function MyMovieSection({ selectedMovie }) {
   const [activeTab, setActiveTab] = useState('Overview');
-  const data = dummyMovieOverview;
-  const TabComponent = TABS[activeTab];
+  const data = useMovieOverviewData(selectedMovie);
+  const OtherTabComponent = OTHER_TABS[activeTab];
 
   return (
     <>
@@ -31,7 +30,7 @@ export default function MyMovieSection() {
         onTabChange={setActiveTab}
         notificationCount={3}
       />
-      <TabComponent />
+      {activeTab === 'Overview' ? <OverviewTab data={data} /> : <OtherTabComponent />}
     </>
   );
 }
