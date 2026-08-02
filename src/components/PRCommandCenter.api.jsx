@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { RotateCcw } from 'lucide-react';
 import LeftNavbar from './navigation/LeftNavbar';
 // COMMENTED OUT: Old entity selection approach
 // import EntitySelector from './navigation/EntitySelector';
@@ -358,6 +357,15 @@ export default function PRCommandCenter() {
     entityType,
   ]);
 
+  // Auto-refresh all data for the selected entities every 30 minutes,
+  // replacing the old manual Refresh button.
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      handleRefreshCurrentEntities();
+    }, 30 * 60 * 1000);
+    return () => clearInterval(intervalId);
+  }, [handleRefreshCurrentEntities]);
+
   // Get current entity types from selectedEntities
   const movieEntitiesSelected = selectedEntities.filter(e => e.entityType === 'movie');
   const celebrityEntitiesSelected = selectedEntities.filter(e => e.entityType === 'celebrity');
@@ -526,15 +534,6 @@ export default function PRCommandCenter() {
               <>
                 <AdminUserSelector />
                 <NotificationBell onViewAll={() => setActiveView('alert-management')} />
-                <button
-                  onClick={handleRefreshCurrentEntities}
-                  disabled={!primaryEntity?.id}
-                  className="px-3 py-2 h-10 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                  title={primaryEntity?.id ? 'Refresh all data for selected entities' : 'Select an entity to refresh data'}
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  Refresh
-                </button>
                 <span className="text-sm text-muted-foreground">Logged in</span>
                 <button
                   onClick={() => {

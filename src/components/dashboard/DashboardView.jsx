@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Sparkles } from "lucide-react";
 import { analyticsService } from "../../api";
 import { transformStatsToCards, calculateStatsFromMentions } from "../../utils/statsTransformer";
 import { formatCurrency } from "../../utils/helpers";
 import WhatsNewCards from "../ai-dashboard/WhatsNewCards";
 import WhatsChangedSummary from "../ai-dashboard/WhatsChangedSummary";
 import CelebrityAnalytics from "./CelebrityAnalytics";
+import MovieAudienceInsights from "./MovieAudienceInsights";
 import CompetitivePositioning from "./CompetitivePositioning";
 import SocialMediaFeed from "./SocialMediaFeed";
 import KPICardsSection from "../analytics/KPICardsSection";
@@ -345,10 +345,6 @@ export default function DashboardView({
           <div>
             <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary rounded-lg">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-primary">AI-Powered</span>
-          </div>
         </div>
 
         {/* Welcome-back digest — each renders only when there's something to show,
@@ -420,6 +416,13 @@ export default function DashboardView({
             error={celebrityError}
             formatCurrency={formatCurrency}
           />
+        )}
+
+        {/* Movie-Specific Audience Intelligence - Only rendered for movie entities */}
+        {/* Shows language-wide audience size, top posters for the movie, and how its
+            audience compares against similarly-budgeted movies (any language) */}
+        {!isCelebrity && (
+          <MovieAudienceInsights selectedEntity={selectedEntity} entityType={entityType} />
         )}
       </div>
     </div>

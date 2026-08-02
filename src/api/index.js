@@ -4,6 +4,7 @@ export { entityService } from './entityService';
 export { dashboardService } from './dashboardService';
 export { crisisService } from './crisisService';
 export { analyticsService } from './analyticsService';
+export { audienceService } from './audienceService';
 export { interactionService } from './interactionService';
 export { marketingAggregationService } from './marketingAggregationService';
 export { checkpointService } from './checkpointService';
