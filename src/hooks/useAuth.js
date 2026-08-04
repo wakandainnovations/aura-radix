@@ -12,16 +12,18 @@ export function useAuth() {
     // Initialize from localStorage
     return !!localStorage.getItem('jwtToken');
   });
+  const [username, setUsername] = useState(() => localStorage.getItem('username'));
 
   // Listen for storage changes (e.g., from other tabs/windows)
   useEffect(() => {
     const handleStorageChange = () => {
       setIsAuthenticated(!!localStorage.getItem('jwtToken'));
+      setUsername(localStorage.getItem('username'));
     };
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  return { isAuthenticated, setIsAuthenticated };
+  return { isAuthenticated, setIsAuthenticated, username, setUsername };
 }

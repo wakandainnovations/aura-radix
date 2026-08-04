@@ -10,7 +10,9 @@ import AIProducerSection from './newui/aiproducer/AIProducerSection';
 import { dummyMovieOverview } from './newui/dummyMovieData';
 import { PAGE_BG } from './newui/theme';
 import { entityService } from '../api/entityService';
+import { authService } from '../api/authService';
 import { useLicense } from '../hooks/useLicense';
+import { useAuth } from '../hooks/useAuth';
 import { daysUntilRelease } from './newui/dateUtils';
 
 const SECTIONS = {
@@ -31,7 +33,17 @@ const SECTIONS = {
 export default function NewCommandCenter() {
   const [activeSection, setActiveSection] = useState('my-movie');
   const [selectedMovie, setSelectedMovie] = useState(null);
-  const { viewAsUserId } = useLicense();
+  const { viewAsUserId, refresh: refreshLicense } = useLicense();
+  const { username, setIsAuthenticated, setUsername } = useAuth();
+
+  const handleLogout = () => {
+    authService.logout();
+    setIsAuthenticated(false);
+    setUsername(null);
+    // Re-probes admin/license status now that the token is gone, which flips
+    // isAdmin to false and lets App.jsx fall back to the classic UI.
+    refreshLicense();
+  };
 
   const { data: movies = [] } = useQuery({
     queryKey: ['entities', 'movie', viewAsUserId ?? 'self'],
@@ -56,6 +68,8 @@ export default function NewCommandCenter() {
         movies={movies}
         selectedMovie={activeMovie}
         onSelectMovie={setSelectedMovie}
+        userName={username}
+        onLogout={handleLogout}
       />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">

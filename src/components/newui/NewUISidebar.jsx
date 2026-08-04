@@ -1,3 +1,4 @@
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import {
   LayoutGrid,
   Clapperboard,
@@ -7,6 +8,7 @@ import {
   ShieldAlert,
   Bot,
   ChevronDown,
+  LogOut,
 } from 'lucide-react';
 import { SIDEBAR_BG } from './theme';
 import SwitchMovieMenu from './SwitchMovieMenu';
@@ -29,8 +31,10 @@ export default function NewUISidebar({
   movies,
   selectedMovie,
   onSelectMovie,
-  producerName = 'Producer',
+  userName,
+  onLogout,
 }) {
+  const displayName = userName || 'Account';
   return (
     <div className={`w-64 shrink-0 h-full flex flex-col ${SIDEBAR_BG}`}>
       <div className="px-5 pt-6 pb-5">
@@ -71,16 +75,36 @@ export default function NewUISidebar({
       </div>
 
       <div className="border-t border-white/[0.07] px-4 py-3">
-        <button className="w-full flex items-center gap-3 hover:bg-white/[0.04] rounded-lg px-2 py-1.5 transition-colors">
-          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-semibold shrink-0">
-            {producerName.charAt(0).toUpperCase()}
-          </div>
-          <div className="flex-1 min-w-0 text-left">
-            <div className="text-sm text-white/90 truncate">{producerName}</div>
-            <div className="text-xs text-white/40">Producer</div>
-          </div>
-          <ChevronDown className="w-4 h-4 text-white/30 shrink-0" />
-        </button>
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger asChild>
+            <button className="w-full flex items-center gap-3 hover:bg-white/[0.04] rounded-lg px-2 py-1.5 transition-colors outline-none">
+              <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-semibold shrink-0">
+                {displayName.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0 text-left">
+                <div className="text-sm text-white/90 truncate">{displayName}</div>
+              </div>
+              <ChevronDown className="w-4 h-4 text-white/30 shrink-0" />
+            </button>
+          </DropdownMenu.Trigger>
+
+          <DropdownMenu.Portal container={document.body}>
+            <DropdownMenu.Content
+              className="overflow-hidden bg-[#0b0e19] rounded-lg border border-white/[0.07] shadow-xl w-56 z-[999] p-1"
+              side="top"
+              align="start"
+              sideOffset={8}
+            >
+              <DropdownMenu.Item
+                onSelect={onLogout}
+                className="flex items-center gap-2 px-3 py-2 rounded text-sm text-white/80 hover:bg-white/[0.06] hover:text-white outline-none cursor-pointer"
+              >
+                <LogOut className="w-4 h-4 text-white/40" />
+                Log out
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
       </div>
     </div>
   );

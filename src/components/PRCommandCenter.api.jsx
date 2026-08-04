@@ -73,7 +73,7 @@ const VIEW_REGISTRY = {
 
 export default function PRCommandCenter() {
   const queryClient = useQueryClient();
-  const { isAuthenticated, setIsAuthenticated } = useAuth();
+  const { isAuthenticated, setIsAuthenticated, setUsername } = useAuth();
   const { isAdmin, viewAsUserId, refresh: refreshLicense, license, usage } = useLicense();
   // Max entities the current license tier allows. Prefer the backend usage cap, fall
   // back to the license payload's per-tier limit, then a safe default while loading.
@@ -539,6 +539,7 @@ export default function PRCommandCenter() {
                   onClick={() => {
                     authService.logout();
                     setIsAuthenticated(false);
+                    setUsername(null);
                     refreshLicense();
                     if (activeView === 'ai-analytics') {
                       setActiveView('dashboard');
@@ -839,6 +840,7 @@ export default function PRCommandCenter() {
         onLoginSuccess={() => {
           // Set authenticated state
           setIsAuthenticated(true);
+          setUsername(localStorage.getItem('username'));
           // Load license/entitlements/admin status for the now-authenticated user.
           refreshLicense();
 

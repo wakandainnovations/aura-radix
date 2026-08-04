@@ -28,6 +28,9 @@ export const authService = {
       // Admin status is no longer inferred from credentials — it is derived from the
       // backend role via the admin probe in LicenseContext (see LicenseProvider).
       localStorage.setItem('jwtToken', response.jwtToken);
+      // There is no profile endpoint, so the username typed at login is the only
+      // place we can get it from — persist it for display elsewhere in the UI.
+      localStorage.setItem('username', username);
       return response;
     } catch (error) {
       console.error('Failed to login user:', error);
@@ -39,6 +42,7 @@ export const authService = {
     try {
       localStorage.removeItem('jwtToken');
       localStorage.removeItem('isAdmin'); // clean up the legacy client-side admin flag
+      localStorage.removeItem('username');
     } catch (error) {
       console.error('Failed to logout user:', error);
       throw error;
