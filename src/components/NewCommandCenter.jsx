@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import NewUISidebar from './newui/NewUISidebar';
+import CommandCenterSection from './newui/commandcenter/CommandCenterSection';
 import MyMovieSection from './newui/mymovie/MyMovieSection';
 import AudienceIntelligenceSection from './newui/audience/AudienceIntelligenceSection';
 import CompetitorIntelligenceSection from './newui/competitor/CompetitorIntelligenceSection';
@@ -16,7 +17,7 @@ import { useAuth } from '../hooks/useAuth';
 import { daysUntilRelease } from './newui/dateUtils';
 
 const SECTIONS = {
-  'command-center': MyMovieSection,
+  'command-center': CommandCenterSection,
   'my-movie': MyMovieSection,
   'audience-intelligence': AudienceIntelligenceSection,
   'competitor-intelligence': CompetitorIntelligenceSection,
@@ -73,7 +74,11 @@ export default function NewCommandCenter() {
       />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        <SectionComponent selectedMovie={activeMovie} />
+        <SectionComponent
+          selectedMovie={activeMovie}
+          userName={username}
+          onOpenWorkspace={() => setActiveSection('my-movie')}
+        />
       </div>
     </div>
   );

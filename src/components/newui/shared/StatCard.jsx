@@ -22,6 +22,7 @@ export default function StatCard({
   caption,
   sparkline,
   sparklineColor = '#3987e5',
+  barPct,
   badge,
 }) {
   const deltaColor = deltaTone === 'good' ? 'text-emerald-400' : deltaTone === 'bad' ? 'text-red-400' : 'text-white/50';
@@ -57,6 +58,15 @@ export default function StatCard({
         )}
       </div>
       {caption && <div className="text-[11px] text-white/35 mt-0.5">{caption}</div>}
+
+      {barPct != null && (
+        <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden mt-3">
+          <div
+            className="h-full rounded-full"
+            style={{ width: `${Math.min(100, barPct)}%`, backgroundColor: sparklineColor }}
+          />
+        </div>
+      )}
 
       {sparkData && (
         <div className="h-7 mt-2 -mx-1">
