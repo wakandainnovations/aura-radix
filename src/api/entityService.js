@@ -137,7 +137,13 @@ export const entityService = {
   // themselves and render it via an object URL (see useEntityImage).
   getImage: async (imageUrl) => {
     try {
-      const blob = await apiClient.get(imageUrl, { responseType: 'blob' });
+      // The endpoint sends Cache-Control: private, max-age=86400 with no ETag, so a bad
+      // image cached before a backend data fix would otherwise stick around for 24h.
+      // Force revalidation on every load so corrections take effect immediately.
+      const blob = await apiClient.get(imageUrl, {
+        responseType: 'blob',
+        headers: { 'Cache-Control': 'no-cache' },
+      });
       return blob;
     } catch (error) {
       console.error(`Failed to fetch entity image ${imageUrl}:`, error);
