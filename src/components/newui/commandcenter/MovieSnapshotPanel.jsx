@@ -1,15 +1,23 @@
 import { Clapperboard, CalendarClock, Tag, Languages, Clock, Building2, RefreshCw, ArrowRight } from 'lucide-react';
 import { CARD } from '../theme';
 import useEntityImage from '../../../hooks/useEntityImage';
+import { releaseCountdownLabel } from '../dateUtils';
 
-const META_ROWS = (snapshot) => [
-  { icon: CalendarClock, label: 'Releasing in', value: `${snapshot.releaseInDays} Days` },
-  { icon: Tag, label: 'Genre', value: snapshot.genre },
-  { icon: Languages, label: 'Language', value: snapshot.language },
-  { icon: Clock, label: 'Runtime', value: snapshot.runtime },
-  { icon: Building2, label: 'Distributor', value: snapshot.distributor },
-  { icon: RefreshCw, label: 'Last Updated', value: snapshot.lastUpdatedLabel },
-];
+const META_ROWS = (snapshot) => {
+  const { isPast, days } = releaseCountdownLabel(snapshot.releaseInDays);
+  return [
+    {
+      icon: CalendarClock,
+      label: isPast ? 'Released' : 'Releasing in',
+      value: isPast ? `${days} Days ago` : `${days} Days`,
+    },
+    { icon: Tag, label: 'Genre', value: snapshot.genre },
+    { icon: Languages, label: 'Language', value: snapshot.language },
+    { icon: Clock, label: 'Runtime', value: snapshot.runtime },
+    { icon: Building2, label: 'Distributor', value: snapshot.distributor },
+    { icon: RefreshCw, label: 'Last Updated', value: snapshot.lastUpdatedLabel },
+  ];
+};
 
 export default function MovieSnapshotPanel({ title, poster, snapshot, onOpenWorkspace }) {
   const posterSrc = useEntityImage(poster.imageUrl);

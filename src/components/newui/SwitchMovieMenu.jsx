@@ -2,6 +2,7 @@ import { useState } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { Check, ChevronDown, Search, Film } from 'lucide-react';
 import useEntityImage from '../../hooks/useEntityImage';
+import { releaseCountdownLabel } from './dateUtils';
 
 // Dark-themed movie switcher for the new UI sidebar. Built on Popover rather
 // than Select: Select.Content has built-in type-ahead keyboard handling that
@@ -10,6 +11,7 @@ import useEntityImage from '../../hooks/useEntityImage';
 export default function SwitchMovieMenu({ movies = [], selectedMovie, onSelect, fallbackTitle, releaseInDays }) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const { isPast, days } = releaseCountdownLabel(releaseInDays);
 
   const filteredMovies = movies.filter((movie) =>
     movie.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -35,7 +37,9 @@ export default function SwitchMovieMenu({ movies = [], selectedMovie, onSelect, 
           </div>
           <div className="flex-1 min-w-0 text-left">
             <div className="text-sm text-white/90 truncate">{displayTitle}</div>
-            <div className="text-xs text-white/40">Releasing in {releaseInDays} days</div>
+            <div className="text-xs text-white/40">
+              {isPast ? `Released ${days} days ago` : `Releasing in ${days} days`}
+            </div>
           </div>
           <ChevronDown className="w-4 h-4 text-white/30 shrink-0" />
         </button>

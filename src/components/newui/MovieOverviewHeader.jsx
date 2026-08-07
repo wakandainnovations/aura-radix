@@ -1,4 +1,5 @@
 import { Calendar, GitCompare, Share2, Bell, User } from 'lucide-react';
+import { releaseCountdownLabel } from './dateUtils';
 
 const TABS = ['Overview', 'Performance', 'Timeline', 'Assets', 'Reports'];
 
@@ -11,6 +12,7 @@ export default function MovieOverviewHeader({
   onTabChange,
   notificationCount = 0,
 }) {
+  const { isPast, days } = releaseCountdownLabel(releaseInDays);
   return (
     <div className="px-8 pt-6 pb-0 border-b border-white/[0.07]">
       <div className="flex items-start justify-between gap-6 flex-wrap">
@@ -23,7 +25,7 @@ export default function MovieOverviewHeader({
               {status}
             </span>
             <span className="text-sm text-white/40">
-              Releasing in {releaseInDays} days
+              {isPast ? `Released ${days} days ago` : `Releasing in ${days} days`}
             </span>
           </div>
         </div>

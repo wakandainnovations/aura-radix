@@ -1,4 +1,5 @@
 import { Search, Bell, User, Info } from 'lucide-react';
+import { releaseCountdownLabel } from '../dateUtils';
 
 function greetingFor(hour) {
   if (hour < 12) return 'Good Morning';
@@ -8,6 +9,7 @@ function greetingFor(hour) {
 
 export default function CommandCenterHeader({ userName, title, releaseInDays, status, notificationCount = 3 }) {
   const greeting = greetingFor(new Date().getHours());
+  const { isPast, days } = releaseCountdownLabel(releaseInDays);
 
   return (
     <div className="px-8 pt-6 pb-5 border-b border-white/[0.07]">
@@ -44,7 +46,7 @@ export default function CommandCenterHeader({ userName, title, releaseInDays, st
       <div className="flex items-center gap-3 flex-wrap">
         <h1 className="text-4xl font-extrabold text-white leading-none">{title}</h1>
         <span className="text-sm text-white/40">
-          releases in <span className="text-blue-400 font-semibold">{releaseInDays}</span> days
+          {isPast ? 'released' : 'releases in'} <span className="text-blue-400 font-semibold">{days}</span> days{isPast ? ' ago' : ''}
         </span>
       </div>
 
