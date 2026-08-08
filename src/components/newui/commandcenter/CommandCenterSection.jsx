@@ -33,7 +33,7 @@ export default function CommandCenterSection({ selectedMovie, userName, onOpenWo
         <div className="space-y-4 min-w-0">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-4 items-stretch">
             <AISummaryPanel summary={data.aiSummary} />
-            <TodaysHighlights highlights={data.highlights} />
+            <TodaysHighlights highlights={data.highlights} updatedLabel={data.aiSummary.updatedLabel} />
           </div>
 
           <RecommendedActions actions={data.recommendedActions} />

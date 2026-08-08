@@ -128,6 +128,37 @@ export const dashboardService = {
     return response;
   },
 
+  // Get top regions by buzz (raw post/comment count)
+  // Path: GET /api/dashboard/{entityId}/audience-pulse
+  // Response: { entityId, entityName, totalMentions, regions: [{ rank, region, mentionCount, sharePct }] }
+  getAudiencePulse: async (entityId) => {
+    const response = await apiClient.get(`/dashboard/${entityId}/audience-pulse`);
+    return response;
+  },
+
+  // Get the LLM-generated Command Center AI summary (shares a cache/generation
+  // with getTodaysHighlights on the backend, so the two never disagree).
+  // Path: GET /api/dashboard/{entityId}/ai-summary
+  // Response: { entityId, entityName, summary, generatedAt }
+  getAiSummary: async (entityId, { refresh = false, signal } = {}) => {
+    const response = await apiClient.get(`/dashboard/${entityId}/ai-summary`, {
+      params: { refresh },
+      signal,
+    });
+    return response;
+  },
+
+  // Get the LLM-generated Command Center highlights list.
+  // Path: GET /api/dashboard/{entityId}/todays-highlights
+  // Response: { entityId, entityName, highlights: [{ type: POSITIVE|NEGATIVE|NEUTRAL, text }], generatedAt }
+  getTodaysHighlights: async (entityId, { refresh = false, signal } = {}) => {
+    const response = await apiClient.get(`/dashboard/${entityId}/todays-highlights`, {
+      params: { refresh },
+      signal,
+    });
+    return response;
+  },
+
   // ========== CLUSTER APIs (for multiple entities) ==========
 
   // Get average statistics for multiple entities

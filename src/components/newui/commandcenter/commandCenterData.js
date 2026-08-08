@@ -66,9 +66,9 @@ export const dummyCommandCenter = {
 
   audiencePulse: {
     topRegions: [
-      { rank: 1, name: 'Tamil Nadu', deltaPct: 34 },
-      { rank: 2, name: 'Karnataka', deltaPct: 18 },
-      { rank: 3, name: 'Maharashtra', deltaPct: 9 },
+      { rank: 1, name: 'Tamil Nadu', sharePct: 51 },
+      { rank: 2, name: 'Karnataka', sharePct: 29 },
+      { rank: 3, name: 'Maharashtra', sharePct: 20 },
     ],
     mapMarkers: [
       { xPct: 42, yPct: 78, size: 10, color: '#3987e5', label: 'Tamil Nadu' },

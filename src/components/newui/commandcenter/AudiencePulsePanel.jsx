@@ -21,7 +21,7 @@ export default function AudiencePulsePanel({ pulse }) {
               <div key={r.name} className="flex items-center gap-2 text-sm">
                 <span className="w-3.5 text-white/30 text-xs shrink-0">{r.rank}</span>
                 <span className="flex-1 min-w-0 text-white/75 truncate">{r.name}</span>
-                <span className="text-emerald-400 text-xs font-semibold shrink-0">↑{r.deltaPct}%</span>
+                <span className="text-emerald-400 text-xs font-semibold shrink-0">{r.sharePct}%</span>
               </div>
             ))}
           </div>

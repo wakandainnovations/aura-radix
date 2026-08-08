@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { ArrowUp, ArrowDown, Music, Plus, Zap } from 'lucide-react';
 import { Panel, PanelLink } from '../shared/Panel';
+import AllInsightsModal from './AllInsightsModal';
 
 const TITLE = (
   <span className="inline-flex items-center gap-1.5">
@@ -8,13 +10,13 @@ const TITLE = (
   </span>
 );
 
-const TONE_ICON_BG = {
+export const TONE_ICON_BG = {
   good: 'bg-emerald-500/15 text-emerald-400',
   warning: 'bg-amber-500/15 text-amber-400',
   bad: 'bg-red-500/15 text-red-400',
 };
 
-const KIND_ICON = { arrow: ArrowUp, arrowDown: ArrowDown, music: Music, plus: Plus };
+export const KIND_ICON = { arrow: ArrowUp, arrowDown: ArrowDown, music: Music, plus: Plus };
 
 function HighlightRow({ highlight }) {
   const Icon = KIND_ICON[highlight.kind] ?? ArrowUp;
@@ -36,7 +38,9 @@ function HighlightRow({ highlight }) {
   );
 }
 
-export default function TodaysHighlights({ highlights, className = '' }) {
+export default function TodaysHighlights({ highlights, updatedLabel, className = '' }) {
+  const [modalOpen, setModalOpen] = useState(false);
+
   return (
     <Panel title={TITLE} className={`min-w-0 ${className}`}>
       <div className="space-y-3.5 flex-1 mt-2">
@@ -44,7 +48,14 @@ export default function TodaysHighlights({ highlights, className = '' }) {
           <HighlightRow key={i} highlight={h} />
         ))}
       </div>
-      <PanelLink>View all insights</PanelLink>
+      <PanelLink onClick={() => setModalOpen(true)}>View all insights</PanelLink>
+
+      <AllInsightsModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        highlights={highlights}
+        updatedLabel={updatedLabel}
+      />
     </Panel>
   );
 }

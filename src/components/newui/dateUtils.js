@@ -14,3 +14,15 @@ export function releaseCountdownLabel(releaseInDays) {
   const isPast = releaseInDays < 0;
   return { isPast, days: isPast ? -releaseInDays : releaseInDays };
 }
+
+// Renders a backend `generatedAt` timestamp as "Updated N mins/hours ago",
+// matching the Command Center panels' existing copy style.
+export function timeAgoLabel(isoString) {
+  if (!isoString) return null;
+  const diffMs = Date.now() - new Date(isoString).getTime();
+  const minutes = Math.max(0, Math.round(diffMs / 60000));
+  if (minutes < 1) return 'Updated just now';
+  if (minutes < 60) return `Updated ${minutes} min${minutes === 1 ? '' : 's'} ago`;
+  const hours = Math.round(minutes / 60);
+  return `Updated ${hours} hour${hours === 1 ? '' : 's'} ago`;
+}
