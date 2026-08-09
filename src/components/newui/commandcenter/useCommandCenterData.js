@@ -28,19 +28,19 @@ export default function useCommandCenterData(selectedMovie) {
     enabled: entityId != null,
   });
 
-  const { data: aiSummaryRaw } = useQuery({
+  const { data: aiSummaryRaw, isLoading: isAiSummaryLoading } = useQuery({
     queryKey: ['ai-summary', entityId, 'newui-command-center'],
     queryFn: ({ signal }) => dashboardService.getAiSummary(entityId, { signal }),
     enabled: entityId != null,
   });
 
-  const { data: highlightsRaw } = useQuery({
+  const { data: highlightsRaw, isLoading: isHighlightsLoading } = useQuery({
     queryKey: ['todays-highlights', entityId, 'newui-command-center'],
     queryFn: ({ signal }) => dashboardService.getTodaysHighlights(entityId, { signal }),
     enabled: entityId != null,
   });
 
-  return useMemo(() => {
+  const merged = useMemo(() => {
     const base = dummyCommandCenter;
     const title = selectedMovie?.name ?? dummyMovieOverview.title;
     const releaseInDays = selectedMovie?.releaseDate
@@ -97,4 +97,6 @@ export default function useCommandCenterData(selectedMovie) {
       highlights,
     };
   }, [selectedMovie, audiencePulseRaw, aiSummaryRaw, highlightsRaw]);
+
+  return { ...merged, isAiSummaryLoading, isHighlightsLoading };
 }

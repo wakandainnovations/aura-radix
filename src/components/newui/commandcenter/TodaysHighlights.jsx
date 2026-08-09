@@ -38,16 +38,33 @@ function HighlightRow({ highlight }) {
   );
 }
 
-export default function TodaysHighlights({ highlights, updatedLabel, className = '' }) {
+function HighlightRowSkeleton() {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="w-6 h-6 rounded-md shrink-0 bg-white/10" />
+      <div className="flex-1 h-3.5 bg-white/10 rounded" />
+    </div>
+  );
+}
+
+export default function TodaysHighlights({ highlights, updatedLabel, isLoading = false, className = '' }) {
   const [modalOpen, setModalOpen] = useState(false);
 
   return (
     <Panel title={TITLE} className={`min-w-0 ${className}`}>
-      <div className="space-y-3.5 flex-1 mt-2">
-        {highlights.map((h, i) => (
-          <HighlightRow key={i} highlight={h} />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="space-y-3.5 flex-1 mt-2 animate-pulse" role="status" aria-label="Loading today's highlights">
+          <HighlightRowSkeleton />
+          <HighlightRowSkeleton />
+          <HighlightRowSkeleton />
+        </div>
+      ) : (
+        <div className="space-y-3.5 flex-1 mt-2">
+          {highlights.map((h, i) => (
+            <HighlightRow key={i} highlight={h} />
+          ))}
+        </div>
+      )}
       <PanelLink onClick={() => setModalOpen(true)}>View all insights</PanelLink>
 
       <AllInsightsModal
