@@ -1,6 +1,6 @@
 import { Heart, AlertTriangle } from 'lucide-react';
 import { Panel, PanelLink } from '../shared/Panel';
-import GeoPlaceholder from '../shared/GeoPlaceholder';
+import IndiaStatesMap from '../shared/IndiaStatesMap';
 
 function Chip({ label, tone }) {
   const toneClass =
@@ -13,7 +13,7 @@ function Chip({ label, tone }) {
 export default function AudiencePulsePanel({ pulse }) {
   return (
     <Panel title="AUDIENCE PULSE" className="min-w-0" control={<PanelLink className="mt-0">View details</PanelLink>}>
-      <div className="grid grid-cols-[1fr_84px] gap-3 mt-2">
+      <div className="grid grid-cols-[1fr_140px] gap-3 mt-2">
         <div className="min-w-0">
           <div className="text-xs font-medium text-white/40 mb-2.5">Top Regions by Buzz</div>
           <div className="space-y-2.5">
@@ -26,7 +26,7 @@ export default function AudiencePulsePanel({ pulse }) {
             ))}
           </div>
         </div>
-        <GeoPlaceholder markers={pulse.mapMarkers} height={110} />
+        <IndiaStatesMap regions={pulse.topRegions} height={130} />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-white/[0.06] flex-1">

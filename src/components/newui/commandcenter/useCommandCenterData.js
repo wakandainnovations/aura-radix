@@ -51,13 +51,22 @@ export default function useCommandCenterData(selectedMovie) {
     // dummy top regions when the entity has none (or hasn't loaded yet).
     // The "unknown" region is a real predicted_region value distinct from
     // the null/"irrelevant" rows the backend already excludes, so it's
-    // filtered out here rather than on the server.
+    // filtered out here rather than on the server. The panel should only
+    // ever display the known-region split, so shares are rescaled against
+    // the known total (assuming unknown mentions split across known regions
+    // in the same ratio as the known mentions do) rather than the original
+    // total that included unknown.
     const realRegions = (audiencePulseRaw?.regions ?? []).filter(
       (r) => r.region?.toLowerCase() !== 'unknown'
     );
+    const knownTotalPct = realRegions.reduce((sum, r) => sum + (r.sharePct ?? 0), 0);
     const topRegions =
       realRegions.length > 0
-        ? realRegions.slice(0, 3).map((r, i) => ({ rank: i + 1, name: r.region, sharePct: Math.round(r.sharePct) }))
+        ? realRegions.slice(0, 3).map((r, i) => ({
+            rank: i + 1,
+            name: r.region,
+            sharePct: knownTotalPct > 0 ? Math.round((r.sharePct / knownTotalPct) * 100) : 0,
+          }))
         : base.audiencePulse.topRegions;
 
     const aiSummary =

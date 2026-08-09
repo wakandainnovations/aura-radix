@@ -70,11 +70,6 @@ export const dummyCommandCenter = {
       { rank: 2, name: 'Karnataka', sharePct: 29 },
       { rank: 3, name: 'Maharashtra', sharePct: 20 },
     ],
-    mapMarkers: [
-      { xPct: 42, yPct: 78, size: 10, color: '#3987e5', label: 'Tamil Nadu' },
-      { xPct: 38, yPct: 62, size: 8, color: '#818cf8', label: 'Karnataka' },
-      { xPct: 48, yPct: 48, size: 6, color: '#818cf8', label: 'Maharashtra' },
-    ],
     peopleLove: ['Comedy', 'Music', 'Lead Pair'],
     peopleConcerned: ['Runtime', 'Second Half Pace', 'VFX'],
   },
