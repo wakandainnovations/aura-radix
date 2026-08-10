@@ -24,6 +24,8 @@ function ActionCard({ action }) {
 
       <h4 className="text-sm font-semibold text-white/90 leading-snug mb-3">{action.title}</h4>
 
+      {action.reason && <p className="text-xs text-white/50 leading-snug mb-3">{action.reason}</p>}
+
       <div className="space-y-1.5 flex-1">
         {action.metrics ? (
           action.metrics.map((m) => (
@@ -33,7 +35,7 @@ function ActionCard({ action }) {
             </div>
           ))
         ) : (
-          <p className="text-xs text-white/40">{action.note}</p>
+          !action.reason && <p className="text-xs text-white/40">{action.note}</p>
         )}
       </div>
 
@@ -45,17 +47,33 @@ function ActionCard({ action }) {
   );
 }
 
-export default function RecommendedActions({ actions }) {
+function ActionCardSkeleton() {
+  return (
+    <div className={`${CARD} p-4 flex flex-col animate-pulse`}>
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="h-4 w-20 rounded-full bg-white/10" />
+        <div className="w-7 h-7 rounded-full bg-white/[0.06]" />
+      </div>
+      <div className="h-3.5 bg-white/10 rounded w-5/6 mb-3" />
+      <div className="space-y-1.5 flex-1">
+        <div className="h-3 bg-white/10 rounded w-full" />
+        <div className="h-3 bg-white/10 rounded w-2/3" />
+      </div>
+    </div>
+  );
+}
+
+export default function RecommendedActions({ actions, isLoading = false }) {
   return (
     <div className={`${CARD} p-5`}>
       <div className="flex items-center gap-1.5 mb-4">
         <Target className="w-3.5 h-3.5 text-white/40" />
         <h3 className="text-sm font-semibold text-white/90 tracking-wide">RECOMMENDED ACTIONS</h3>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {actions.map((a) => (
-          <ActionCard key={a.title} action={a} />
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4" role={isLoading ? 'status' : undefined} aria-label={isLoading ? 'Loading recommended actions' : undefined}>
+        {isLoading
+          ? [0, 1, 2].map((i) => <ActionCardSkeleton key={i} />)
+          : actions.map((a) => <ActionCard key={a.title} action={a} />)}
       </div>
     </div>
   );

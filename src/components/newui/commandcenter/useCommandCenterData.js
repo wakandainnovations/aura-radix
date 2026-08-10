@@ -12,12 +12,19 @@ import { dashboardService } from '../../../api/dashboardService';
 const HIGHLIGHT_TYPE_TO_TONE = { POSITIVE: 'good', NEGATIVE: 'bad', NEUTRAL: 'warning' };
 const TONE_TO_KIND = { good: 'arrow', bad: 'arrowDown', warning: 'plus' };
 
+// Maps the backend's server-computed action category onto this panel's
+// impact vocabulary (and a matching decorative corner icon), which has no
+// backend equivalent of its own.
+const CATEGORY_TO_IMPACT = { HIGH_IMPACT: 'High', MEDIUM_IMPACT: 'Medium', LOW_IMPACT: 'Low' };
+const IMPACT_TO_ICON = { High: 'trending', Medium: 'external', Low: 'eye' };
+
 // Merges the selected real movie entity's identity fields (title, release
 // countdown, poster image, genre/language), the real audience-pulse top
-// regions, and the real AI summary/highlights into the Command Center's dummy
-// data. Everything else on this page (recommended actions, competitor watch,
-// the audience pulse map/love/concerned chips, campaign timeline) has no
-// backend concept yet, so it stays as static dummy data — same approach as
+// regions, the real "People Love"/"People Concerned About" aspect chips, the
+// real AI summary/highlights, and the real recommended-actions plan into the
+// Command Center's dummy data. Everything else on this page (competitor
+// watch, the audience pulse map, campaign timeline) has no backend concept
+// yet, so it stays as static dummy data — same approach as
 // useMovieOverviewData for the My Movie tab.
 export default function useCommandCenterData(selectedMovie) {
   const entityId = selectedMovie?.id;
@@ -25,6 +32,12 @@ export default function useCommandCenterData(selectedMovie) {
   const { data: audiencePulseRaw } = useQuery({
     queryKey: ['audience-pulse', entityId, 'newui-command-center'],
     queryFn: () => dashboardService.getAudiencePulse(entityId),
+    enabled: entityId != null,
+  });
+
+  const { data: pulseAspectsRaw } = useQuery({
+    queryKey: ['audience-pulse-aspects', entityId, 'newui-command-center'],
+    queryFn: ({ signal }) => dashboardService.getAudiencePulseAspects(entityId, { signal }),
     enabled: entityId != null,
   });
 
@@ -37,6 +50,12 @@ export default function useCommandCenterData(selectedMovie) {
   const { data: highlightsRaw, isLoading: isHighlightsLoading } = useQuery({
     queryKey: ['todays-highlights', entityId, 'newui-command-center'],
     queryFn: ({ signal }) => dashboardService.getTodaysHighlights(entityId, { signal }),
+    enabled: entityId != null,
+  });
+
+  const { data: recommendedActionsRaw, isLoading: isRecommendedActionsLoading } = useQuery({
+    queryKey: ['recommended-actions', entityId, 'newui-command-center'],
+    queryFn: ({ signal }) => dashboardService.getRecommendedActions(entityId, { signal }),
     enabled: entityId != null,
   });
 
@@ -69,6 +88,15 @@ export default function useCommandCenterData(selectedMovie) {
           }))
         : base.audiencePulse.topRegions;
 
+    // Falls back to dummy chips per side when that side has no grounded aspects yet
+    // (sparse mention data) or the query hasn't resolved.
+    const peopleLove =
+      pulseAspectsRaw?.peopleLove?.length > 0 ? pulseAspectsRaw.peopleLove : base.audiencePulse.peopleLove;
+    const peopleConcerned =
+      pulseAspectsRaw?.peopleConcerned?.length > 0
+        ? pulseAspectsRaw.peopleConcerned
+        : base.audiencePulse.peopleConcerned;
+
     const aiSummary =
       aiSummaryRaw?.summary
         ? { text: aiSummaryRaw.summary, updatedLabel: timeAgoLabel(aiSummaryRaw.generatedAt) ?? base.aiSummary.updatedLabel }
@@ -82,6 +110,26 @@ export default function useCommandCenterData(selectedMovie) {
             return { tone, kind: TONE_TO_KIND[tone], text: h.text };
           })
         : base.highlights;
+
+    // Falls back to the dummy plan when this entity's candidate generation
+    // produced nothing yet (no real backing data) or the query hasn't resolved.
+    const realRecommendedActions = recommendedActionsRaw?.actions ?? [];
+    const recommendedActions =
+      realRecommendedActions.length > 0
+        ? realRecommendedActions.map((a) => {
+            const impact = CATEGORY_TO_IMPACT[a.category] ?? 'Medium';
+            return {
+              impact,
+              icon: IMPACT_TO_ICON[impact],
+              title: a.title,
+              reason: a.reason,
+              metrics: [
+                { label: 'Window', value: a.windowLabel },
+                { label: 'Confidence', value: `${a.confidencePct}%` },
+              ],
+            };
+          })
+        : base.recommendedActions;
 
     return {
       ...base,
@@ -101,11 +149,14 @@ export default function useCommandCenterData(selectedMovie) {
       audiencePulse: {
         ...base.audiencePulse,
         topRegions,
+        peopleLove,
+        peopleConcerned,
       },
       aiSummary,
       highlights,
+      recommendedActions,
     };
-  }, [selectedMovie, audiencePulseRaw, aiSummaryRaw, highlightsRaw]);
+  }, [selectedMovie, audiencePulseRaw, pulseAspectsRaw, aiSummaryRaw, highlightsRaw, recommendedActionsRaw]);
 
-  return { ...merged, isAiSummaryLoading, isHighlightsLoading };
+  return { ...merged, isAiSummaryLoading, isHighlightsLoading, isRecommendedActionsLoading };
 }

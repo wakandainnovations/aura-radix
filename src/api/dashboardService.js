@@ -159,6 +159,32 @@ export const dashboardService = {
     return response;
   },
 
+  // Get the top 3 "People Love" / top 3 "People Concerned About" aspects for the
+  // Audience Pulse panel, ranked by AuraMath's aspect-driver analysis (cached per entity, refreshed every 6h).
+  // Path: GET /api/dashboard/{entityId}/audience-pulse-aspects
+  // Response: { entityId, entityName, peopleLove: string[], peopleConcerned: string[], generatedAt }
+  getAudiencePulseAspects: async (entityId, { refresh = false, signal } = {}) => {
+    const response = await apiClient.get(`/dashboard/${entityId}/audience-pulse-aspects`, {
+      params: { refresh },
+      signal,
+    });
+    return response;
+  },
+
+  // Get the Command Center "Recommended Actions" panel plan: server-computed
+  // candidates (category/confidencePct/window) selected and phrased by an LLM,
+  // filtered by default to the phase whose window contains today.
+  // Path: GET /api/dashboard/{entityId}/recommended-actions
+  // Response: { entityId, entityName, daysToRelease, actions: [{ category, title, reason,
+  //   confidencePct, relatedFactor, windowStartDaysFromRelease, windowEndDaysFromRelease, windowLabel }], generatedAt }
+  getRecommendedActions: async (entityId, { refresh = false, allPhases = false, signal } = {}) => {
+    const response = await apiClient.get(`/dashboard/${entityId}/recommended-actions`, {
+      params: { refresh, allPhases },
+      signal,
+    });
+    return response;
+  },
+
   // ========== CLUSTER APIs (for multiple entities) ==========
 
   // Get average statistics for multiple entities
