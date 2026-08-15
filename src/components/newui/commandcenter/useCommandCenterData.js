@@ -2,9 +2,33 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { dummyCommandCenter } from './commandCenterData';
 import { dummyMovieOverview } from '../dummyMovieData';
-import { daysUntilRelease, timeAgoLabel } from '../dateUtils';
+import { daysUntilRelease, timeAgoLabel, formatShortDate, todayDateStr } from '../dateUtils';
 import { formatCompact } from '../formatCompact';
 import { dashboardService } from '../../../api/dashboardService';
+import { checkpointService } from '../../../api/checkpointService';
+
+// The window (in days) of mentions immediately before vs. after a checkpoint
+// that the "impact score" is computed over, matching the default window the
+// classic UI's CheckpointImpactView uses.
+export const CHECKPOINT_IMPACT_WINDOW_DAYS = 7;
+
+// Reduces a checkpoint's before/after mention counts to a single skimmable
+// multiplier ("5.0x impact score" = mentions quintupled in the window after
+// vs. before) rather than making the reader read two raw numbers and do the
+// division themselves. Falls back to a qualitative label when there's no
+// "before" baseline to divide by.
+function checkpointImpactLabel(impact) {
+  if (!impact) return null;
+  const before = impact.beforeTotalMentions ?? 0;
+  const after = impact.afterTotalMentions ?? 0;
+  if (before > 0) {
+    const multiplier = after / before;
+    const tone = multiplier > 1.05 ? 'good' : multiplier < 0.95 ? 'bad' : 'neutral';
+    return { text: `${multiplier.toFixed(1)}x impact score`, tone };
+  }
+  if (after > 0) return { text: 'New activity', tone: 'good' };
+  return { text: 'No mentions yet', tone: 'neutral' };
+}
 
 // Maps the backend's discrete health/awareness tiers onto the icon-badge hue,
 // reusing the good/warning/bad thresholds (60%/40%) CompetitivePositioning
@@ -101,6 +125,18 @@ export default function useCommandCenterData(selectedMovie) {
     enabled: entityId != null,
   });
 
+  const { data: checkpointsRaw, isLoading: isCheckpointsLoading } = useQuery({
+    queryKey: ['checkpoints', entityId, 'newui-command-center'],
+    queryFn: () => checkpointService.listByEntity(entityId),
+    enabled: entityId != null,
+  });
+
+  const { data: checkpointImpactRaw, isLoading: isCheckpointImpactLoading } = useQuery({
+    queryKey: ['checkpoint-impact', entityId, CHECKPOINT_IMPACT_WINDOW_DAYS, 'newui-command-center'],
+    queryFn: () => checkpointService.getCheckpointImpact(entityId, { windowDays: CHECKPOINT_IMPACT_WINDOW_DAYS }),
+    enabled: entityId != null,
+  });
+
   const merged = useMemo(() => {
     const base = dummyCommandCenter;
     const title = selectedMovie?.name ?? dummyMovieOverview.title;
@@ -165,6 +201,29 @@ export default function useCommandCenterData(selectedMovie) {
             };
           })
         : base.recommendedActions;
+
+    // Falls back to the dummy launch-plan steps (which carry no impact score)
+    // until this entity has at least one real checkpoint. Once it does, each
+    // step's impact score is looked up from the checkpoint-impact endpoint by
+    // checkpointId, and status is derived from comparing the checkpoint date
+    // to today rather than relying on a manually-set status field.
+    const realCheckpoints = checkpointsRaw ?? [];
+    const impactByCheckpointId = new Map(
+      (checkpointImpactRaw?.impacts ?? []).map((imp) => [imp.checkpointId, imp])
+    );
+    const today = todayDateStr();
+    const campaignTimeline =
+      realCheckpoints.length > 0
+        ? [...realCheckpoints]
+            .sort((a, b) => a.checkpointDate.localeCompare(b.checkpointDate))
+            .map((cp) => ({
+              key: String(cp.id),
+              label: cp.description,
+              date: formatShortDate(cp.checkpointDate),
+              status: cp.checkpointDate < today ? 'done' : cp.checkpointDate > today ? 'upcoming' : 'current',
+              impact: checkpointImpactLabel(impactByCheckpointId.get(cp.id)),
+            }))
+        : base.campaignTimeline;
 
     // Each top-row stat swaps in its real value once its own endpoint
     // resolves; until then (or if the entity has no data yet) it keeps the
@@ -242,6 +301,8 @@ export default function useCommandCenterData(selectedMovie) {
       highlights,
       recommendedActions,
       stats,
+      campaignTimeline,
+      checkpoints: realCheckpoints,
     };
   }, [
     selectedMovie,
@@ -255,6 +316,8 @@ export default function useCommandCenterData(selectedMovie) {
     sentimentRaw,
     reachRaw,
     awarenessRaw,
+    checkpointsRaw,
+    checkpointImpactRaw,
   ]);
 
   return {
@@ -263,5 +326,6 @@ export default function useCommandCenterData(selectedMovie) {
     isHighlightsLoading,
     isRecommendedActionsLoading,
     isAudiencePulseLoading: isAudiencePulseLoading || isPulseAspectsLoading,
+    isCampaignTimelineLoading: isCheckpointsLoading || isCheckpointImpactLoading,
   };
 }

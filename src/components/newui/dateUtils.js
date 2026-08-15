@@ -26,3 +26,18 @@ export function timeAgoLabel(isoString) {
   const hours = Math.round(minutes / 60);
   return `Updated ${hours} hour${hours === 1 ? '' : 's'} ago`;
 }
+
+// Renders a `checkpointDate` ("YYYY-MM-DD") as "May 10" for the timeline
+// step labels. Anchored to local midnight rather than parsed as UTC so the
+// displayed day doesn't shift a day back in timezones behind UTC.
+export function formatShortDate(dateStr) {
+  if (!dateStr) return '';
+  return new Date(`${dateStr}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+// Today's date in the same "YYYY-MM-DD" shape as `checkpointDate`, so the two
+// can be compared with plain string ordering to derive done/current/upcoming.
+export function todayDateStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
