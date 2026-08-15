@@ -41,7 +41,11 @@ export default function CommandCenterSection({ selectedMovie, userName, onOpenWo
               />
             </div>
 
-            <RecommendedActions actions={data.recommendedActions} isLoading={data.isRecommendedActionsLoading} />
+            <RecommendedActions
+              actions={data.recommendedActions}
+              isLoading={data.isRecommendedActionsLoading}
+              entityId={selectedMovie?.id}
+            />
 
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
               {data.stats.map((s) => (

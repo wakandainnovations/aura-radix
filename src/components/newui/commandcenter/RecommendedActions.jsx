@@ -1,5 +1,8 @@
-import { Target, ExternalLink, TrendingUp, Eye, ArrowRight } from 'lucide-react';
+import { useState } from 'react';
+import { Target, ExternalLink, TrendingUp, Eye, Check, Ban, ArrowRight } from 'lucide-react';
 import { CARD } from '../theme';
+import useActionStatuses from './useActionStatuses';
+import RecommendedActionsModal from './RecommendedActionsModal';
 
 const IMPACT_TONE = {
   High: 'bg-red-500/15 text-red-400',
@@ -9,7 +12,7 @@ const IMPACT_TONE = {
 
 const ICONS = { external: ExternalLink, trending: TrendingUp, eye: Eye };
 
-function ActionCard({ action }) {
+function ActionCard({ action, onMarkDone, onMarkIrrelevant }) {
   const CornerIcon = ICONS[action.icon] ?? ExternalLink;
   return (
     <div className={`${CARD} p-4 flex flex-col`}>
@@ -39,10 +42,20 @@ function ActionCard({ action }) {
         )}
       </div>
 
-      <button className="mt-3 flex items-center gap-1.5 text-sm text-blue-400 hover:text-blue-300 transition-colors self-start">
-        View Details
-        <ArrowRight className="w-3.5 h-3.5" />
-      </button>
+      <div className="mt-3 flex items-center gap-2 pt-3 border-t border-white/[0.06]">
+        <button
+          onClick={onMarkDone}
+          className="flex items-center gap-1 text-xs font-medium text-emerald-400 hover:text-emerald-300 transition-colors px-2 py-1 rounded-md hover:bg-emerald-500/10"
+        >
+          <Check className="w-3.5 h-3.5" /> Done
+        </button>
+        <button
+          onClick={onMarkIrrelevant}
+          className="flex items-center gap-1 text-xs font-medium text-white/40 hover:text-white/70 transition-colors px-2 py-1 rounded-md hover:bg-white/[0.06]"
+        >
+          <Ban className="w-3.5 h-3.5" /> Irrelevant
+        </button>
+      </div>
     </div>
   );
 }
@@ -63,18 +76,61 @@ function ActionCardSkeleton() {
   );
 }
 
-export default function RecommendedActions({ actions, isLoading = false }) {
+export default function RecommendedActions({ actions, isLoading = false, entityId }) {
+  const [statuses, setStatus] = useActionStatuses(entityId);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const withStatus = actions.map((a) => ({ ...a, status: statuses[a.title] ?? 'active' }));
+  const activeActions = withStatus.filter((a) => a.status === 'active');
+
   return (
     <div className={`${CARD} p-5`}>
-      <div className="flex items-center gap-1.5 mb-4">
-        <Target className="w-3.5 h-3.5 text-white/40" />
-        <h3 className="text-sm font-semibold text-white/90 tracking-wide">RECOMMENDED ACTIONS</h3>
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <div className="flex items-center gap-1.5">
+          <Target className="w-3.5 h-3.5 text-white/40" />
+          <h3 className="text-sm font-semibold text-white/90 tracking-wide">RECOMMENDED ACTIONS</h3>
+        </div>
+        {!isLoading && (
+          <button
+            onClick={() => setModalOpen(true)}
+            className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors shrink-0"
+          >
+            View Details
+            <ArrowRight className="w-3 h-3" />
+          </button>
+        )}
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4" role={isLoading ? 'status' : undefined} aria-label={isLoading ? 'Loading recommended actions' : undefined}>
-        {isLoading
-          ? [0, 1, 2].map((i) => <ActionCardSkeleton key={i} />)
-          : actions.map((a) => <ActionCard key={a.title} action={a} />)}
+      <div
+        className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        role={isLoading ? 'status' : undefined}
+        aria-label={isLoading ? 'Loading recommended actions' : undefined}
+      >
+        {isLoading ? (
+          [0, 1, 2].map((i) => <ActionCardSkeleton key={i} />)
+        ) : activeActions.length > 0 ? (
+          activeActions.map((a) => (
+            <ActionCard
+              key={a.title}
+              action={a}
+              onMarkDone={() => setStatus(a.title, 'done')}
+              onMarkIrrelevant={() => setStatus(a.title, 'irrelevant')}
+            />
+          ))
+        ) : (
+          <p className="col-span-full text-sm text-white/40 text-center py-6">
+            No active actions right now — check View Details for done/irrelevant history.
+          </p>
+        )}
       </div>
+
+      {!isLoading && (
+        <RecommendedActionsModal
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          actions={withStatus}
+          onSetStatus={setStatus}
+        />
+      )}
     </div>
   );
 }
