@@ -26,20 +26,7 @@ export default function CampaignTimelinePanel({ steps, checkpoints = [], entityI
     <Panel
       title="CAMPAIGN TIMELINE"
       className="min-w-0"
-      control={
-        <div className="flex items-center gap-3">
-          {entityId != null && (
-            <button
-              onClick={() => setAddOpen(true)}
-              className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Add checkpoint
-            </button>
-          )}
-          <PanelLink className="mt-0" onClick={() => setCalendarOpen(true)}>View calendar</PanelLink>
-        </div>
-      }
+      control={<PanelLink className="mt-0" onClick={() => setCalendarOpen(true)}>View calendar</PanelLink>}
     >
       <div className="flex-1 overflow-x-auto mt-4">
         <div className="flex items-start min-w-max">
@@ -70,6 +57,16 @@ export default function CampaignTimelinePanel({ steps, checkpoints = [], entityI
           })}
         </div>
       </div>
+
+      {entityId != null && (
+        <button
+          onClick={() => setAddOpen(true)}
+          className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors self-start mt-3"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          Add checkpoint
+        </button>
+      )}
 
       <CheckpointCalendarModal open={calendarOpen} onOpenChange={setCalendarOpen} checkpoints={checkpoints} />
       {entityId != null && (

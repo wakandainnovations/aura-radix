@@ -24,7 +24,7 @@ function checkpointImpactLabel(impact) {
   if (before > 0) {
     const multiplier = after / before;
     const tone = multiplier > 1.05 ? 'good' : multiplier < 0.95 ? 'bad' : 'neutral';
-    return { text: `${multiplier.toFixed(1)}x impact score`, tone };
+    return { text: `${multiplier.toFixed(1)}x Impact`, tone };
   }
   if (after > 0) return { text: 'New activity', tone: 'good' };
   return { text: 'No mentions yet', tone: 'neutral' };
