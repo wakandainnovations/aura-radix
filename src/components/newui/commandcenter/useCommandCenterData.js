@@ -200,7 +200,8 @@ export default function useCommandCenterData(selectedMovie) {
               ],
               // Backend already caps this at 20; sliced again defensively
               // since this list gets rendered in full in the details modal.
-              relatedUsers: (a.relatedUsers ?? []).slice(0, 20),
+              // Field is "relevantUsers" (not "relatedUsers") on the wire.
+              relatedUsers: (a.relevantUsers ?? []).slice(0, 20),
             };
           })
         : base.recommendedActions;

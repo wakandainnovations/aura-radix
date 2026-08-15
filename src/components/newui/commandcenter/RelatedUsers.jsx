@@ -1,9 +1,10 @@
 import { User } from 'lucide-react';
 
-// Renders one related-user hyperlink chip. Falls back to plain (non-link)
-// text when the backend didn't resolve a profileUrl for that user id.
+// Renders one related-user hyperlink chip. userId is the display handle
+// itself (there's no separate display-name field). Falls back to plain
+// (non-link) text when the backend didn't resolve a profileUrl for that user.
 function UserChip({ user }) {
-  const label = user.name || user.userId;
+  const label = user.userId;
   const className =
     'inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-white/[0.06] text-white/70 transition-colors';
 

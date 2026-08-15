@@ -177,8 +177,10 @@ export const dashboardService = {
   // Path: GET /api/dashboard/{entityId}/recommended-actions
   // Response: { entityId, entityName, daysToRelease, actions: [{ category, title, reason,
   //   confidencePct, relatedFactor, windowStartDaysFromRelease, windowEndDaysFromRelease, windowLabel,
-  //   relatedUsers: [{ userId, name, profileUrl }] (max 20, only present when the action text
-  //   references specific user ids) }], generatedAt }
+  //   exampleHandles: string[], relevantUsers: [{ userId, platform, profileUrl }] (max 20,
+  //   only present when the action text references specific user handles; userId is the
+  //   display handle itself, not a numeric id — there's no separate display-name field) }],
+  //   generatedAt }
   getRecommendedActions: async (entityId, { refresh = false, allPhases = false, signal } = {}) => {
     const response = await apiClient.get(`/dashboard/${entityId}/recommended-actions`, {
       params: { refresh, allPhases },
