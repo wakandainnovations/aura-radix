@@ -3,6 +3,7 @@ import { Target, ExternalLink, TrendingUp, Eye, Check, Ban, ArrowRight } from 'l
 import { CARD } from '../theme';
 import useActionStatuses from './useActionStatuses';
 import RecommendedActionsModal from './RecommendedActionsModal';
+import { RelatedUsersPreview } from './RelatedUsers';
 
 const IMPACT_TONE = {
   High: 'bg-red-500/15 text-red-400',
@@ -28,6 +29,8 @@ function ActionCard({ action, onMarkDone, onMarkIrrelevant }) {
       <h4 className="text-sm font-semibold text-white/90 leading-snug mb-3">{action.title}</h4>
 
       {action.reason && <p className="text-xs text-white/50 leading-snug mb-3">{action.reason}</p>}
+
+      <RelatedUsersPreview users={action.relatedUsers} />
 
       <div className="space-y-1.5 flex-1">
         {action.metrics ? (

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, Target, Check, Ban, RotateCcw } from 'lucide-react';
+import { RelatedUsersList } from './RelatedUsers';
 
 const IMPACT_TONE = {
   High: 'bg-red-500/15 text-red-400',
@@ -22,6 +23,7 @@ function ActionRow({ action, onSetStatus }) {
       </span>
       <h4 className="text-sm font-semibold text-white/90 leading-snug mb-1.5">{action.title}</h4>
       {action.reason && <p className="text-xs text-white/50 leading-snug mb-2">{action.reason}</p>}
+      <RelatedUsersList users={action.relatedUsers} />
       {action.metrics ? (
         <div className="space-y-1 mb-2">
           {action.metrics.map((m) => (

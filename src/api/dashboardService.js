@@ -176,7 +176,9 @@ export const dashboardService = {
   // filtered by default to the phase whose window contains today.
   // Path: GET /api/dashboard/{entityId}/recommended-actions
   // Response: { entityId, entityName, daysToRelease, actions: [{ category, title, reason,
-  //   confidencePct, relatedFactor, windowStartDaysFromRelease, windowEndDaysFromRelease, windowLabel }], generatedAt }
+  //   confidencePct, relatedFactor, windowStartDaysFromRelease, windowEndDaysFromRelease, windowLabel,
+  //   relatedUsers: [{ userId, name, profileUrl }] (max 20, only present when the action text
+  //   references specific user ids) }], generatedAt }
   getRecommendedActions: async (entityId, { refresh = false, allPhases = false, signal } = {}) => {
     const response = await apiClient.get(`/dashboard/${entityId}/recommended-actions`, {
       params: { refresh, allPhases },
