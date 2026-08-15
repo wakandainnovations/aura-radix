@@ -59,9 +59,9 @@ export const dummyCommandCenter = {
   ],
 
   competitorWatch: [
-    { name: 'Sapta Sagaradaache Ello', event: 'Trailer launched', deltaPct: 24 },
-    { name: 'KD - The Devil', event: 'Song crossed 10M views', deltaPct: 12 },
-    { name: 'UI', event: 'Reviews leaked', deltaPct: 6 },
+    { name: 'Sapta Sagaradaache Ello', totalMentions: 8200, positiveRatio: 0.71 },
+    { name: 'KD - The Devil', totalMentions: 5400, positiveRatio: 0.52 },
+    { name: 'UI', totalMentions: 3100, positiveRatio: 0.34 },
   ],
 
   campaignTimeline: [

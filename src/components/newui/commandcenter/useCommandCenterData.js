@@ -125,6 +125,12 @@ export default function useCommandCenterData(selectedMovie) {
     enabled: entityId != null,
   });
 
+  const { data: competitorSnapshotRaw, isLoading: isCompetitorWatchLoading } = useQuery({
+    queryKey: ['competitive-snapshot', entityId, 'newui-command-center'],
+    queryFn: ({ signal }) => dashboardService.getCompetitorSnapshot(entityId, { signal }),
+    enabled: entityId != null,
+  });
+
   const { data: checkpointsRaw, isLoading: isCheckpointsLoading } = useQuery({
     queryKey: ['checkpoints', entityId, 'newui-command-center'],
     queryFn: () => checkpointService.listByEntity(entityId),
@@ -205,6 +211,19 @@ export default function useCommandCenterData(selectedMovie) {
             };
           })
         : base.recommendedActions;
+
+    // First entry of the snapshot array is the primary entity's own stats
+    // (same [mainEntity, competitor1, ...] shape PRCommandCenter.api.jsx
+    // uses), so it's dropped here — this panel only watches competitors.
+    const realCompetitors = (competitorSnapshotRaw ?? []).slice(1);
+    const competitorWatch =
+      realCompetitors.length > 0
+        ? realCompetitors.map((c) => ({
+            name: c.entityName,
+            totalMentions: c.totalMentions,
+            positiveRatio: c.positiveRatio,
+          }))
+        : base.competitorWatch;
 
     // Falls back to the dummy launch-plan steps (which carry no impact score)
     // until this entity has at least one real checkpoint. Once it does, each
@@ -305,6 +324,7 @@ export default function useCommandCenterData(selectedMovie) {
       highlights,
       recommendedActions,
       stats,
+      competitorWatch,
       campaignTimeline,
       checkpoints: realCheckpoints,
     };
@@ -320,6 +340,7 @@ export default function useCommandCenterData(selectedMovie) {
     sentimentRaw,
     reachRaw,
     awarenessRaw,
+    competitorSnapshotRaw,
     checkpointsRaw,
     checkpointImpactRaw,
   ]);
@@ -330,6 +351,7 @@ export default function useCommandCenterData(selectedMovie) {
     isHighlightsLoading,
     isRecommendedActionsLoading,
     isAudiencePulseLoading: isAudiencePulseLoading || isPulseAspectsLoading,
+    isCompetitorWatchLoading,
     isCampaignTimelineLoading: isCheckpointsLoading || isCheckpointImpactLoading,
   };
 }

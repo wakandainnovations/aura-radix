@@ -21,13 +21,17 @@ export const dashboardService = {
     }
   },
 
-  // Get competitor comparison snapshot (entity + competitors stats)
+  // Get competitor comparison snapshot (entity + competitors stats).
+  // First element of the response array is the primary entity's own stats
+  // (used as a baseline / for dedupe when adding new competitors); the rest
+  // are the actual competitors.
   // Path: GET /api/dashboard/{entityId}/competitor-snapshot
-  // Response: Array of { entityName, totalMentions, positiveSentiment }
-  getCompetitorSnapshot: async (entityId) => {
+  // Response: Array of { entityName, totalMentions, overallSentiment, positiveRatio, netSentimentScore }
+  getCompetitorSnapshot: async (entityId, { signal } = {}) => {
     try {
       const response = await apiClient.get(
-        `/dashboard/${entityId}/competitor-snapshot`
+        `/dashboard/${entityId}/competitor-snapshot`,
+        { signal }
       );
       return response;
     } catch (error) {
