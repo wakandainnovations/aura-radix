@@ -185,6 +185,50 @@ export const dashboardService = {
     return response;
   },
 
+  // Get the Command Center "Movie Health" stat: net positive/negative
+  // sentiment ratio scored onto a 0-100 scale.
+  // Path: GET /api/dashboard/{entityId}/movie-health
+  // Response: { entityId, entityName, netSentimentScore, healthPercentage, healthLabel: Excellent|Good|"Needs Improvement" }
+  getMovieHealth: async (entityId, { signal } = {}) => {
+    const response = await apiClient.get(`/dashboard/${entityId}/movie-health`, { signal });
+    return response;
+  },
+
+  // Get the Command Center "Buzz" stat: mention volume today vs. the prior UTC day.
+  // Path: GET /api/dashboard/{entityId}/buzz
+  // Response: { entityId, entityName, mentionsToday, mentionsYesterday, mentionsChange, mentionsChangePct }
+  getBuzz: async (entityId, { signal } = {}) => {
+    const response = await apiClient.get(`/dashboard/${entityId}/buzz`, { signal });
+    return response;
+  },
+
+  // Get the Command Center "Sentiment" stat: overall average sentiment across
+  // the entity's whole mention history.
+  // Path: GET /api/dashboard/{entityId}/sentiment
+  // Response: { entityId, entityName, totalMentions, averageSentimentScore, positiveRatio }
+  getMovieSentiment: async (entityId, { signal } = {}) => {
+    const response = await apiClient.get(`/dashboard/${entityId}/sentiment`, { signal });
+    return response;
+  },
+
+  // Get the Command Center "Reach" stat: total unique authors who have posted
+  // about the entity.
+  // Path: GET /api/dashboard/{entityId}/reach
+  // Response: { entityId, entityName, uniqueUsers }
+  getReach: async (entityId, { signal } = {}) => {
+    const response = await apiClient.get(`/dashboard/${entityId}/reach`, { signal });
+    return response;
+  },
+
+  // Get the Command Center "Awareness" stat: High/Medium/Low tier for total
+  // views, ranked against the caller's other movies.
+  // Path: GET /api/dashboard/{entityId}/awareness
+  // Response: { entityId, entityName, totalViews, awarenessLevel: High|Medium|Low, comparedMovieCount }
+  getAwareness: async (entityId, { signal } = {}) => {
+    const response = await apiClient.get(`/dashboard/${entityId}/awareness`, { signal });
+    return response;
+  },
+
   // ========== CLUSTER APIs (for multiple entities) ==========
 
   // Get average statistics for multiple entities

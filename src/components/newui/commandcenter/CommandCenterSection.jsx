@@ -71,7 +71,7 @@ export default function CommandCenterSection({ selectedMovie, userName, onOpenWo
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
           <CompetitorWatchPanel competitors={data.competitorWatch} />
-          <AudiencePulsePanel pulse={data.audiencePulse} />
+          <AudiencePulsePanel pulse={data.audiencePulse} isLoading={data.isAudiencePulseLoading} />
           <CampaignTimelinePanel steps={data.campaignTimeline} />
         </div>
       </div>

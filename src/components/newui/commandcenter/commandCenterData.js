@@ -64,16 +64,6 @@ export const dummyCommandCenter = {
     { name: 'UI', event: 'Reviews leaked', deltaPct: 6 },
   ],
 
-  audiencePulse: {
-    topRegions: [
-      { rank: 1, name: 'Tamil Nadu', sharePct: 51 },
-      { rank: 2, name: 'Karnataka', sharePct: 29 },
-      { rank: 3, name: 'Maharashtra', sharePct: 20 },
-    ],
-    peopleLove: ['Comedy', 'Music', 'Lead Pair'],
-    peopleConcerned: ['Runtime', 'Second Half Pace', 'VFX'],
-  },
-
   campaignTimeline: [
     { key: 'poster', label: 'Poster', date: 'May 10', status: 'done' },
     { key: 'song1', label: 'Song #1', date: 'May 15', status: 'done' },

@@ -3,7 +3,19 @@ import { useQuery } from '@tanstack/react-query';
 import { dummyCommandCenter } from './commandCenterData';
 import { dummyMovieOverview } from '../dummyMovieData';
 import { daysUntilRelease, timeAgoLabel } from '../dateUtils';
+import { formatCompact } from '../formatCompact';
 import { dashboardService } from '../../../api/dashboardService';
+
+// Maps the backend's discrete health/awareness tiers onto the icon-badge hue,
+// reusing the good/warning/bad thresholds (60%/40%) CompetitivePositioning
+// already applies to positiveRatio, so "Sentiment" gets the same treatment.
+const HEALTH_LABEL_HUE = { Excellent: 'green', Good: 'amber', 'Needs Improvement': 'red' };
+const AWARENESS_LEVEL_HUE = { High: 'green', Medium: 'amber', Low: 'red' };
+function sentimentHue(pct) {
+  if (pct >= 60) return 'green';
+  if (pct >= 40) return 'amber';
+  return 'red';
+}
 
 // Maps the backend's HighlightItem.type (POSITIVE|NEGATIVE|NEUTRAL, no icon
 // concept) onto this panel's tone/kind vocabulary, which was designed around
@@ -29,13 +41,13 @@ const IMPACT_TO_ICON = { High: 'trending', Medium: 'external', Low: 'eye' };
 export default function useCommandCenterData(selectedMovie) {
   const entityId = selectedMovie?.id;
 
-  const { data: audiencePulseRaw } = useQuery({
+  const { data: audiencePulseRaw, isLoading: isAudiencePulseLoading } = useQuery({
     queryKey: ['audience-pulse', entityId, 'newui-command-center'],
     queryFn: () => dashboardService.getAudiencePulse(entityId),
     enabled: entityId != null,
   });
 
-  const { data: pulseAspectsRaw } = useQuery({
+  const { data: pulseAspectsRaw, isLoading: isPulseAspectsLoading } = useQuery({
     queryKey: ['audience-pulse-aspects', entityId, 'newui-command-center'],
     queryFn: ({ signal }) => dashboardService.getAudiencePulseAspects(entityId, { signal }),
     enabled: entityId != null,
@@ -59,6 +71,36 @@ export default function useCommandCenterData(selectedMovie) {
     enabled: entityId != null,
   });
 
+  const { data: movieHealthRaw } = useQuery({
+    queryKey: ['movie-health', entityId, 'newui-command-center'],
+    queryFn: ({ signal }) => dashboardService.getMovieHealth(entityId, { signal }),
+    enabled: entityId != null,
+  });
+
+  const { data: buzzRaw } = useQuery({
+    queryKey: ['buzz', entityId, 'newui-command-center'],
+    queryFn: ({ signal }) => dashboardService.getBuzz(entityId, { signal }),
+    enabled: entityId != null,
+  });
+
+  const { data: sentimentRaw } = useQuery({
+    queryKey: ['sentiment', entityId, 'newui-command-center'],
+    queryFn: ({ signal }) => dashboardService.getMovieSentiment(entityId, { signal }),
+    enabled: entityId != null,
+  });
+
+  const { data: reachRaw } = useQuery({
+    queryKey: ['reach', entityId, 'newui-command-center'],
+    queryFn: ({ signal }) => dashboardService.getReach(entityId, { signal }),
+    enabled: entityId != null,
+  });
+
+  const { data: awarenessRaw } = useQuery({
+    queryKey: ['awareness', entityId, 'newui-command-center'],
+    queryFn: ({ signal }) => dashboardService.getAwareness(entityId, { signal }),
+    enabled: entityId != null,
+  });
+
   const merged = useMemo(() => {
     const base = dummyCommandCenter;
     const title = selectedMovie?.name ?? dummyMovieOverview.title;
@@ -66,10 +108,10 @@ export default function useCommandCenterData(selectedMovie) {
       ? daysUntilRelease(selectedMovie.releaseDate)
       : dummyMovieOverview.releaseInDays;
 
-    // Only some movies have region-tagged mentions yet, so fall back to the
-    // dummy top regions when the entity has none (or hasn't loaded yet).
-    // The "unknown" region is a real predicted_region value distinct from
-    // the null/"irrelevant" rows the backend already excludes, so it's
+    // Only some movies have region-tagged mentions yet, so this stays empty
+    // (rather than falling back to placeholder regions) when the entity has
+    // none. The "unknown" region is a real predicted_region value distinct
+    // from the null/"irrelevant" rows the backend already excludes, so it's
     // filtered out here rather than on the server. The panel should only
     // ever display the known-region split, so shares are rescaled against
     // the known total (assuming unknown mentions split across known regions
@@ -79,23 +121,16 @@ export default function useCommandCenterData(selectedMovie) {
       (r) => r.region?.toLowerCase() !== 'unknown'
     );
     const knownTotalPct = realRegions.reduce((sum, r) => sum + (r.sharePct ?? 0), 0);
-    const topRegions =
-      realRegions.length > 0
-        ? realRegions.slice(0, 3).map((r, i) => ({
-            rank: i + 1,
-            name: r.region,
-            sharePct: knownTotalPct > 0 ? Math.round((r.sharePct / knownTotalPct) * 100) : 0,
-          }))
-        : base.audiencePulse.topRegions;
+    const topRegions = realRegions.slice(0, 3).map((r, i) => ({
+      rank: i + 1,
+      name: r.region,
+      sharePct: knownTotalPct > 0 ? Math.round((r.sharePct / knownTotalPct) * 100) : 0,
+    }));
 
-    // Falls back to dummy chips per side when that side has no grounded aspects yet
-    // (sparse mention data) or the query hasn't resolved.
-    const peopleLove =
-      pulseAspectsRaw?.peopleLove?.length > 0 ? pulseAspectsRaw.peopleLove : base.audiencePulse.peopleLove;
-    const peopleConcerned =
-      pulseAspectsRaw?.peopleConcerned?.length > 0
-        ? pulseAspectsRaw.peopleConcerned
-        : base.audiencePulse.peopleConcerned;
+    // Stays empty per side when that side has no grounded aspects yet
+    // (sparse mention data) rather than falling back to placeholder chips.
+    const peopleLove = pulseAspectsRaw?.peopleLove ?? [];
+    const peopleConcerned = pulseAspectsRaw?.peopleConcerned ?? [];
 
     const aiSummary =
       aiSummaryRaw?.summary
@@ -131,6 +166,58 @@ export default function useCommandCenterData(selectedMovie) {
           })
         : base.recommendedActions;
 
+    // Each top-row stat swaps in its real value once its own endpoint
+    // resolves; until then (or if the entity has no data yet) it keeps the
+    // dummy placeholder, same fallback approach as the rest of this file.
+    // None of these endpoints return a time series, so the sparkline is
+    // dropped rather than pairing a real point value with a fabricated trend.
+    const stats = base.stats.map((s) => {
+      switch (s.key) {
+        case 'health':
+          return movieHealthRaw
+            ? {
+                ...s,
+                value: Math.round(movieHealthRaw.healthPercentage),
+                caption: movieHealthRaw.healthLabel,
+                hue: HEALTH_LABEL_HUE[movieHealthRaw.healthLabel] ?? s.hue,
+                spark: undefined,
+              }
+            : s;
+        case 'buzz': {
+          if (!buzzRaw) return s;
+          const pct = Math.round(buzzRaw.mentionsChangePct);
+          return {
+            ...s,
+            value: `${pct >= 0 ? '+' : ''}${pct}%`,
+            caption: 'vs yesterday',
+            hue: pct >= 0 ? 'violet' : 'red',
+            spark: undefined,
+          };
+        }
+        case 'sentiment': {
+          if (!sentimentRaw) return s;
+          const pct = Math.round(sentimentRaw.positiveRatio * 100);
+          return { ...s, value: `${pct}%`, caption: 'Positive', barPct: pct, hue: sentimentHue(pct) };
+        }
+        case 'reach':
+          return reachRaw
+            ? { ...s, value: formatCompact(reachRaw.uniqueUsers), caption: 'Unique People', spark: undefined }
+            : s;
+        case 'awareness':
+          return awarenessRaw
+            ? {
+                ...s,
+                value: awarenessRaw.awarenessLevel,
+                caption: `${formatCompact(awarenessRaw.totalViews)} views`,
+                hue: AWARENESS_LEVEL_HUE[awarenessRaw.awarenessLevel] ?? s.hue,
+                spark: undefined,
+              }
+            : s;
+        default:
+          return s;
+      }
+    });
+
     return {
       ...base,
       title,
@@ -147,7 +234,6 @@ export default function useCommandCenterData(selectedMovie) {
         language: selectedMovie?.language || base.snapshot.language,
       },
       audiencePulse: {
-        ...base.audiencePulse,
         topRegions,
         peopleLove,
         peopleConcerned,
@@ -155,8 +241,27 @@ export default function useCommandCenterData(selectedMovie) {
       aiSummary,
       highlights,
       recommendedActions,
+      stats,
     };
-  }, [selectedMovie, audiencePulseRaw, pulseAspectsRaw, aiSummaryRaw, highlightsRaw, recommendedActionsRaw]);
+  }, [
+    selectedMovie,
+    audiencePulseRaw,
+    pulseAspectsRaw,
+    aiSummaryRaw,
+    highlightsRaw,
+    recommendedActionsRaw,
+    movieHealthRaw,
+    buzzRaw,
+    sentimentRaw,
+    reachRaw,
+    awarenessRaw,
+  ]);
 
-  return { ...merged, isAiSummaryLoading, isHighlightsLoading, isRecommendedActionsLoading };
+  return {
+    ...merged,
+    isAiSummaryLoading,
+    isHighlightsLoading,
+    isRecommendedActionsLoading,
+    isAudiencePulseLoading: isAudiencePulseLoading || isPulseAspectsLoading,
+  };
 }
