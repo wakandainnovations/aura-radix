@@ -215,15 +215,20 @@ export default function useCommandCenterData(selectedMovie) {
     // First entry of the snapshot array is the primary entity's own stats
     // (same [mainEntity, competitor1, ...] shape PRCommandCenter.api.jsx
     // uses), so it's dropped here — this panel only watches competitors.
+    // Unlike the other sections above, this stays empty (rather than
+    // falling back to placeholder competitors) when the entity has none
+    // added yet, so the panel can prompt the user to add one instead of
+    // showing data for movies that aren't actually being tracked.
     const realCompetitors = (competitorSnapshotRaw ?? []).slice(1);
-    const competitorWatch =
-      realCompetitors.length > 0
-        ? realCompetitors.map((c) => ({
-            name: c.entityName,
-            totalMentions: c.totalMentions,
-            positiveRatio: c.positiveRatio,
-          }))
-        : base.competitorWatch;
+    const competitorWatch = realCompetitors.map((c) => ({
+      // The documented snapshot DTO has no id field, but PRCommandCenter's
+      // handleAddCompetitor already relies on one of these being present to
+      // dedupe against on re-add; kept here for the same reason.
+      id: c.id ?? c.entityId,
+      name: c.entityName,
+      totalMentions: c.totalMentions,
+      positiveRatio: c.positiveRatio,
+    }));
 
     // Falls back to the dummy launch-plan steps (which carry no impact score)
     // until this entity has at least one real checkpoint. Once it does, each

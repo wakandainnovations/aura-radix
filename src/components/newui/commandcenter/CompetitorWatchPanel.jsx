@@ -1,4 +1,7 @@
+import { useState } from 'react';
+import { Plus } from 'lucide-react';
 import { Panel, PanelLink } from '../shared/Panel';
+import AddCompetitorModal from './AddCompetitorModal';
 
 // Mirrors CompetitivePositioning's formatPercentage: the backend sends
 // positiveRatio as a 0-1 fraction, but tolerate an already-scaled 0-100
@@ -44,7 +47,9 @@ function CompetitorRow({ competitor }) {
   );
 }
 
-export default function CompetitorWatchPanel({ competitors, isLoading = false }) {
+export default function CompetitorWatchPanel({ competitors, isLoading = false, entityId }) {
+  const [addOpen, setAddOpen] = useState(false);
+
   return (
     <Panel title="COMPETITOR WATCH" className="min-w-0" control={<PanelLink className="mt-0">View all</PanelLink>}>
       {isLoading ? (
@@ -60,7 +65,26 @@ export default function CompetitorWatchPanel({ competitors, isLoading = false })
           ))}
         </div>
       ) : (
-        <p className="text-sm text-white/35 mt-2 flex-1">No competitor data yet</p>
+        <p className="text-sm text-white/35 mt-2 flex-1">No competitors added yet</p>
+      )}
+
+      {entityId != null && (
+        <button
+          onClick={() => setAddOpen(true)}
+          className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors self-start mt-3"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          Add competitor
+        </button>
+      )}
+
+      {entityId != null && (
+        <AddCompetitorModal
+          open={addOpen}
+          onOpenChange={setAddOpen}
+          entityId={entityId}
+          existingCompetitors={competitors}
+        />
       )}
     </Panel>
   );

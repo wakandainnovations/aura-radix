@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { HeartPulse, MonitorPlay, Smile, Users, Radio } from 'lucide-react';
 import CommandCenterHeader from './CommandCenterHeader';
 import AISummaryPanel from './AISummaryPanel';
@@ -8,6 +9,7 @@ import AudiencePulsePanel from './AudiencePulsePanel';
 import CampaignTimelinePanel from './CampaignTimelinePanel';
 import MovieSnapshotPanel from './MovieSnapshotPanel';
 import AskFramehouseBar from './AskFramehouseBar';
+import MovieQueryChatModal from './MovieQueryChatModal';
 import StatCard from '../shared/StatCard';
 import useCommandCenterData from './useCommandCenterData';
 
@@ -15,9 +17,12 @@ const STAT_ICONS = { health: HeartPulse, buzz: MonitorPlay, sentiment: Smile, re
 
 export default function CommandCenterSection({ selectedMovie, userName, onOpenWorkspace }) {
   const data = useCommandCenterData(selectedMovie);
+  const [askModalOpen, setAskModalOpen] = useState(false);
+  const [askPrompt, setAskPrompt] = useState('');
 
-  function handleAsk() {
-    // UI preview only — no backend wired up for Q&A yet, matching AI Producer's chat.
+  function handleAsk(question) {
+    setAskPrompt(question);
+    setAskModalOpen(true);
   }
 
   return (
@@ -74,7 +79,11 @@ export default function CommandCenterSection({ selectedMovie, userName, onOpenWo
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
-          <CompetitorWatchPanel competitors={data.competitorWatch} isLoading={data.isCompetitorWatchLoading} />
+          <CompetitorWatchPanel
+            competitors={data.competitorWatch}
+            isLoading={data.isCompetitorWatchLoading}
+            entityId={selectedMovie?.id}
+          />
           <AudiencePulsePanel pulse={data.audiencePulse} isLoading={data.isAudiencePulseLoading} />
           <CampaignTimelinePanel
             steps={data.campaignTimeline}
@@ -91,6 +100,14 @@ export default function CommandCenterSection({ selectedMovie, userName, onOpenWo
           onAsk={handleAsk}
         />
       </div>
+
+      <MovieQueryChatModal
+        open={askModalOpen}
+        onOpenChange={setAskModalOpen}
+        entityId={selectedMovie?.id}
+        movieTitle={data.title}
+        initialPrompt={askPrompt}
+      />
     </>
   );
 }
