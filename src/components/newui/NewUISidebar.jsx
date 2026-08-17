@@ -33,8 +33,10 @@ export default function NewUISidebar({
   onSelectMovie,
   userName,
   onLogout,
+  hiddenNavKeys = [],
 }) {
   const displayName = userName || 'Account';
+  const navItems = NAV_ITEMS.filter((item) => !hiddenNavKeys.includes(item.key));
   return (
     <div className={`w-64 shrink-0 h-full flex flex-col ${SIDEBAR_BG}`}>
       <div className="px-5 pt-6 pb-5">
@@ -43,7 +45,7 @@ export default function NewUISidebar({
       </div>
 
       <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
-        {NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const Icon = item.icon;
           const active = item.key === activeItem;
           return (

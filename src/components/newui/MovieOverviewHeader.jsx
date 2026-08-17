@@ -1,13 +1,14 @@
 import { Calendar, GitCompare, Share2, Bell, User } from 'lucide-react';
 import { releaseCountdownLabel } from './dateUtils';
 
-const TABS = ['Overview', 'Performance', 'Timeline', 'Assets', 'Reports'];
+const DEFAULT_TABS = ['Overview', 'Performance', 'Timeline', 'Assets', 'Reports'];
 
 export default function MovieOverviewHeader({
   title,
   status,
   releaseInDays,
   dateRangeLabel,
+  tabs = DEFAULT_TABS,
   activeTab,
   onTabChange,
   notificationCount = 0,
@@ -58,7 +59,7 @@ export default function MovieOverviewHeader({
       </div>
 
       <div className="flex items-center gap-6 mt-5">
-        {TABS.map((tab) => (
+        {tabs.map((tab) => (
           <button
             key={tab}
             onClick={() => onTabChange?.(tab)}
