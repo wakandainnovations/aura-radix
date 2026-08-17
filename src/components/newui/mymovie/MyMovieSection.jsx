@@ -6,7 +6,7 @@ import TimelineTab from './TimelineTab';
 import AssetsTab from './AssetsTab';
 import ReportsTab from './ReportsTab';
 import useMovieOverviewData from './useMovieOverviewData';
-import { PREVIEW_SUBTABS } from '../previewTabs';
+import { visibleTabsFor } from '../previewTabs';
 
 const OTHER_TABS = {
   Performance: PerformanceTab,
@@ -15,19 +15,17 @@ const OTHER_TABS = {
   Reports: ReportsTab,
 };
 
-const HIDDEN_TABS = PREVIEW_SUBTABS['my-movie'];
+const ALL_TABS = ['Overview', ...Object.keys(OTHER_TABS)];
 
-export default function MyMovieSection({ selectedMovie, showPreviewTabs }) {
+export default function MyMovieSection({ selectedMovie, fullAccess }) {
   const [activeTab, setActiveTab] = useState('Overview');
   const data = useMovieOverviewData(selectedMovie);
   const OtherTabComponent = OTHER_TABS[activeTab];
-  const visibleTabs = ['Overview', ...Object.keys(OTHER_TABS)].filter(
-    (tab) => showPreviewTabs || !HIDDEN_TABS.includes(tab),
-  );
+  const visibleTabs = visibleTabsFor('my-movie', ALL_TABS, fullAccess);
 
   useEffect(() => {
     if (!visibleTabs.includes(activeTab)) {
-      setActiveTab('Overview');
+      setActiveTab(visibleTabs[0]);
     }
   }, [visibleTabs, activeTab]);
 

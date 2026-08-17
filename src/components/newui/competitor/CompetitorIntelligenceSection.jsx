@@ -5,7 +5,7 @@ import CampaignsTab from './CampaignsTab';
 import AudienceOverlapTab from './AudienceOverlapTab';
 import ContentAnalysisTab from './ContentAnalysisTab';
 import MarketPositionTab from './MarketPositionTab';
-import { PREVIEW_SUBTABS } from '../previewTabs';
+import { visibleTabsFor } from '../previewTabs';
 
 const TABS = {
   Overview: OverviewTab,
@@ -15,18 +15,14 @@ const TABS = {
   'Market Position': MarketPositionTab,
 };
 
-const HIDDEN_TABS = PREVIEW_SUBTABS['competitor-intelligence'];
-
-export default function CompetitorIntelligenceSection({ showPreviewTabs }) {
+export default function CompetitorIntelligenceSection({ fullAccess }) {
   const [activeTab, setActiveTab] = useState('Overview');
   const TabComponent = TABS[activeTab];
-  const visibleTabs = Object.keys(TABS).filter(
-    (tab) => showPreviewTabs || !HIDDEN_TABS.includes(tab),
-  );
+  const visibleTabs = visibleTabsFor('competitor-intelligence', Object.keys(TABS), fullAccess);
 
   useEffect(() => {
     if (!visibleTabs.includes(activeTab)) {
-      setActiveTab('Overview');
+      setActiveTab(visibleTabs[0]);
     }
   }, [visibleTabs, activeTab]);
 

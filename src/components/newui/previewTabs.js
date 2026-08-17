@@ -1,11 +1,23 @@
-// Nav sections and sub-tabs still being built out. Hidden from every viewer by
-// default (customer demos land only on finished tabs); an admin can reveal
-// them in their own browser via the preview toggle to keep working on them.
-export const PREVIEW_NAV_KEYS = ['command-center', 'ai-producer'];
+// Demo-ready nav sections and sub-tabs. In demo mode (the default — what a
+// customer sees) only these are shown; everything else is still being built.
+// An admin can flip on full access (see usePreviewTabsToggle) to see the
+// whole app while building/testing.
+//
+// Sections not listed in DEMO_VISIBLE_SUBTABS (Command Center, AI Producer)
+// show all of their content in demo mode — there's nothing to restrict.
+export const DEMO_HIDDEN_NAV_KEYS = ['campaign-planner'];
 
-export const PREVIEW_SUBTABS = {
+export const DEMO_VISIBLE_SUBTABS = {
   'my-movie': ['Performance'],
-  'audience-intelligence': ['Conversations', 'Influencers'],
+  'audience-intelligence': ['Influencers', 'Conversations'],
   'competitor-intelligence': ['Content Analysis'],
   'war-room': ['Crisis Management'],
 };
+
+// Given every tab a section defines and whether the viewer has full access,
+// returns the tabs that should actually be shown.
+export function visibleTabsFor(sectionKey, allTabs, fullAccess) {
+  const allowed = DEMO_VISIBLE_SUBTABS[sectionKey];
+  if (fullAccess || !allowed) return allTabs;
+  return allTabs.filter((tab) => allowed.includes(tab));
+}

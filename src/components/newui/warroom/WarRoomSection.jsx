@@ -6,7 +6,7 @@ import CrisisManagementTab from './CrisisManagementTab';
 import PlatformWatchTab from './PlatformWatchTab';
 import TeamCoordinationTab from './TeamCoordinationTab';
 import DecisionLogTab from './DecisionLogTab';
-import { PREVIEW_SUBTABS } from '../previewTabs';
+import { visibleTabsFor } from '../previewTabs';
 
 const TABS = {
   Overview: OverviewTab,
@@ -17,8 +17,6 @@ const TABS = {
   'Decision Log': DecisionLogTab,
 };
 
-const HIDDEN_TABS = PREVIEW_SUBTABS['war-room'];
-
 function AutoRefreshBadge() {
   return (
     <div className="flex items-center gap-1.5 text-xs text-white/40 shrink-0">
@@ -28,16 +26,14 @@ function AutoRefreshBadge() {
   );
 }
 
-export default function WarRoomSection({ showPreviewTabs }) {
+export default function WarRoomSection({ fullAccess }) {
   const [activeTab, setActiveTab] = useState('Overview');
   const TabComponent = TABS[activeTab];
-  const visibleTabs = Object.keys(TABS).filter(
-    (tab) => showPreviewTabs || !HIDDEN_TABS.includes(tab),
-  );
+  const visibleTabs = visibleTabsFor('war-room', Object.keys(TABS), fullAccess);
 
   useEffect(() => {
     if (!visibleTabs.includes(activeTab)) {
-      setActiveTab('Overview');
+      setActiveTab(visibleTabs[0]);
     }
   }, [visibleTabs, activeTab]);
 

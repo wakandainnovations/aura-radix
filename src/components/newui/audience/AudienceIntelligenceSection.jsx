@@ -6,7 +6,7 @@ import GeographyTab from './GeographyTab';
 import ThemesTab from './ThemesTab';
 import InfluencersTab from './InfluencersTab';
 import ConversationsTab from './ConversationsTab';
-import { PREVIEW_SUBTABS } from '../previewTabs';
+import { visibleTabsFor } from '../previewTabs';
 
 const TABS = {
   Overview: OverviewTab,
@@ -17,18 +17,14 @@ const TABS = {
   Conversations: ConversationsTab,
 };
 
-const HIDDEN_TABS = PREVIEW_SUBTABS['audience-intelligence'];
-
-export default function AudienceIntelligenceSection({ showPreviewTabs }) {
+export default function AudienceIntelligenceSection({ fullAccess }) {
   const [activeTab, setActiveTab] = useState('Overview');
   const TabComponent = TABS[activeTab];
-  const visibleTabs = Object.keys(TABS).filter(
-    (tab) => showPreviewTabs || !HIDDEN_TABS.includes(tab),
-  );
+  const visibleTabs = visibleTabsFor('audience-intelligence', Object.keys(TABS), fullAccess);
 
   useEffect(() => {
     if (!visibleTabs.includes(activeTab)) {
-      setActiveTab('Overview');
+      setActiveTab(visibleTabs[0]);
     }
   }, [visibleTabs, activeTab]);
 

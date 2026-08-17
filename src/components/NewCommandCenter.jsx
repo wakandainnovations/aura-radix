@@ -11,7 +11,7 @@ import WarRoomSection from './newui/warroom/WarRoomSection';
 import AIProducerSection from './newui/aiproducer/AIProducerSection';
 import { dummyMovieOverview } from './newui/dummyMovieData';
 import { PAGE_BG } from './newui/theme';
-import { PREVIEW_NAV_KEYS } from './newui/previewTabs';
+import { DEMO_HIDDEN_NAV_KEYS } from './newui/previewTabs';
 import { entityService } from '../api/entityService';
 import { authService } from '../api/authService';
 import { useLicense } from '../hooks/useLicense';
@@ -39,11 +39,12 @@ export default function NewCommandCenter() {
   const [selectedMovie, setSelectedMovie] = useState(null);
   const { isAdmin, viewAsUserId, refresh: refreshLicense } = useLicense();
   const { username, setIsAuthenticated, setUsername } = useAuth();
-  const [previewTabsOn, setPreviewTabsOn] = usePreviewTabsToggle();
+  const [fullAccessOn, setFullAccessOn] = usePreviewTabsToggle();
 
-  // Non-admins never see preview tabs; admins see them only while the toggle is on.
-  const showPreviewTabs = isAdmin && previewTabsOn;
-  const hiddenNavKeys = showPreviewTabs ? [] : PREVIEW_NAV_KEYS;
+  // Non-admins always get the demo-restricted view; admins get it too unless
+  // they've flipped the toggle on.
+  const fullAccess = isAdmin && fullAccessOn;
+  const hiddenNavKeys = fullAccess ? [] : DEMO_HIDDEN_NAV_KEYS;
 
   // If the active section just got hidden (toggle flipped off, or admin
   // status changed), fall back to a section that's always visible.
@@ -77,7 +78,7 @@ export default function NewCommandCenter() {
 
   return (
     <div className={`h-screen flex ${PAGE_BG} text-white overflow-hidden`}>
-      {isAdmin && <PreviewTabsToggle showPreviewTabs={previewTabsOn} onToggle={setPreviewTabsOn} />}
+      {isAdmin && <PreviewTabsToggle fullAccess={fullAccessOn} onToggle={setFullAccessOn} />}
 
       <NewUISidebar
         activeItem={activeSection}
@@ -97,7 +98,7 @@ export default function NewCommandCenter() {
           selectedMovie={activeMovie}
           userName={username}
           onOpenWorkspace={() => setActiveSection('my-movie')}
-          showPreviewTabs={showPreviewTabs}
+          fullAccess={fullAccess}
         />
       </div>
     </div>
