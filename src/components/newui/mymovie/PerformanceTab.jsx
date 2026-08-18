@@ -4,14 +4,24 @@ import { Panel, PanelLink, DropdownPill } from '../shared/Panel';
 import LegendDonut from '../shared/LegendDonut';
 import BarRow from '../shared/BarRow';
 import TrendLine from '../shared/TrendLine';
-import GeoPlaceholder from '../shared/GeoPlaceholder';
-import { performanceData, AXIS_TICKS_15D } from './myMovieTabsData';
+import IndiaStatesMap from '../shared/IndiaStatesMap';
+import { AXIS_TICKS_15D } from './myMovieTabsData';
 
 const STAT_ICONS = { buzz: Volume2, sentiment: Smile, awareness: Eye, engagement: Users, momentum: Rocket };
 const DRIVER_ICONS = { song: Music, trailer: Play, media: Newspaper, fan: MessageCircle };
 
-export default function PerformanceTab() {
-  const d = performanceData;
+function PanelSkeleton() {
+  return (
+    <div className="space-y-2.5 animate-pulse" role="status" aria-label="Loading">
+      <div className="h-3.5 bg-white/10 rounded w-2/3" />
+      <div className="h-3.5 bg-white/10 rounded w-1/2" />
+      <div className="h-3.5 bg-white/10 rounded w-3/5" />
+    </div>
+  );
+}
+
+export default function PerformanceTab({ data, isTrendLoading, isPlatformLoading, isRegionsLoading }) {
+  const d = data;
 
   return (
     <div className="p-6 space-y-4">
@@ -35,7 +45,8 @@ export default function PerformanceTab() {
             value={s.value}
             suffix={s.suffix}
             delta={s.delta}
-            caption="vs previous 30 days"
+            deltaTone={s.deltaTone}
+            caption={s.caption ?? 'vs previous 30 days'}
             sparkline={s.spark}
             sparklineColor="#a78bfa"
           />
@@ -44,7 +55,11 @@ export default function PerformanceTab() {
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4">
         <Panel title="BUZZ OVER TIME" info description="Track how conversations around your movie have changed over time." control={<DropdownPill>Overall</DropdownPill>}>
-          <TrendLine data={d.buzzOverTime} series={[{ key: 'value', label: 'Buzz', color: '#a78bfa' }]} ticks={AXIS_TICKS_15D} area />
+          {isTrendLoading ? (
+            <PanelSkeleton />
+          ) : (
+            <TrendLine data={d.buzzOverTime} series={[{ key: 'value', label: 'Buzz', color: '#a78bfa' }]} ticks={d.buzzOverTimeTicks ?? AXIS_TICKS_15D} area />
+          )}
         </Panel>
 
         <Panel title="TOP DRIVERS" info description="What's contributing to your performance.">
@@ -76,24 +91,32 @@ export default function PerformanceTab() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Panel title="PLATFORM BREAKDOWN" info description="Where your conversations are happening.">
-          <LegendDonut data={d.platformBreakdown} centerValue="100%" size={130} />
+          {isPlatformLoading ? <PanelSkeleton /> : <LegendDonut data={d.platformBreakdown} centerValue="100%" size={130} />}
           <PanelLink>View platform performance</PanelLink>
         </Panel>
 
         <Panel title="SENTIMENT DISTRIBUTION" info description="Overall tone of conversations.">
-          <LegendDonut data={d.sentimentDistribution} centerValue="80%" centerLabel="Positive" size={130} />
+          {isTrendLoading ? (
+            <PanelSkeleton />
+          ) : (
+            <LegendDonut data={d.sentimentDistribution} centerValue={d.sentimentPositivePct ?? '80%'} centerLabel="Positive" size={130} />
+          )}
           <PanelLink>View sentiment trends</PanelLink>
         </Panel>
 
         <Panel title="TOP REGIONS BY BUZZ" info description="Where you're getting the most buzz.">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2.5">
-              {d.topRegions.map((r) => (
-                <BarRow key={r.label} label={r.label} pct={r.pct * 3} valueLabel={`${r.pct}%`} color="#a78bfa" />
-              ))}
+          {isRegionsLoading ? (
+            <PanelSkeleton />
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2.5">
+                {d.topRegions.map((r) => (
+                  <BarRow key={r.label} label={r.label} pct={r.pct * 3} valueLabel={`${r.pct}%`} color="#a78bfa" />
+                ))}
+              </div>
+              <IndiaStatesMap regions={d.topRegionsForMap} height={140} />
             </div>
-            <GeoPlaceholder markers={d.regionMarkers} height={140} />
-          </div>
+          )}
           <PanelLink>View all regions</PanelLink>
         </Panel>
       </div>

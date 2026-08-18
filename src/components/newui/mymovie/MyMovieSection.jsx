@@ -6,20 +6,21 @@ import TimelineTab from './TimelineTab';
 import AssetsTab from './AssetsTab';
 import ReportsTab from './ReportsTab';
 import useMovieOverviewData from './useMovieOverviewData';
+import useMoviePerformanceData from './useMoviePerformanceData';
 import { visibleTabsFor } from '../previewTabs';
 
 const OTHER_TABS = {
-  Performance: PerformanceTab,
   Timeline: TimelineTab,
   Assets: AssetsTab,
   Reports: ReportsTab,
 };
 
-const ALL_TABS = ['Overview', ...Object.keys(OTHER_TABS)];
+const ALL_TABS = ['Overview', 'Performance', ...Object.keys(OTHER_TABS)];
 
 export default function MyMovieSection({ selectedMovie, fullAccess }) {
   const [activeTab, setActiveTab] = useState('Overview');
   const data = useMovieOverviewData(selectedMovie);
+  const performanceData = useMoviePerformanceData(selectedMovie);
   const OtherTabComponent = OTHER_TABS[activeTab];
   const visibleTabs = visibleTabsFor('my-movie', ALL_TABS, fullAccess);
 
@@ -41,7 +42,18 @@ export default function MyMovieSection({ selectedMovie, fullAccess }) {
         onTabChange={setActiveTab}
         notificationCount={3}
       />
-      {activeTab === 'Overview' ? <OverviewTab data={data} /> : <OtherTabComponent />}
+      {activeTab === 'Overview' ? (
+        <OverviewTab data={data} />
+      ) : activeTab === 'Performance' ? (
+        <PerformanceTab
+          data={performanceData}
+          isTrendLoading={performanceData.isTrendLoading}
+          isPlatformLoading={performanceData.isPlatformLoading}
+          isRegionsLoading={performanceData.isRegionsLoading}
+        />
+      ) : (
+        <OtherTabComponent />
+      )}
     </>
   );
 }

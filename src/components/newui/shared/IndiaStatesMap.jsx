@@ -50,8 +50,10 @@ const MARKER_COLORS = ['#3987e5', '#a78bfa', '#34d399', '#f59e0b', '#22d3ee'];
 
 // Backend values for the non-Indian bucket (e.g. "Diaspora_International")
 // should read simply as "International" in the UI rather than a literal,
-// word-split rendering of the raw classifier string.
-function displayName(value) {
+// word-split rendering of the raw classifier string. Exported so other
+// widgets showing these same raw region strings (e.g. Performance tab's
+// Top Regions bar list) render them the same way this map does.
+export function displayName(value) {
   const key = normalize(value);
   if (isInternationalRegion(key)) return 'International';
   return (value ?? '')

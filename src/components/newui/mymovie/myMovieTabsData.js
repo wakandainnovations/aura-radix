@@ -47,13 +47,6 @@ export const performanceData = {
     { label: 'Maharashtra', pct: 10 },
     { label: 'Kerala', pct: 8 },
   ],
-  regionMarkers: [
-    { xPct: 45, yPct: 78, size: 14, color: '#a78bfa', label: 'Tamil Nadu' },
-    { xPct: 40, yPct: 60, size: 10, color: '#a78bfa', label: 'Karnataka' },
-    { xPct: 48, yPct: 55, size: 8, color: '#a78bfa', label: 'Telangana' },
-    { xPct: 30, yPct: 45, size: 8, color: '#a78bfa', label: 'Maharashtra' },
-    { xPct: 38, yPct: 85, size: 6, color: '#a78bfa', label: 'Kerala' },
-  ],
 };
 
 export const timelineData = {
