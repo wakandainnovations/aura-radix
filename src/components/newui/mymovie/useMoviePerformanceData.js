@@ -152,22 +152,6 @@ export default function useMoviePerformanceData(selectedMovie) {
     const buzzOverTime = hasSeries ? days.map((d) => ({ date: d.label, value: d.total })) : base.buzzOverTime;
     const buzzOverTimeTicks = hasSeries ? pickEvenTicks(days.map((d) => d.label)) : undefined;
 
-    const totalAll = days.reduce((sum, d) => sum + d.total, 0);
-    const posTotal = days.reduce((sum, d) => sum + d.positive, 0);
-    const neuTotal = days.reduce((sum, d) => sum + d.neutral, 0);
-    const negTotal = days.reduce((sum, d) => sum + d.negative, 0);
-    const pctOf = (n) => (totalAll > 0 ? Math.round((n / totalAll) * 100) : 0);
-
-    const sentimentDistribution =
-      totalAll > 0
-        ? [
-            { label: 'Positive', value: pctOf(posTotal), pctLabel: `${formatCompact(posTotal)} (${pctOf(posTotal)}%)`, color: '#34d399' },
-            { label: 'Neutral', value: pctOf(neuTotal), pctLabel: `${formatCompact(neuTotal)} (${pctOf(neuTotal)}%)`, color: '#94a3b8' },
-            { label: 'Negative', value: pctOf(negTotal), pctLabel: `${formatCompact(negTotal)} (${pctOf(negTotal)}%)`, color: '#f87171' },
-          ]
-        : base.sentimentDistribution;
-    const sentimentPositivePct = totalAll > 0 ? `${pctOf(posTotal)}%` : undefined;
-
     // getPlatformMentions returns a sentiment breakdown per platform
     // ({ X: { POSITIVE, NEGATIVE, NEUTRAL }, ... }), same shape the classic
     // dashboard's PlatformBreakdownChart consumes - sum each platform's
@@ -209,6 +193,79 @@ export default function useMoviePerformanceData(selectedMovie) {
           })
         : base.platformSentimentBreakdown;
 
+    // Overall sentiment totals, summed across platforms from the same
+    // getPlatformMentions data platformCounts already sums above - this
+    // matches classic UI's totals exactly, unlike sentiment-over-time's
+    // daily series (sentimentOverTimeRaw/days above), which can come back
+    // all-zero for entities without per-day history yet.
+    const sentimentTotals = platformCounts.reduce(
+      (acc, [key]) => {
+        const s = platformRaw[key] ?? {};
+        acc.positive += s.POSITIVE ?? 0;
+        acc.negative += s.NEGATIVE ?? 0;
+        acc.neutral += s.NEUTRAL ?? 0;
+        return acc;
+      },
+      { positive: 0, negative: 0, neutral: 0 }
+    );
+    const sentimentGrandTotal = sentimentTotals.positive + sentimentTotals.negative + sentimentTotals.neutral;
+    const pctOfSentiment = (n) => (sentimentGrandTotal > 0 ? Math.round((n / sentimentGrandTotal) * 100) : 0);
+
+    const sentimentDistribution =
+      sentimentGrandTotal > 0
+        ? [
+            {
+              label: 'Positive',
+              value: pctOfSentiment(sentimentTotals.positive),
+              pctLabel: `${formatCompact(sentimentTotals.positive)} (${pctOfSentiment(sentimentTotals.positive)}%)`,
+              color: '#34d399',
+            },
+            {
+              label: 'Neutral',
+              value: pctOfSentiment(sentimentTotals.neutral),
+              pctLabel: `${formatCompact(sentimentTotals.neutral)} (${pctOfSentiment(sentimentTotals.neutral)}%)`,
+              color: '#94a3b8',
+            },
+            {
+              label: 'Negative',
+              value: pctOfSentiment(sentimentTotals.negative),
+              pctLabel: `${formatCompact(sentimentTotals.negative)} (${pctOfSentiment(sentimentTotals.negative)}%)`,
+              color: '#f87171',
+            },
+          ]
+        : base.sentimentDistribution;
+    const sentimentPositivePct = sentimentGrandTotal > 0 ? `${pctOfSentiment(sentimentTotals.positive)}%` : undefined;
+
+    // Within each sentiment bucket (positive/neutral/negative), which
+    // platform contributed how much - shown in the "View sentiment trends"
+    // modal. Reuses the same per-platform POSITIVE/NEGATIVE/NEUTRAL counts
+    // as sentimentTotals/platformSentimentBreakdown above, just grouped the
+    // other way (by sentiment, then by platform).
+    const byPlatformShare = (sentimentKey, grandTotal) => {
+      if (grandTotal === 0) return [];
+      return platformCounts
+        .map(([key]) => {
+          const count = platformRaw[key]?.[sentimentKey] ?? 0;
+          return {
+            key,
+            label: PLATFORM_META[key]?.label ?? key,
+            color: PLATFORM_META[key]?.color ?? '#64748b',
+            count,
+            pct: Math.round((count / grandTotal) * 100),
+          };
+        })
+        .filter((p) => p.count > 0)
+        .sort((a, b) => b.count - a.count);
+    };
+    const sentimentPlatformBreakdown =
+      sentimentGrandTotal > 0
+        ? {
+            positive: byPlatformShare('POSITIVE', sentimentTotals.positive),
+            neutral: byPlatformShare('NEUTRAL', sentimentTotals.neutral),
+            negative: byPlatformShare('NEGATIVE', sentimentTotals.negative),
+          }
+        : base.sentimentPlatformBreakdown;
+
     // "unknown" is a real predicted_region value distinct from the
     // null/irrelevant rows the backend already excludes (same filter
     // useCommandCenterData applies to its own audience-pulse regions), so
@@ -237,6 +294,7 @@ export default function useMoviePerformanceData(selectedMovie) {
       buzzOverTimeTicks,
       sentimentDistribution,
       sentimentPositivePct,
+      sentimentPlatformBreakdown,
       platformBreakdown,
       platformSentimentBreakdown,
       topRegions,

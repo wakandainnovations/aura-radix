@@ -47,6 +47,29 @@ export const performanceData = {
     { label: 'Neutral', value: 14, pctLabel: '560K (14%)', color: '#94a3b8' },
     { label: 'Negative', value: 6, pctLabel: '240K (6%)', color: '#f87171' },
   ],
+  sentimentPlatformBreakdown: {
+    positive: [
+      { key: 'X', label: 'X (Twitter)', color: '#cbd5e1', count: 881600, pct: 37 },
+      { key: 'INSTAGRAM', label: 'Instagram', color: '#f472b6', count: 686400, pct: 29 },
+      { key: 'YOUTUBE', label: 'YouTube', color: '#f87171', count: 390400, pct: 16 },
+      { key: 'OTHERS', label: 'Others', color: '#64748b', count: 208000, pct: 9 },
+      { key: 'FACEBOOK', label: 'Facebook', color: '#3987e5', count: 220000, pct: 9 },
+    ],
+    neutral: [
+      { key: 'X', label: 'X (Twitter)', color: '#cbd5e1', count: 425600, pct: 39 },
+      { key: 'INSTAGRAM', label: 'Instagram', color: '#f472b6', count: 249600, pct: 23 },
+      { key: 'YOUTUBE', label: 'YouTube', color: '#f87171', count: 160000, pct: 15 },
+      { key: 'OTHERS', label: 'Others', color: '#64748b', count: 128000, pct: 12 },
+      { key: 'FACEBOOK', label: 'Facebook', color: '#3987e5', count: 120000, pct: 11 },
+    ],
+    negative: [
+      { key: 'X', label: 'X (Twitter)', color: '#cbd5e1', count: 212800, pct: 40 },
+      { key: 'INSTAGRAM', label: 'Instagram', color: '#f472b6', count: 104000, pct: 20 },
+      { key: 'YOUTUBE', label: 'YouTube', color: '#f87171', count: 89600, pct: 17 },
+      { key: 'OTHERS', label: 'Others', color: '#64748b', count: 64000, pct: 12 },
+      { key: 'FACEBOOK', label: 'Facebook', color: '#3987e5', count: 60000, pct: 11 },
+    ],
+  },
   topRegions: [
     { label: 'Tamil Nadu', pct: 28 },
     { label: 'Karnataka', pct: 16 },

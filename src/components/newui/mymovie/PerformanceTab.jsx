@@ -7,6 +7,7 @@ import BarRow from '../shared/BarRow';
 import TrendLine from '../shared/TrendLine';
 import IndiaStatesMap from '../shared/IndiaStatesMap';
 import PlatformPerformanceModal from './PlatformPerformanceModal';
+import SentimentTrendsModal from './SentimentTrendsModal';
 import { AXIS_TICKS_15D } from './myMovieTabsData';
 
 const STAT_ICONS = { buzz: Volume2, sentiment: Smile, awareness: Eye, engagement: Users, momentum: Rocket };
@@ -25,6 +26,7 @@ function PanelSkeleton() {
 export default function PerformanceTab({ data, isTrendLoading, isPlatformLoading, isRegionsLoading }) {
   const d = data;
   const [platformModalOpen, setPlatformModalOpen] = useState(false);
+  const [sentimentModalOpen, setSentimentModalOpen] = useState(false);
 
   return (
     <div className="p-6 space-y-4">
@@ -104,12 +106,17 @@ export default function PerformanceTab({ data, isTrendLoading, isPlatformLoading
         </Panel>
 
         <Panel title="SENTIMENT DISTRIBUTION" info description="Overall tone of conversations.">
-          {isTrendLoading ? (
+          {isPlatformLoading ? (
             <PanelSkeleton />
           ) : (
             <LegendDonut data={d.sentimentDistribution} centerValue={d.sentimentPositivePct ?? '80%'} centerLabel="Positive" size={130} />
           )}
-          <PanelLink>View sentiment trends</PanelLink>
+          <PanelLink onClick={() => setSentimentModalOpen(true)}>View sentiment trends</PanelLink>
+          <SentimentTrendsModal
+            open={sentimentModalOpen}
+            onOpenChange={setSentimentModalOpen}
+            data={d.sentimentPlatformBreakdown}
+          />
         </Panel>
 
         <Panel title="TOP REGIONS BY BUZZ" info description="Where you're getting the most buzz.">
