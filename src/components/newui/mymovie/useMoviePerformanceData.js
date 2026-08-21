@@ -187,6 +187,28 @@ export default function useMoviePerformanceData(selectedMovie) {
           }))
         : base.platformBreakdown;
 
+    // Per-platform positive/neutral/negative sentiment split, shown in the
+    // "View platform performance" modal - same POSITIVE/NEGATIVE/NEUTRAL
+    // counts platformCounts sums above, kept separate per sentiment here.
+    const platformSentimentBreakdown =
+      platformTotal > 0
+        ? platformCounts.map(([key]) => {
+            const sentiments = platformRaw[key] ?? {};
+            const positive = sentiments.POSITIVE ?? 0;
+            const negative = sentiments.NEGATIVE ?? 0;
+            const neutral = sentiments.NEUTRAL ?? 0;
+            const total = positive + negative + neutral;
+            return {
+              key,
+              label: PLATFORM_META[key]?.label ?? key,
+              color: PLATFORM_META[key]?.color ?? '#64748b',
+              positivePct: total > 0 ? Math.round((positive / total) * 100) : 0,
+              neutralPct: total > 0 ? Math.round((neutral / total) * 100) : 0,
+              negativePct: total > 0 ? Math.round((negative / total) * 100) : 0,
+            };
+          })
+        : base.platformSentimentBreakdown;
+
     // "unknown" is a real predicted_region value distinct from the
     // null/irrelevant rows the backend already excludes (same filter
     // useCommandCenterData applies to its own audience-pulse regions), so
@@ -216,6 +238,7 @@ export default function useMoviePerformanceData(selectedMovie) {
       sentimentDistribution,
       sentimentPositivePct,
       platformBreakdown,
+      platformSentimentBreakdown,
       topRegions,
       topRegionsForMap,
     };

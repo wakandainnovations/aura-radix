@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Volume2, Smile, Eye, Users, Rocket, Music, Play, Newspaper, MessageCircle } from 'lucide-react';
 import StatCard from '../shared/StatCard';
 import { Panel, PanelLink, DropdownPill } from '../shared/Panel';
@@ -5,6 +6,7 @@ import LegendDonut from '../shared/LegendDonut';
 import BarRow from '../shared/BarRow';
 import TrendLine from '../shared/TrendLine';
 import IndiaStatesMap from '../shared/IndiaStatesMap';
+import PlatformPerformanceModal from './PlatformPerformanceModal';
 import { AXIS_TICKS_15D } from './myMovieTabsData';
 
 const STAT_ICONS = { buzz: Volume2, sentiment: Smile, awareness: Eye, engagement: Users, momentum: Rocket };
@@ -22,6 +24,7 @@ function PanelSkeleton() {
 
 export default function PerformanceTab({ data, isTrendLoading, isPlatformLoading, isRegionsLoading }) {
   const d = data;
+  const [platformModalOpen, setPlatformModalOpen] = useState(false);
 
   return (
     <div className="p-6 space-y-4">
@@ -92,7 +95,12 @@ export default function PerformanceTab({ data, isTrendLoading, isPlatformLoading
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Panel title="PLATFORM BREAKDOWN" info description="Where your conversations are happening.">
           {isPlatformLoading ? <PanelSkeleton /> : <LegendDonut data={d.platformBreakdown} centerValue="100%" size={130} />}
-          <PanelLink>View platform performance</PanelLink>
+          <PanelLink onClick={() => setPlatformModalOpen(true)}>View platform performance</PanelLink>
+          <PlatformPerformanceModal
+            open={platformModalOpen}
+            onOpenChange={setPlatformModalOpen}
+            data={d.platformSentimentBreakdown}
+          />
         </Panel>
 
         <Panel title="SENTIMENT DISTRIBUTION" info description="Overall tone of conversations.">

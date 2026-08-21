@@ -35,6 +35,13 @@ export const performanceData = {
     { label: 'Facebook', value: 10, color: '#3987e5' },
     { label: 'Others', value: 10, color: '#64748b' },
   ],
+  platformSentimentBreakdown: [
+    { key: 'X', label: 'X (Twitter)', color: '#cbd5e1', positivePct: 58, neutralPct: 28, negativePct: 14 },
+    { key: 'INSTAGRAM', label: 'Instagram', color: '#f472b6', positivePct: 66, neutralPct: 24, negativePct: 10 },
+    { key: 'YOUTUBE', label: 'YouTube', color: '#f87171', positivePct: 61, neutralPct: 25, negativePct: 14 },
+    { key: 'FACEBOOK', label: 'Facebook', color: '#3987e5', positivePct: 55, neutralPct: 30, negativePct: 15 },
+    { key: 'OTHERS', label: 'Others', color: '#64748b', positivePct: 52, neutralPct: 32, negativePct: 16 },
+  ],
   sentimentDistribution: [
     { label: 'Positive', value: 60, pctLabel: '2.4M (60%)', color: '#34d399' },
     { label: 'Neutral', value: 14, pctLabel: '560K (14%)', color: '#94a3b8' },
