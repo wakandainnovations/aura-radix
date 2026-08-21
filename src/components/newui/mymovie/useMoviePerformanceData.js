@@ -168,11 +168,19 @@ export default function useMoviePerformanceData(selectedMovie) {
         : base.sentimentDistribution;
     const sentimentPositivePct = totalAll > 0 ? `${pctOf(posTotal)}%` : undefined;
 
-    const platformEntries = platformRaw ? Object.entries(platformRaw).filter(([, v]) => v > 0) : [];
-    const platformTotal = platformEntries.reduce((sum, [, v]) => sum + v, 0);
+    // getPlatformMentions returns a sentiment breakdown per platform
+    // ({ X: { POSITIVE, NEGATIVE, NEUTRAL }, ... }), same shape the classic
+    // dashboard's PlatformBreakdownChart consumes - sum each platform's
+    // sentiment counts into a single mention count before computing shares.
+    const platformCounts = platformRaw
+      ? Object.entries(platformRaw)
+          .map(([key, sentiments]) => [key, Object.values(sentiments ?? {}).reduce((sum, v) => sum + v, 0)])
+          .filter(([, total]) => total > 0)
+      : [];
+    const platformTotal = platformCounts.reduce((sum, [, v]) => sum + v, 0);
     const platformBreakdown =
       platformTotal > 0
-        ? platformEntries.map(([key, v]) => ({
+        ? platformCounts.map(([key, v]) => ({
             label: PLATFORM_META[key]?.label ?? key,
             value: Math.round((v / platformTotal) * 100),
             color: PLATFORM_META[key]?.color ?? '#64748b',
