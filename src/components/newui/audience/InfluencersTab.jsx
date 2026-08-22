@@ -1,32 +1,71 @@
-import { LineChart, Line, ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useState } from 'react';
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
+// Reads color off each point's own data (payload) rather than a shared
+// per-<Scatter> `fill` prop - with one <Scatter> per point (the previous
+// approach) Recharts doesn't reliably forward that per-series fill into a
+// custom shape, and its default tooltip matching gets confused across many
+// single-point series, showing whichever series happened to match first
+// regardless of which dot was hovered. A single <Scatter> holding the whole
+// array fixes both: real per-point colors, and a tooltip that reflects the
+// actual hovered point.
 function Bubble(props) {
-  const { cx, cy, fill } = props;
-  return <circle cx={cx} cy={cy} r={11} fill={fill} fillOpacity={0.85} stroke="#05070d" strokeWidth={2} />;
+  const { cx, cy, payload } = props;
+  return <circle cx={cx} cy={cy} r={11} fill={payload?.color ?? '#64748b'} fillOpacity={0.85} stroke="#05070d" strokeWidth={2} />;
 }
 import { Download } from 'lucide-react';
 import { Panel, PanelLink, DropdownPill } from '../shared/Panel';
 import VennCluster from '../shared/VennCluster';
 import FilterBar from '../shared/FilterBar';
 import AIInsightBar from '../shared/AIInsightBar';
+import SortableTh from '../shared/SortableTh';
 import { thClass, tdClass, trClass, PLATFORM_COLOR } from '../theme';
-import { influencersData } from './audienceData';
+import { useSortableRows } from '../../shared/SortableTable';
+import useInfluencersData from './useInfluencersData';
+import AllInfluencersModal from './AllInfluencersModal';
+
+const INFLUENCER_SORT_ACCESSORS = {
+  views: (row) => row.viewsValue,
+  engRate: (row) => row.engRateValue,
+  impact: (row) => row.impact,
+};
 
 const SENTIMENT_TONE = { Positive: 'text-emerald-400 bg-emerald-500/15', Neutral: 'text-white/50 bg-white/[0.06]', Negative: 'text-red-400 bg-red-500/15' };
+
+function PanelSkeleton() {
+  return (
+    <div className="space-y-2.5 animate-pulse" role="status" aria-label="Loading">
+      <div className="h-3.5 bg-white/10 rounded w-2/3" />
+      <div className="h-3.5 bg-white/10 rounded w-1/2" />
+      <div className="h-3.5 bg-white/10 rounded w-3/5" />
+    </div>
+  );
+}
 
 function ImpactTooltip({ active, payload }) {
   if (!active || !payload?.length) return null;
   const p = payload[0].payload;
   return (
     <div className="bg-[#11141f] border border-white/10 rounded-lg px-3 py-2 text-xs shadow-xl">
-      <div className="text-white font-semibold">{p.name}</div>
-      <div className="text-white/50">Impact {p.impact} · Eng. {p.engRate}%</div>
+      <div className="flex items-center gap-1.5">
+        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
+        <span className="text-white font-semibold">{p.name}</span>
+      </div>
+      <div className="text-white/50 mt-0.5">
+        {p.platform && <>{p.platform} · </>}Impact {p.impact} · Eng. {p.engRate}%
+      </div>
     </div>
   );
 }
 
-export default function InfluencersTab() {
-  const d = influencersData;
+export default function InfluencersTab({ selectedMovie }) {
+  const d = useInfluencersData(selectedMovie);
+  const [allInfluencersOpen, setAllInfluencersOpen] = useState(false);
+  const { rows: sortedInfluencers, sortState, requestSort } = useSortableRows(
+    d.influencers,
+    { key: 'views', dir: 'desc' },
+    INFLUENCER_SORT_ACCESSORS
+  );
 
   return (
     <div className="p-6 space-y-4">
@@ -51,74 +90,81 @@ export default function InfluencersTab() {
             </button>
           }
         >
-          <table className="w-full">
-            <thead>
-              <tr>
-                <th className={thClass}>#</th>
-                <th className={thClass}>Influencer</th>
-                <th className={thClass}>Platform</th>
-                <th className={`${thClass} text-right`}>Followers</th>
-                <th className={`${thClass} text-right`}>Eng. Rate</th>
-                <th className={`${thClass} text-right`}>Impact</th>
-                <th className={`${thClass} text-right`}>Trend</th>
-              </tr>
-            </thead>
-            <tbody>
-              {d.influencers.map((inf) => (
-                <tr key={inf.name} className={trClass}>
-                  <td className={tdClass}>{inf.rank}</td>
-                  <td className={tdClass}>
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-full bg-white/[0.06] shrink-0" />
-                      <div className="min-w-0">
-                        <div className="text-white/85 truncate">{inf.name}</div>
-                        <div className="text-[11px] text-white/35 truncate">{inf.handle}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className={tdClass}>
-                    <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ backgroundColor: `${PLATFORM_COLOR[inf.platform]}22`, color: PLATFORM_COLOR[inf.platform] }}>
-                      {inf.platform}
-                    </span>
-                  </td>
-                  <td className={`${tdClass} text-right text-white/60`}>{inf.followers}</td>
-                  <td className={`${tdClass} text-right text-white/60`}>{inf.engRate}</td>
-                  <td className={`${tdClass} text-right`}>
-                    <div className="flex items-center justify-end gap-2">
-                      <div className="h-1.5 w-16 rounded-full bg-white/[0.06] overflow-hidden">
-                        <div className="h-full rounded-full bg-emerald-400" style={{ width: `${inf.impact}%` }} />
-                      </div>
-                      <span className="text-white/70">{inf.impact}</span>
-                    </div>
-                  </td>
-                  <td className={`${tdClass} text-right`}>
-                    <div className="w-16 h-6 inline-block">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={inf.spark.map((v, i) => ({ i, v }))}>
-                          <Line type="monotone" dataKey="v" stroke="#34d399" strokeWidth={2} dot={false} isAnimationActive={false} />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </td>
+          {d.isInfluencersLoading ? (
+            <PanelSkeleton />
+          ) : (
+            <table className="w-full">
+              <thead>
+                <tr>
+                  <th className={thClass}>#</th>
+                  <th className={thClass}>Influencer</th>
+                  <th className={thClass}>Platform</th>
+                  <SortableTh label="Views" sortKey="views" sortState={sortState} onSort={requestSort} align="right" />
+                  <SortableTh label="Eng. Rate" sortKey="engRate" sortState={sortState} onSort={requestSort} align="right" />
+                  <SortableTh label="Impact" sortKey="impact" sortState={sortState} onSort={requestSort} align="right" />
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          <PanelLink>View all influencers</PanelLink>
+              </thead>
+              <tbody>
+                {sortedInfluencers.map((inf, i) => (
+                  <tr key={inf.rank} className={trClass}>
+                    <td className={tdClass}>{i + 1}</td>
+                    <td className={tdClass}>
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-full bg-white/[0.06] shrink-0" />
+                        <div className="min-w-0">
+                          <div className="text-white/85 truncate">{inf.name}</div>
+                          <div className="text-[11px] text-white/35 truncate">{inf.handle}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className={tdClass}>
+                      <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ backgroundColor: `${PLATFORM_COLOR[inf.platform]}22`, color: PLATFORM_COLOR[inf.platform] }}>
+                        {inf.platform}
+                      </span>
+                    </td>
+                    <td className={`${tdClass} text-right text-white/60`}>{inf.views}</td>
+                    <td className={`${tdClass} text-right text-white/60`}>{inf.engRate}</td>
+                    <td className={`${tdClass} text-right`}>
+                      <div className="flex items-center justify-end gap-2">
+                        <div className="h-1.5 w-16 rounded-full bg-white/[0.06] overflow-hidden">
+                          <div className="h-full rounded-full bg-emerald-400" style={{ width: `${inf.impact}%` }} />
+                        </div>
+                        <span className="text-white/70">{inf.impact}</span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <PanelLink onClick={() => setAllInfluencersOpen(true)}>View all influencers</PanelLink>
+          <AllInfluencersModal open={allInfluencersOpen} onOpenChange={setAllInfluencersOpen} data={d.allInfluencers} />
         </Panel>
 
         <Panel title="INFLUENCER IMPACT MAP" info description="Impact vs. engagement rate.">
-          <ResponsiveContainer width="100%" height={260}>
-            <ScatterChart margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-              <CartesianGrid stroke="rgba(255,255,255,0.06)" />
-              <XAxis type="number" dataKey="impact" name="Impact Score" domain={[0, 100]} tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }} axisLine={{ stroke: 'rgba(255,255,255,0.08)' }} tickLine={false} />
-              <YAxis type="number" dataKey="engRate" name="Engagement Rate" domain={[0, 10]} tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }} axisLine={false} tickLine={false} width={30} />
-              <Tooltip content={<ImpactTooltip />} cursor={{ strokeDasharray: '3 3', stroke: 'rgba(255,255,255,0.2)' }} />
+          {d.isInfluencersLoading ? (
+            <PanelSkeleton />
+          ) : (
+            <ResponsiveContainer width="100%" height={260}>
+              <ScatterChart margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <CartesianGrid stroke="rgba(255,255,255,0.06)" />
+                <XAxis type="number" dataKey="impact" name="Impact Score" domain={[0, 100]} tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }} axisLine={{ stroke: 'rgba(255,255,255,0.08)' }} tickLine={false} />
+                <YAxis type="number" dataKey="engRate" name="Engagement Rate" domain={[0, 'dataMax + 1']} tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }} axisLine={false} tickLine={false} width={30} />
+                <Tooltip content={<ImpactTooltip />} cursor={{ strokeDasharray: '3 3', stroke: 'rgba(255,255,255,0.2)' }} />
+                <Scatter data={d.impactMap} shape={Bubble} />
+              </ScatterChart>
+            </ResponsiveContainer>
+          )}
+          {!d.isInfluencersLoading && (
+            <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-2">
               {d.impactMap.map((p, i) => (
-                <Scatter key={i} data={[p]} fill={p.color} shape={Bubble} />
+                <div key={p.name ?? i} className="flex items-center gap-1.5 text-[11px] text-white/50">
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
+                  <span className="truncate max-w-[110px]">{p.name}</span>
+                </div>
               ))}
-            </ScatterChart>
-          </ResponsiveContainer>
+            </div>
+          )}
           <PanelLink>View full map</PanelLink>
         </Panel>
       </div>

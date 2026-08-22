@@ -17,7 +17,7 @@ const TABS = {
   Conversations: ConversationsTab,
 };
 
-export default function AudienceIntelligenceSection({ fullAccess }) {
+export default function AudienceIntelligenceSection({ selectedMovie, fullAccess }) {
   const [activeTab, setActiveTab] = useState('Overview');
   const TabComponent = TABS[activeTab];
   const visibleTabs = visibleTabsFor('audience-intelligence', Object.keys(TABS), fullAccess);
@@ -37,7 +37,7 @@ export default function AudienceIntelligenceSection({ fullAccess }) {
         activeTab={activeTab}
         onTabChange={setActiveTab}
       />
-      <TabComponent />
+      {activeTab === 'Influencers' ? <TabComponent selectedMovie={selectedMovie} /> : <TabComponent />}
     </>
   );
 }
