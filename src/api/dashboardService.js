@@ -140,6 +140,16 @@ export const dashboardService = {
     return response;
   },
 
+  // Get the ranked breakdown of what kind of buzz is driving conversation
+  // (fan-amplified promo, organic opinion, trade/box-office update, etc.),
+  // used by the "Top Drivers" panel.
+  // Path: GET /api/dashboard/{entityId}/content-intent-breakdown
+  // Response: { entityId, entityName, totalClassifiedPosts, intents: [{ rank, contentIntent, count, sharePct }] }
+  getContentIntentBreakdown: async (entityId, { signal } = {}) => {
+    const response = await apiClient.get(`/dashboard/${entityId}/content-intent-breakdown`, { signal });
+    return response;
+  },
+
   // Get the LLM-generated Command Center AI summary (shares a cache/generation
   // with getTodaysHighlights on the backend, so the two never disagree).
   // Path: GET /api/dashboard/{entityId}/ai-summary

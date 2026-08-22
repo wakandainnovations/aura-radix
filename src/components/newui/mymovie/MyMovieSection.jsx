@@ -50,6 +50,7 @@ export default function MyMovieSection({ selectedMovie, fullAccess }) {
           isTrendLoading={performanceData.isTrendLoading}
           isPlatformLoading={performanceData.isPlatformLoading}
           isRegionsLoading={performanceData.isRegionsLoading}
+          isTopDriversLoading={performanceData.isTopDriversLoading}
         />
       ) : (
         <OtherTabComponent />

@@ -27,12 +27,23 @@ const PLATFORM_META = {
   REDDIT: { label: 'Reddit', color: '#3987e5' },
 };
 
+// Human labels for the backend's snake_case contentIntent values, shown in
+// the "Top Drivers" panel.
+const CONTENT_INTENT_LABELS = {
+  official_promo: 'Official promo',
+  fan_amplified_promo: 'Fan-amplified promo',
+  organic_opinion: 'Organic opinion',
+  news_press_coverage: 'News / press coverage',
+  trade_box_office_update: 'Trade / box-office update',
+  ticket_merch_marketplace: 'Ticket / merch marketplace',
+};
+
 // Fetches real per-entity performance metrics for the My Movie Performance
-// tab and merges them into the dummy data's shape. "Marketing Momentum" and
-// "Top Drivers" have no backend concept today, so they're intentionally left
-// as static dummy values rather than inventing a formula for them (same
-// approach useMovieOverviewData/useCommandCenterData take for their own
-// backend-less fields). The region map markers also stay dummy - there's no
+// tab and merges them into the dummy data's shape. "Marketing Momentum" has
+// no backend concept today, so it's intentionally left as a static dummy
+// value rather than inventing a formula for it (same approach
+// useMovieOverviewData/useCommandCenterData take for their own backend-less
+// fields). The region map markers also stay dummy - there's no
 // region-name-to-map-coordinate lookup anywhere in this codebase yet.
 export default function useMoviePerformanceData(selectedMovie) {
   const entityId = selectedMovie?.id;
@@ -76,6 +87,12 @@ export default function useMoviePerformanceData(selectedMovie) {
   const { data: audiencePulseRaw, isLoading: isRegionsLoading } = useQuery({
     queryKey: ['audience-pulse', entityId, 'newui-my-movie-performance'],
     queryFn: () => dashboardService.getAudiencePulse(entityId),
+    enabled: entityId != null,
+  });
+
+  const { data: contentIntentRaw, isLoading: isTopDriversLoading } = useQuery({
+    queryKey: ['content-intent-breakdown', entityId, 'newui-my-movie-performance'],
+    queryFn: () => dashboardService.getContentIntentBreakdown(entityId),
     enabled: entityId != null,
   });
 
@@ -287,6 +304,19 @@ export default function useMoviePerformanceData(selectedMovie) {
     // disagree, in both the real-data and dummy-fallback cases.
     const topRegionsForMap = topRegions.map((r) => ({ name: r.label, sharePct: r.pct }));
 
+    // Ranked breakdown of what kind of buzz is driving conversation (fan
+    // promo, organic opinion, press coverage, etc.) - backend already ranks
+    // by sharePct, so the top few are shown as-is.
+    const topDrivers =
+      contentIntentRaw?.intents?.length > 0
+        ? contentIntentRaw.intents.slice(0, 4).map((intent) => ({
+            label: CONTENT_INTENT_LABELS[intent.contentIntent] ?? intent.contentIntent,
+            pct: Math.round(intent.sharePct),
+            caption: `${formatCompact(intent.count)} posts`,
+            iconKey: intent.contentIntent,
+          }))
+        : base.topDrivers;
+
     return {
       ...base,
       stats,
@@ -299,13 +329,25 @@ export default function useMoviePerformanceData(selectedMovie) {
       platformSentimentBreakdown,
       topRegions,
       topRegionsForMap,
+      topDrivers,
     };
-  }, [entityId, buzzRaw, sentimentRaw, awarenessRaw, reachRaw, sentimentOverTimeRaw, platformRaw, audiencePulseRaw]);
+  }, [
+    entityId,
+    buzzRaw,
+    sentimentRaw,
+    awarenessRaw,
+    reachRaw,
+    sentimentOverTimeRaw,
+    platformRaw,
+    audiencePulseRaw,
+    contentIntentRaw,
+  ]);
 
   return {
     ...merged,
     isTrendLoading: entityId != null && isTrendLoading,
     isPlatformLoading: entityId != null && isPlatformLoading,
     isRegionsLoading: entityId != null && isRegionsLoading,
+    isTopDriversLoading: entityId != null && isTopDriversLoading,
   };
 }

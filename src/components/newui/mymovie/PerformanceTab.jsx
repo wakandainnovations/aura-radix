@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Volume2, Smile, Eye, Users, Rocket, Music, Play, Newspaper, MessageCircle } from 'lucide-react';
+import { Volume2, Smile, Eye, Users, Rocket, Music, Play, Newspaper, MessageCircle, Megaphone, MessagesSquare, TrendingUp, Ticket } from 'lucide-react';
 import StatCard from '../shared/StatCard';
 import { Panel, PanelLink, DropdownPill } from '../shared/Panel';
 import LegendDonut from '../shared/LegendDonut';
@@ -11,7 +11,18 @@ import SentimentTrendsModal from './SentimentTrendsModal';
 import { AXIS_TICKS_15D } from './myMovieTabsData';
 
 const STAT_ICONS = { buzz: Volume2, sentiment: Smile, awareness: Eye, engagement: Users, momentum: Rocket };
-const DRIVER_ICONS = { song: Music, trailer: Play, media: Newspaper, fan: MessageCircle };
+const DRIVER_ICONS = {
+  song: Music,
+  trailer: Play,
+  media: Newspaper,
+  fan: MessageCircle,
+  official_promo: Megaphone,
+  fan_amplified_promo: MessageCircle,
+  organic_opinion: MessagesSquare,
+  news_press_coverage: Newspaper,
+  trade_box_office_update: TrendingUp,
+  ticket_merch_marketplace: Ticket,
+};
 
 function PanelSkeleton() {
   return (
@@ -23,7 +34,7 @@ function PanelSkeleton() {
   );
 }
 
-export default function PerformanceTab({ data, isTrendLoading, isPlatformLoading, isRegionsLoading }) {
+export default function PerformanceTab({ data, isTrendLoading, isPlatformLoading, isRegionsLoading, isTopDriversLoading }) {
   const d = data;
   const [platformModalOpen, setPlatformModalOpen] = useState(false);
   const [sentimentModalOpen, setSentimentModalOpen] = useState(false);
@@ -67,29 +78,33 @@ export default function PerformanceTab({ data, isTrendLoading, isPlatformLoading
           )}
         </Panel>
 
-        <Panel title="TOP DRIVERS" info description="What's contributing to your performance.">
-          <div className="space-y-4 flex-1">
-            {d.topDrivers.map((driver) => {
-              const Icon = DRIVER_ICONS[driver.iconKey];
-              return (
-                <div key={driver.label} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-white/[0.05] flex items-center justify-center shrink-0">
-                    <Icon className="w-4 h-4 text-white/60" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm text-white/80 mb-1">{driver.label}</div>
-                    <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-                      <div className="h-full rounded-full bg-emerald-400" style={{ width: `${driver.pct * 2}%` }} />
+        <Panel title="TOP DRIVERS" info description="What kind of buzz is driving conversation, ranked by share of posts.">
+          {isTopDriversLoading ? (
+            <PanelSkeleton />
+          ) : (
+            <div className="space-y-4 flex-1">
+              {d.topDrivers.map((driver) => {
+                const Icon = DRIVER_ICONS[driver.iconKey] ?? MessagesSquare;
+                return (
+                  <div key={driver.label} className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-white/[0.05] flex items-center justify-center shrink-0">
+                      <Icon className="w-4 h-4 text-white/60" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm text-white/80 mb-1">{driver.label}</div>
+                      <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                        <div className="h-full rounded-full bg-emerald-400" style={{ width: `${Math.min(driver.pct * 2, 100)}%` }} />
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="text-emerald-400 text-sm font-semibold">{driver.pct}%</div>
+                      <div className="text-[11px] text-white/35">{driver.caption}</div>
                     </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <div className="text-emerald-400 text-sm font-semibold">↑ {driver.pct}%</div>
-                    <div className="text-[11px] text-white/35">{driver.caption}</div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
           <PanelLink>View all drivers</PanelLink>
         </Panel>
       </div>
