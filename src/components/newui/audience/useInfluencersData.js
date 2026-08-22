@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { marketingAggregationService } from '../../../api/marketingAggregationService';
-import { SERIES_COLORS } from '../theme';
 import { formatCompact } from '../formatCompact';
 import { influencersData } from './audienceData';
 
@@ -101,24 +100,14 @@ export default function useInfluencersData(selectedMovie) {
     };
 
     const allInfluencers = sortedByViews.map(toRow);
-    const influencers = allInfluencers.slice(0, 8);
-    // Real top-spreader data is almost entirely one or two platforms (X,
-    // Others), so coloring dots by platform makes most of them share a
-    // color. Each dot is one specific influencer, so instead each gets its
-    // own color from the app's categorical palette, cycled by position -
-    // exactly 8 colors for up to 8 dots, so no two are ever the same.
-    const impactMap = influencers.map((inf, i) => ({
-      name: inf.name,
-      platform: inf.platform,
-      impact: inf.impact,
-      engRate: inf.engRateValue,
-      color: SERIES_COLORS[i % SERIES_COLORS.length],
-    }));
 
+    // The "Top Influencers" table and Impact Map both derive their visible
+    // top-8 (and its ordering/coloring) from this full list at render time
+    // in InfluencersTab.jsx, based on whatever column is currently sorted -
+    // not fixed here, so changing sort re-ranks across every spreader
+    // returned by the API, not just a pre-sliced top 8.
     return {
       ...base,
-      influencers,
-      impactMap,
       allInfluencers,
     };
   }, [entityId, spreadersRaw]);

@@ -19,7 +19,8 @@ import VennCluster from '../shared/VennCluster';
 import FilterBar from '../shared/FilterBar';
 import AIInsightBar from '../shared/AIInsightBar';
 import SortableTh from '../shared/SortableTh';
-import { thClass, tdClass, trClass, PLATFORM_COLOR } from '../theme';
+import InfluencerName from '../shared/InfluencerName';
+import { thClass, tdClass, trClass, PLATFORM_COLOR, SERIES_COLORS } from '../theme';
 import { useSortableRows } from '../../shared/SortableTable';
 import useInfluencersData from './useInfluencersData';
 import AllInfluencersModal from './AllInfluencersModal';
@@ -61,11 +62,25 @@ function ImpactTooltip({ active, payload }) {
 export default function InfluencersTab({ selectedMovie }) {
   const d = useInfluencersData(selectedMovie);
   const [allInfluencersOpen, setAllInfluencersOpen] = useState(false);
-  const { rows: sortedInfluencers, sortState, requestSort } = useSortableRows(
-    d.influencers,
+  // Sorts across every spreader the API returned (d.allInfluencers), not a
+  // pre-sliced subset, so changing the sort column re-ranks the full result
+  // set and can bring different influencers into the visible top 8.
+  const { rows: sortedAllInfluencers, sortState, requestSort } = useSortableRows(
+    d.allInfluencers,
     { key: 'views', dir: 'desc' },
     INFLUENCER_SORT_ACCESSORS
   );
+  const topInfluencers = sortedAllInfluencers.slice(0, 8);
+  // The Impact Map always mirrors whatever 8 rows the table is currently
+  // showing, so its dots update in lockstep with the active sort - each
+  // dot's color is assigned by its position in that same visible order.
+  const impactMapData = topInfluencers.map((inf, i) => ({
+    name: inf.name,
+    platform: inf.platform,
+    impact: inf.impact,
+    engRate: inf.engRateValue,
+    color: SERIES_COLORS[i % SERIES_COLORS.length],
+  }));
 
   return (
     <div className="p-6 space-y-4">
@@ -105,14 +120,14 @@ export default function InfluencersTab({ selectedMovie }) {
                 </tr>
               </thead>
               <tbody>
-                {sortedInfluencers.map((inf, i) => (
+                {topInfluencers.map((inf, i) => (
                   <tr key={inf.rank} className={trClass}>
                     <td className={tdClass}>{i + 1}</td>
                     <td className={tdClass}>
                       <div className="flex items-center gap-2.5">
                         <div className="w-7 h-7 rounded-full bg-white/[0.06] shrink-0" />
                         <div className="min-w-0">
-                          <div className="text-white/85 truncate">{inf.name}</div>
+                          <InfluencerName name={inf.name} url={inf.profileUrl} className="block text-sm text-white/85" />
                           <div className="text-[11px] text-white/35 truncate">{inf.handle}</div>
                         </div>
                       </div>
@@ -151,13 +166,13 @@ export default function InfluencersTab({ selectedMovie }) {
                 <XAxis type="number" dataKey="impact" name="Impact Score" domain={[0, 100]} tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }} axisLine={{ stroke: 'rgba(255,255,255,0.08)' }} tickLine={false} />
                 <YAxis type="number" dataKey="engRate" name="Engagement Rate" domain={[0, 'dataMax + 1']} tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 11 }} axisLine={false} tickLine={false} width={30} />
                 <Tooltip content={<ImpactTooltip />} cursor={{ strokeDasharray: '3 3', stroke: 'rgba(255,255,255,0.2)' }} />
-                <Scatter data={d.impactMap} shape={Bubble} />
+                <Scatter data={impactMapData} shape={Bubble} />
               </ScatterChart>
             </ResponsiveContainer>
           )}
           {!d.isInfluencersLoading && (
             <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-2">
-              {d.impactMap.map((p, i) => (
+              {impactMapData.map((p, i) => (
                 <div key={p.name ?? i} className="flex items-center gap-1.5 text-[11px] text-white/50">
                   <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
                   <span className="truncate max-w-[110px]">{p.name}</span>

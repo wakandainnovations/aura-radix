@@ -2,6 +2,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { X, Users } from 'lucide-react';
 import { thClass, tdClass, trClass, PLATFORM_COLOR } from '../theme';
 import SortableTh from '../shared/SortableTh';
+import InfluencerName from '../shared/InfluencerName';
 import { useSortableRows } from '../../shared/SortableTable';
 
 const SORT_ACCESSORS = {
@@ -53,7 +54,7 @@ export default function AllInfluencersModal({ open, onOpenChange, data = [] }) {
                       <td className={tdClass}>{i + 1}</td>
                       <td className={tdClass}>
                         <div className="min-w-0">
-                          <div className="text-white/85 truncate">{inf.name}</div>
+                          <InfluencerName name={inf.name} url={inf.profileUrl} className="block text-sm text-white/85" />
                           <div className="text-[11px] text-white/35 truncate">{inf.handle}</div>
                         </div>
                       </td>

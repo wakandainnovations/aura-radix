@@ -284,27 +284,12 @@ export const themesData = {
 };
 
 export const influencersData = {
-  influencers: [
-    { rank: 1, name: 'Cinema Vikatan', handle: '@cinemavikatan', platform: 'Instagram', views: '4.2M', viewsValue: 4200000, engRate: '8.7%', engRateValue: 8.7, impact: 92, color: '#f472b6' },
-    { rank: 2, name: 'Behindwoods TV', handle: '@behindwoodstv', platform: 'YouTube', views: '3.6M', viewsValue: 3600000, engRate: '6.2%', engRateValue: 6.2, impact: 89, color: '#f87171' },
-    { rank: 3, name: 'Filmy Reacts', handle: '@filmyreacts', platform: 'X (Twitter)', views: '2.9M', viewsValue: 2900000, engRate: '7.1%', engRateValue: 7.1, impact: 84, color: '#cbd5e1' },
-    { rank: 4, name: 'Galatta Media', handle: '@galattadotcom', platform: 'Instagram', views: '2.1M', viewsValue: 2100000, engRate: '5.3%', engRateValue: 5.3, impact: 78, color: '#f472b6' },
-    { rank: 5, name: 'Tamil Talkies', handle: '@tamiltalkies', platform: 'YouTube', views: '1.8M', viewsValue: 1800000, engRate: '6.8%', engRateValue: 6.8, impact: 75, color: '#f87171' },
-  ],
   allInfluencers: [
-    { rank: 1, name: 'Cinema Vikatan', handle: '@cinemavikatan', platform: 'Instagram', views: '4.2M', viewsValue: 4200000, engRate: '8.7%', engRateValue: 8.7, impact: 92, color: '#f472b6' },
-    { rank: 2, name: 'Behindwoods TV', handle: '@behindwoodstv', platform: 'YouTube', views: '3.6M', viewsValue: 3600000, engRate: '6.2%', engRateValue: 6.2, impact: 89, color: '#f87171' },
-    { rank: 3, name: 'Filmy Reacts', handle: '@filmyreacts', platform: 'X (Twitter)', views: '2.9M', viewsValue: 2900000, engRate: '7.1%', engRateValue: 7.1, impact: 84, color: '#cbd5e1' },
-    { rank: 4, name: 'Galatta Media', handle: '@galattadotcom', platform: 'Instagram', views: '2.1M', viewsValue: 2100000, engRate: '5.3%', engRateValue: 5.3, impact: 78, color: '#f472b6' },
-    { rank: 5, name: 'Tamil Talkies', handle: '@tamiltalkies', platform: 'YouTube', views: '1.8M', viewsValue: 1800000, engRate: '6.8%', engRateValue: 6.8, impact: 75, color: '#f87171' },
-  ],
-  impactMap: [
-    { name: 'Cinema Vikatan', impact: 62, engRate: 5.2, color: '#3987e5' },
-    { name: 'Behindwoods TV', impact: 55, engRate: 4.9, color: '#f472b6' },
-    { name: 'Filmy Reacts', impact: 30, engRate: 3.3, color: '#a78bfa' },
-    { name: 'Galatta Media', impact: 68, engRate: 8.1, color: '#a78bfa' },
-    { name: 'Tamil Talkies', impact: 78, engRate: 8.6, color: '#f97316' },
-    { name: 'Others', impact: 82, engRate: 8.9, color: '#34d399' },
+    { rank: 1, name: 'Cinema Vikatan', handle: '@cinemavikatan', platform: 'Instagram', views: '4.2M', viewsValue: 4200000, engRate: '8.7%', engRateValue: 8.7, impact: 92 },
+    { rank: 2, name: 'Behindwoods TV', handle: '@behindwoodstv', platform: 'YouTube', views: '3.6M', viewsValue: 3600000, engRate: '6.2%', engRateValue: 6.2, impact: 89 },
+    { rank: 3, name: 'Filmy Reacts', handle: '@filmyreacts', platform: 'X (Twitter)', views: '2.9M', viewsValue: 2900000, engRate: '7.1%', engRateValue: 7.1, impact: 84 },
+    { rank: 4, name: 'Galatta Media', handle: '@galattadotcom', platform: 'Instagram', views: '2.1M', viewsValue: 2100000, engRate: '5.3%', engRateValue: 5.3, impact: 78 },
+    { rank: 5, name: 'Tamil Talkies', handle: '@tamiltalkies', platform: 'YouTube', views: '1.8M', viewsValue: 1800000, engRate: '6.8%', engRateValue: 6.8, impact: 75 },
   ],
   content: [
     { title: 'Lord Gaaga – Official Reaction!', influencer: 'Filmy Reacts', platform: 'YouTube', date: 'May 12, 2025', reach: '1.2M', engagement: '98K', engRate: '8.2%', sentiment: 'Positive' },
