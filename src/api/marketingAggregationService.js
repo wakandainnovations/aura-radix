@@ -9,6 +9,7 @@ const payload = (res) => entitlementPayload(unwrapEntitlement(res));
 export const marketingAggregationService = {
   getTopSpreaders: async (filters = {}, groupBy) => {
     const params = buildParams(filters, groupBy);
+    if (filters.platform) params.platform = filters.platform;
     return payload(await apiClient.get('/marketing/aggregate/top-spreaders', { params }));
   },
 

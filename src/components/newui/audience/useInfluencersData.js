@@ -82,12 +82,13 @@ const SPREADER_QUERY_OPTIONS = {
 // preview array instead of real data (see src/api/entitlement.js), which
 // gets rendered the same way classic UI renders it, with no separate
 // blur/gating handling here.
-export default function useInfluencersData(selectedMovie) {
+export default function useInfluencersData(selectedMovie, platform = 'all') {
   const entityId = selectedMovie?.id;
+  const platformFilter = platform === 'all' ? undefined : platform;
 
   const { data: spreadersRaw, isLoading } = useQuery({
-    queryKey: ['top-spreaders', entityId, 'newui-audience-influencers'],
-    queryFn: () => marketingAggregationService.getTopSpreaders({ entityId }),
+    queryKey: ['top-spreaders', entityId, platformFilter, 'newui-audience-influencers'],
+    queryFn: () => marketingAggregationService.getTopSpreaders({ entityId, platform: platformFilter }),
     enabled: entityId != null,
     ...SPREADER_QUERY_OPTIONS,
   });

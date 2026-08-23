@@ -33,6 +33,14 @@ const INFLUENCER_SORT_ACCESSORS = {
   impact: (row) => row.impact,
 };
 
+const PLATFORM_OPTIONS = [
+  { label: 'All Platforms', value: 'all' },
+  { label: 'X', value: 'x' },
+  { label: 'YouTube', value: 'youtube' },
+  { label: 'Reddit', value: 'reddit' },
+  { label: 'Instagram', value: 'instagram' },
+];
+
 const CONTENT_SORT_ACCESSORS = {
   reach: (row) => row.reachValue,
   engRate: (row) => row.engRateValue,
@@ -67,7 +75,8 @@ function ImpactTooltip({ active, payload }) {
 }
 
 export default function InfluencersTab({ selectedMovie }) {
-  const d = useInfluencersData(selectedMovie);
+  const [platform, setPlatform] = useState('all');
+  const d = useInfluencersData(selectedMovie, platform);
   const [allInfluencersOpen, setAllInfluencersOpen] = useState(false);
   // Sorts across every spreader the API returned (d.allInfluencers), not a
   // pre-sliced subset, so changing the sort column re-ranks the full result
@@ -104,10 +113,12 @@ export default function InfluencersTab({ selectedMovie }) {
     <div className="p-6 space-y-4">
       <FilterBar
         filters={[
-          { label: 'Platform', value: 'All Platforms' },
-          { label: 'Content Type', value: 'All Content' },
-          { label: 'Audience', value: 'All Audiences' },
-          { label: 'Metric', value: 'Engagement' },
+          {
+            label: 'Platform',
+            value: PLATFORM_OPTIONS.find((o) => o.value === platform)?.label ?? 'All Platforms',
+            options: PLATFORM_OPTIONS,
+            onChange: setPlatform,
+          },
         ]}
       />
 
