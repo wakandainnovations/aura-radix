@@ -67,8 +67,8 @@ export default function useMoviePerformanceData(selectedMovie) {
   });
 
   const { data: reachRaw } = useQuery({
-    queryKey: ['reach', entityId, 'newui-my-movie-performance'],
-    queryFn: ({ signal }) => dashboardService.getReach(entityId, { signal }),
+    queryKey: ['reach-direct', entityId, 'newui-my-movie-performance'],
+    queryFn: ({ signal }) => dashboardService.getReachDirect(entityId, { signal }),
     enabled: entityId != null,
   });
 
