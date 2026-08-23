@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, Target, Check, Ban, RotateCcw } from 'lucide-react';
 import { RelatedUsersList } from './RelatedUsers';
@@ -15,9 +15,14 @@ const TABS = [
   { key: 'irrelevant', label: 'Irrelevant' },
 ];
 
-function ActionRow({ action, onSetStatus }) {
+function ActionRow({ action, onSetStatus, rowRef, isHighlighted }) {
   return (
-    <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3.5">
+    <div
+      ref={rowRef}
+      className={`rounded-xl border p-3.5 transition-colors duration-500 ${
+        isHighlighted ? 'border-blue-500/50 bg-blue-500/[0.08]' : 'border-white/[0.06] bg-white/[0.02]'
+      }`}
+    >
       <span className={`inline-block text-[11px] font-semibold tracking-wide px-2 py-0.5 rounded-full mb-2 ${IMPACT_TONE[action.impact]}`}>
         {action.impact.toUpperCase()} IMPACT
       </span>
@@ -66,14 +71,49 @@ function ActionRow({ action, onSetStatus }) {
   );
 }
 
-export default function RecommendedActionsModal({ open, onOpenChange, actions, onSetStatus }) {
+export default function RecommendedActionsModal({ open, onOpenChange, actions, onSetStatus, highlightTitle }) {
   const [tab, setTab] = useState('active');
+  const [highlighted, setHighlighted] = useState(null);
+  const rowRefs = useRef(new Map());
 
   const counts = useMemo(() => {
     const c = { active: 0, done: 0, irrelevant: 0 };
     for (const a of actions) c[a.status] = (c[a.status] ?? 0) + 1;
     return c;
   }, [actions]);
+
+  // Jump to the tab that holds the requested item.
+  useEffect(() => {
+    if (!open || !highlightTitle) return;
+    const match = actions.find((a) => a.title === highlightTitle);
+    if (match) setTab(match.status);
+  }, [open, highlightTitle, actions]);
+
+  // Once that tab's rows are rendered, scroll to and flash the requested item.
+  // Radix mounts Dialog.Content a tick after `open` flips, so the row ref isn't
+  // available yet on the same render — poll a few frames until it shows up.
+  useEffect(() => {
+    if (!open || !highlightTitle) return;
+    let rafId = 0;
+    let timeoutId;
+    let attempts = 0;
+    const tryScroll = () => {
+      const node = rowRefs.current.get(highlightTitle);
+      if (node) {
+        node.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        setHighlighted(highlightTitle);
+        timeoutId = setTimeout(() => setHighlighted(null), 1600);
+        return;
+      }
+      attempts += 1;
+      if (attempts < 30) rafId = requestAnimationFrame(tryScroll);
+    };
+    rafId = requestAnimationFrame(tryScroll);
+    return () => {
+      cancelAnimationFrame(rafId);
+      clearTimeout(timeoutId);
+    };
+  }, [open, highlightTitle, tab]);
 
   const visible = actions.filter((a) => a.status === tab);
 
@@ -120,7 +160,18 @@ export default function RecommendedActionsModal({ open, onOpenChange, actions, o
 
           <div className="flex-1 overflow-y-auto px-5 py-3 space-y-2.5">
             {visible.length > 0 ? (
-              visible.map((a) => <ActionRow key={a.title} action={a} onSetStatus={onSetStatus} />)
+              visible.map((a) => (
+                <ActionRow
+                  key={a.title}
+                  action={a}
+                  onSetStatus={onSetStatus}
+                  isHighlighted={highlighted === a.title}
+                  rowRef={(el) => {
+                    if (el) rowRefs.current.set(a.title, el);
+                    else rowRefs.current.delete(a.title);
+                  }}
+                />
+              ))
             ) : (
               <p className="text-sm text-white/40 text-center py-8">No {tab} actions.</p>
             )}

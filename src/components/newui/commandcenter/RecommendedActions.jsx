@@ -13,7 +13,7 @@ const IMPACT_TONE = {
 
 const ICONS = { external: ExternalLink, trending: TrendingUp, eye: Eye };
 
-function ActionCard({ action, onMarkDone, onMarkIrrelevant }) {
+function ActionCard({ action, onMarkDone, onMarkIrrelevant, onOpenItem }) {
   const CornerIcon = ICONS[action.icon] ?? ExternalLink;
   return (
     <div className={`${CARD} p-4 flex flex-col`}>
@@ -21,9 +21,14 @@ function ActionCard({ action, onMarkDone, onMarkIrrelevant }) {
         <span className={`text-[11px] font-semibold tracking-wide px-2 py-0.5 rounded-full shrink-0 ${IMPACT_TONE[action.impact]}`}>
           {action.impact.toUpperCase()} IMPACT
         </span>
-        <div className="w-7 h-7 rounded-full bg-white/[0.06] flex items-center justify-center text-white/50 shrink-0">
+        <button
+          type="button"
+          onClick={onOpenItem}
+          className="w-7 h-7 rounded-full bg-white/[0.06] flex items-center justify-center text-white/50 shrink-0 hover:bg-white/[0.12] hover:text-white/80 transition-colors"
+          aria-label={`Open details for ${action.title}`}
+        >
           <CornerIcon className="w-3.5 h-3.5" />
-        </div>
+        </button>
       </div>
 
       <h4 className="text-sm font-semibold text-white/90 leading-snug mb-3">{action.title}</h4>
@@ -82,9 +87,20 @@ function ActionCardSkeleton() {
 export default function RecommendedActions({ actions, isLoading = false, entityId }) {
   const [statuses, setStatus] = useActionStatuses(entityId);
   const [modalOpen, setModalOpen] = useState(false);
+  const [focusTitle, setFocusTitle] = useState(null);
 
   const withStatus = actions.map((a) => ({ ...a, status: statuses[a.title] ?? 'active' }));
   const activeActions = withStatus.filter((a) => a.status === 'active');
+
+  const openItemDetail = (title) => {
+    setFocusTitle(title);
+    setModalOpen(true);
+  };
+
+  const handleModalOpenChange = (isOpen) => {
+    setModalOpen(isOpen);
+    if (!isOpen) setFocusTitle(null);
+  };
 
   return (
     <div className={`${CARD} p-5`}>
@@ -95,7 +111,10 @@ export default function RecommendedActions({ actions, isLoading = false, entityI
         </div>
         {!isLoading && (
           <button
-            onClick={() => setModalOpen(true)}
+            onClick={() => {
+              setFocusTitle(null);
+              setModalOpen(true);
+            }}
             className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors shrink-0"
           >
             View Details
@@ -117,6 +136,7 @@ export default function RecommendedActions({ actions, isLoading = false, entityI
               action={a}
               onMarkDone={() => setStatus(a.title, 'done')}
               onMarkIrrelevant={() => setStatus(a.title, 'irrelevant')}
+              onOpenItem={() => openItemDetail(a.title)}
             />
           ))
         ) : (
@@ -129,9 +149,10 @@ export default function RecommendedActions({ actions, isLoading = false, entityI
       {!isLoading && (
         <RecommendedActionsModal
           open={modalOpen}
-          onOpenChange={setModalOpen}
+          onOpenChange={handleModalOpenChange}
           actions={withStatus}
           onSetStatus={setStatus}
+          highlightTitle={focusTitle}
         />
       )}
     </div>
