@@ -281,6 +281,14 @@ export const dashboardService = {
     return response;
   },
 
+  // Get the Command Center "Reach" stat via the direct (non-cached) query.
+  // Path: GET /api/dashboard/{entityId}/reach-direct
+  // Response: { entityId, entityName, uniqueUsers }
+  getReachDirect: async (entityId, { signal } = {}) => {
+    const response = await apiClient.get(`/dashboard/${entityId}/reach-direct`, { signal });
+    return response;
+  },
+
   // Get the Command Center "Awareness" stat: High/Medium/Low tier for total
   // views, ranked against the caller's other movies.
   // Path: GET /api/dashboard/{entityId}/awareness

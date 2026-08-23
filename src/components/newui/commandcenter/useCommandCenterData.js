@@ -114,8 +114,8 @@ export default function useCommandCenterData(selectedMovie) {
   });
 
   const { data: reachRaw } = useQuery({
-    queryKey: ['reach', entityId, 'newui-command-center'],
-    queryFn: ({ signal }) => dashboardService.getReach(entityId, { signal }),
+    queryKey: ['reach-direct', entityId, 'newui-command-center'],
+    queryFn: ({ signal }) => dashboardService.getReachDirect(entityId, { signal }),
     enabled: entityId != null,
   });
 
