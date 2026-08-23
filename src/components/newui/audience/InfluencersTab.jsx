@@ -25,6 +25,7 @@ import { useSortableRows } from '../../shared/SortableTable';
 import useInfluencersData from './useInfluencersData';
 import AllInfluencersModal from './AllInfluencersModal';
 import AllInfluencerContentModal from './AllInfluencerContentModal';
+import AllRecommendationsModal from './AllRecommendationsModal';
 
 const INFLUENCER_SORT_ACCESSORS = {
   views: (row) => row.viewsValue,
@@ -78,6 +79,7 @@ export default function InfluencersTab({ selectedMovie }) {
   );
   const topInfluencers = sortedAllInfluencers.slice(0, 8);
   const [allContentOpen, setAllContentOpen] = useState(false);
+  const [allRecommendationsOpen, setAllRecommendationsOpen] = useState(false);
   // Same full-list-sorts-then-slices pattern as topInfluencers above, so
   // changing the sort column re-ranks across every post the API returned,
   // not just a pre-sliced top 5.
@@ -265,8 +267,19 @@ export default function InfluencersTab({ selectedMovie }) {
           <PanelSkeleton />
         </div>
       ) : (
-        <AIInsightBar insight={d.aiInsight} actions={d.actions} ctaLabel="View AI Recommendations" />
+        <AIInsightBar
+          insight={d.aiInsight}
+          actions={d.actions}
+          ctaLabel="View AI Recommendations"
+          onCtaClick={() => setAllRecommendationsOpen(true)}
+        />
       )}
+      <AllRecommendationsModal
+        open={allRecommendationsOpen}
+        onOpenChange={setAllRecommendationsOpen}
+        insight={d.aiInsight}
+        data={d.allActions}
+      />
     </div>
   );
 }

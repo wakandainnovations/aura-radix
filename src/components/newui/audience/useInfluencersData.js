@@ -222,21 +222,21 @@ export default function useInfluencersData(selectedMovie) {
     // "AI INSIGHT" bar: summary + top 3 collaboration actions (of up to 5 the
     // backend returns), ranked High > Medium > Low by the server-computed
     // impact tier (never LLM-authored) so the marketing team sees the
-    // highest-impact recommendations first. An entity with no spreaders
-    // carrying resolved post content returns summary: "" / actions: [], which
-    // falls back to the dummy insight rather than rendering an empty bar.
+    // highest-impact recommendations first. The full ranked list backs the
+    // "View AI Recommendations" modal. An entity with no spreaders carrying
+    // resolved post content returns summary: "" / actions: [], which falls
+    // back to the dummy insight rather than rendering an empty bar/modal.
     const realActions = insightsRaw?.actions ?? [];
     const aiInsight = insightsRaw?.summary || base.aiInsight;
-    const actions =
-      insightsRaw?.summary
-        ? [...realActions]
-            .sort((a, b) => (IMPACT_RANK[a.impact] ?? 99) - (IMPACT_RANK[b.impact] ?? 99))
-            .slice(0, 3)
-            .map((a) => ({
-              text: a.action,
-              impact: SPREADER_IMPACT_TO_LABEL[a.impact] ?? 'Medium',
-            }))
-        : base.actions;
+    const rankedActions = insightsRaw?.summary
+      ? [...realActions]
+          .sort((a, b) => (IMPACT_RANK[a.impact] ?? 99) - (IMPACT_RANK[b.impact] ?? 99))
+          .map((a) => ({
+            text: a.action,
+            impact: SPREADER_IMPACT_TO_LABEL[a.impact] ?? 'Medium',
+          }))
+      : base.actions;
+    const actions = rankedActions.slice(0, 3);
 
     // The "Influencer Content Performance" panel and its "View all influencer
     // content" modal both derive their visible top-5 (and sort order) from
@@ -248,6 +248,7 @@ export default function useInfluencersData(selectedMovie) {
       topicsOfDiscussion,
       aiInsight,
       actions,
+      allActions: rankedActions,
       ...(spreaders.length > 0 ? { allContent } : {}),
     };
   }, [entityId, spreadersRaw, contentRaw, topicsRaw, insightsRaw]);

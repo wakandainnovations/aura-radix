@@ -18,8 +18,9 @@ function ImpactTag({ impact }) {
 
 // The "AI INSIGHT" + "RECOMMENDED ACTIONS" bar that closes out almost every
 // screen. `actions` items: { icon, text, impact }. `ctaLabel` renders a
-// button on the far right (e.g. "View AI Recommendations").
-export default function AIInsightBar({ insight, actions, ctaLabel, layout = 'list' }) {
+// button on the far right (e.g. "View AI Recommendations"); `onCtaClick`
+// fires when it's clicked (e.g. to open a modal with the full list).
+export default function AIInsightBar({ insight, actions, ctaLabel, onCtaClick, layout = 'list' }) {
   return (
     <div className={`${CARD} p-5 flex flex-col lg:flex-row gap-6`}>
       <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -63,7 +64,10 @@ export default function AIInsightBar({ insight, actions, ctaLabel, layout = 'lis
       )}
 
       {ctaLabel && (
-        <button className="self-start lg:self-end shrink-0 px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors whitespace-nowrap">
+        <button
+          onClick={onCtaClick}
+          className="self-start lg:self-end shrink-0 px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-colors whitespace-nowrap"
+        >
           {ctaLabel}
         </button>
       )}
