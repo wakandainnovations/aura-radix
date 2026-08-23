@@ -150,6 +150,22 @@ export const dashboardService = {
     return response;
   },
 
+  // Get each top spreader's top posts about this entity, with per-post view count, engagement rate,
+  // and sentiment - joined off the same author identity the top-spreaders endpoint returns.
+  // Path: GET /api/dashboard/{entityId}/top-spreaders/content
+  // Query Params: language?, spreaderLimit (default 10, max 50), postsPerSpreader (default 5, max 50)
+  // Response: { entityId, language, spreaders: [{ globalUserId, profileUrl, totalViews,
+  //   topContent: [{ mentionId, platform: X|REDDIT|YOUTUBE|INSTAGRAM, postId, content, permalink,
+  //   postDate, views, likes, comments, engagementRate, sentiment: POSITIVE|NEGATIVE|NEUTRAL|TOTAL,
+  //   sentimentScore }] }] }
+  getTopSpreaderContent: async (entityId, { language, spreaderLimit, postsPerSpreader, signal } = {}) => {
+    const response = await apiClient.get(`/dashboard/${entityId}/top-spreaders/content`, {
+      params: { language, spreaderLimit, postsPerSpreader },
+      signal,
+    });
+    return response;
+  },
+
   // Get the LLM-generated Command Center AI summary (shares a cache/generation
   // with getTodaysHighlights on the backend, so the two never disagree).
   // Path: GET /api/dashboard/{entityId}/ai-summary

@@ -24,11 +24,17 @@ import { thClass, tdClass, trClass, PLATFORM_COLOR, SERIES_COLORS } from '../the
 import { useSortableRows } from '../../shared/SortableTable';
 import useInfluencersData from './useInfluencersData';
 import AllInfluencersModal from './AllInfluencersModal';
+import AllInfluencerContentModal from './AllInfluencerContentModal';
 
 const INFLUENCER_SORT_ACCESSORS = {
   views: (row) => row.viewsValue,
   engRate: (row) => row.engRateValue,
   impact: (row) => row.impact,
+};
+
+const CONTENT_SORT_ACCESSORS = {
+  reach: (row) => row.reachValue,
+  engRate: (row) => row.engRateValue,
 };
 
 const SENTIMENT_TONE = { Positive: 'text-emerald-400 bg-emerald-500/15', Neutral: 'text-white/50 bg-white/[0.06]', Negative: 'text-red-400 bg-red-500/15' };
@@ -71,6 +77,16 @@ export default function InfluencersTab({ selectedMovie }) {
     INFLUENCER_SORT_ACCESSORS
   );
   const topInfluencers = sortedAllInfluencers.slice(0, 8);
+  const [allContentOpen, setAllContentOpen] = useState(false);
+  // Same full-list-sorts-then-slices pattern as topInfluencers above, so
+  // changing the sort column re-ranks across every post the API returned,
+  // not just a pre-sliced top 5.
+  const { rows: sortedContent, sortState: contentSortState, requestSort: requestContentSort } = useSortableRows(
+    d.allContent,
+    { key: 'reach', dir: 'desc' },
+    CONTENT_SORT_ACCESSORS
+  );
+  const topContent = sortedContent.slice(0, 5);
   // The Impact Map always mirrors whatever 8 rows the table is currently
   // showing, so its dots update in lockstep with the active sort - each
   // dot's color is assigned by its position in that same visible order.
@@ -186,39 +202,52 @@ export default function InfluencersTab({ selectedMovie }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-4">
         <Panel title="INFLUENCER CONTENT PERFORMANCE" info description="How content from influencers is performing.">
-          <table className="w-full">
-            <thead>
-              <tr>
-                <th className={thClass}>Content</th>
-                <th className={thClass}>Influencer</th>
-                <th className={`${thClass} text-right`}>Reach</th>
-                <th className={`${thClass} text-right`}>Eng.</th>
-                <th className={`${thClass} text-right`}>Sentiment</th>
-              </tr>
-            </thead>
-            <tbody>
-              {d.content.map((c) => (
-                <tr key={c.title} className={trClass}>
-                  <td className={tdClass}>
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-md bg-gradient-to-br from-slate-700 to-slate-800 shrink-0" />
-                      <div className="min-w-0">
-                        <div className="text-white/85 truncate">{c.title}</div>
-                        <div className="text-[11px] text-white/35">{c.date}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className={`${tdClass} text-white/60`}>{c.influencer}</td>
-                  <td className={`${tdClass} text-right text-white/60`}>{c.reach}</td>
-                  <td className={`${tdClass} text-right text-white/60`}>{c.engagement} ({c.engRate})</td>
-                  <td className={`${tdClass} text-right`}>
-                    <span className={`text-[11px] px-2 py-0.5 rounded-full ${SENTIMENT_TONE[c.sentiment]}`}>{c.sentiment}</span>
-                  </td>
+          {d.isContentLoading ? (
+            <PanelSkeleton />
+          ) : (
+            <table className="w-full table-fixed">
+              <thead>
+                <tr>
+                  <th className={`${thClass} w-[40%]`}>Content</th>
+                  <th className={`${thClass} w-[22%]`}>Influencer</th>
+                  <SortableTh label="Reach" sortKey="reach" sortState={contentSortState} onSort={requestContentSort} align="right" />
+                  <SortableTh label="Eng. Rate" sortKey="engRate" sortState={contentSortState} onSort={requestContentSort} align="right" />
+                  <th className={`${thClass} text-right w-[15%]`}>Sentiment</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          <PanelLink>View all influencer content</PanelLink>
+              </thead>
+              <tbody>
+                {topContent.map((c) => (
+                  <tr key={c.id} className={trClass}>
+                    <td className={tdClass}>
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-md bg-gradient-to-br from-slate-700 to-slate-800 shrink-0" />
+                        <div className="min-w-0">
+                          {c.permalink ? (
+                            <a href={c.permalink} target="_blank" rel="noopener noreferrer" className="block text-white/85 truncate hover:underline hover:text-white">
+                              {c.title}
+                            </a>
+                          ) : (
+                            <div className="text-white/85 truncate">{c.title}</div>
+                          )}
+                          <div className="text-[11px] text-white/35">{c.date}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className={tdClass}>
+                      <InfluencerName name={c.influencer} url={c.profileUrl} className="text-white/60" />
+                    </td>
+                    <td className={`${tdClass} text-right text-white/60`}>{c.reach}</td>
+                    <td className={`${tdClass} text-right text-white/60`}>{c.engRate}</td>
+                    <td className={`${tdClass} text-right`}>
+                      <span className={`text-[11px] px-2 py-0.5 rounded-full ${SENTIMENT_TONE[c.sentiment]}`}>{c.sentiment}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <PanelLink onClick={() => setAllContentOpen(true)}>View all influencer content</PanelLink>
+          <AllInfluencerContentModal open={allContentOpen} onOpenChange={setAllContentOpen} data={d.allContent} />
         </Panel>
 
         <Panel title="INFLUENCER AUDIENCE OVERLAPPING" info description="Overlap of influencer audiences with your target.">

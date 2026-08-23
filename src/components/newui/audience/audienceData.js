@@ -291,12 +291,12 @@ export const influencersData = {
     { rank: 4, name: 'Galatta Media', handle: '@galattadotcom', platform: 'Instagram', views: '2.1M', viewsValue: 2100000, engRate: '5.3%', engRateValue: 5.3, impact: 78 },
     { rank: 5, name: 'Tamil Talkies', handle: '@tamiltalkies', platform: 'YouTube', views: '1.8M', viewsValue: 1800000, engRate: '6.8%', engRateValue: 6.8, impact: 75 },
   ],
-  content: [
-    { title: 'Lord Gaaga – Official Reaction!', influencer: 'Filmy Reacts', platform: 'YouTube', date: 'May 12, 2025', reach: '1.2M', engagement: '98K', engRate: '8.2%', sentiment: 'Positive' },
-    { title: 'Mass Dialogues from Lord Gaaga', influencer: 'Cinema Vikatan', platform: 'Instagram', date: 'May 10, 2025', reach: '850K', engagement: '72K', engRate: '8.5%', sentiment: 'Positive' },
-    { title: 'Why Lord Gaaga will be a Game Changer', influencer: 'Behindwoods TV', platform: 'YouTube', date: 'May 9, 2025', reach: '1.8M', engagement: '110K', engRate: '6.1%', sentiment: 'Positive' },
-    { title: 'Lord Gaaga BGM is Pure Goosebumps!', influencer: 'Tamil Talkies', platform: 'YouTube', date: 'May 8, 2025', reach: '620K', engagement: '41K', engRate: '6.6%', sentiment: 'Positive' },
-    { title: 'First Look Breakdown', influencer: 'Galatta Media', platform: 'Instagram', date: 'May 7, 2025', reach: '540K', engagement: '28K', engRate: '5.2%', sentiment: 'Neutral' },
+  allContent: [
+    { id: 1, title: 'Lord Gaaga – Official Reaction!', influencer: 'Filmy Reacts', platform: 'YouTube', date: 'May 12, 2025', reach: '1.2M', reachValue: 1200000, engagement: '98K', engRate: '8.2%', engRateValue: 8.2, sentiment: 'Positive' },
+    { id: 2, title: 'Mass Dialogues from Lord Gaaga', influencer: 'Cinema Vikatan', platform: 'Instagram', date: 'May 10, 2025', reach: '850K', reachValue: 850000, engagement: '72K', engRate: '8.5%', engRateValue: 8.5, sentiment: 'Positive' },
+    { id: 3, title: 'Why Lord Gaaga will be a Game Changer', influencer: 'Behindwoods TV', platform: 'YouTube', date: 'May 9, 2025', reach: '1.8M', reachValue: 1800000, engagement: '110K', engRate: '6.1%', engRateValue: 6.1, sentiment: 'Positive' },
+    { id: 4, title: 'Lord Gaaga BGM is Pure Goosebumps!', influencer: 'Tamil Talkies', platform: 'YouTube', date: 'May 8, 2025', reach: '620K', reachValue: 620000, engagement: '41K', engRate: '6.6%', engRateValue: 6.6, sentiment: 'Positive' },
+    { id: 5, title: 'First Look Breakdown', influencer: 'Galatta Media', platform: 'Instagram', date: 'May 7, 2025', reach: '540K', reachValue: 540000, engagement: '28K', engRate: '5.2%', engRateValue: 5.2, sentiment: 'Neutral' },
   ],
   overlap: [
     { label: 'Filmy Reacts Audience', color: '#a78bfa' },
