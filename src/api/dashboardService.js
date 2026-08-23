@@ -176,6 +176,23 @@ export const dashboardService = {
     return response;
   },
 
+  // Get the LLM-generated collaboration recommendations for the entity's top
+  // spreaders (Influencers tab "AI INSIGHT" panel). Java ranks each spreader
+  // into an impact tier (HIGH/MEDIUM/LOW) by totalViews before the LLM ever
+  // sees the data; the LLM only picks up to 5 worth a recommendation and
+  // writes the action text, grounded in that spreader's real sample content.
+  // Path: GET /api/dashboard/{entityId}/top-spreaders/insights
+  // Query Params: language?, spreaderLimit (default 10, max 50), postsPerSpreader (default 5, max 10), refresh?
+  // Response: { entityId, language, summary, actions: [{ spreaderId, action,
+  //   impact: HIGH_IMPACT|MEDIUM_IMPACT|LOW_IMPACT }], generatedAt }
+  getTopSpreaderInsights: async (entityId, { language, spreaderLimit, postsPerSpreader, refresh = false, signal } = {}) => {
+    const response = await apiClient.get(`/dashboard/${entityId}/top-spreaders/insights`, {
+      params: { language, spreaderLimit, postsPerSpreader, refresh },
+      signal,
+    });
+    return response;
+  },
+
   // Get the LLM-generated Command Center AI summary (shares a cache/generation
   // with getTodaysHighlights on the backend, so the two never disagree).
   // Path: GET /api/dashboard/{entityId}/ai-summary

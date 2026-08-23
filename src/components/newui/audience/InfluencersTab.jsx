@@ -20,7 +20,7 @@ import FilterBar from '../shared/FilterBar';
 import AIInsightBar from '../shared/AIInsightBar';
 import SortableTh from '../shared/SortableTh';
 import InfluencerName from '../shared/InfluencerName';
-import { thClass, tdClass, trClass, PLATFORM_COLOR, SERIES_COLORS } from '../theme';
+import { thClass, tdClass, trClass, PLATFORM_COLOR, SERIES_COLORS, CARD } from '../theme';
 import { useSortableRows } from '../../shared/SortableTable';
 import useInfluencersData from './useInfluencersData';
 import AllInfluencersModal from './AllInfluencersModal';
@@ -260,7 +260,13 @@ export default function InfluencersTab({ selectedMovie }) {
         </Panel>
       </div>
 
-      <AIInsightBar insight={d.aiInsight} actions={d.actions} ctaLabel="View AI Recommendations" />
+      {d.isInsightsLoading ? (
+        <div className={`${CARD} p-5`}>
+          <PanelSkeleton />
+        </div>
+      ) : (
+        <AIInsightBar insight={d.aiInsight} actions={d.actions} ctaLabel="View AI Recommendations" />
+      )}
     </div>
   );
 }

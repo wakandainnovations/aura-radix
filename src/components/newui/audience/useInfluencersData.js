@@ -23,6 +23,11 @@ function platformLabel(code) {
 
 const SENTIMENT_LABEL = { POSITIVE: 'Positive', NEGATIVE: 'Negative', NEUTRAL: 'Neutral', TOTAL: 'Neutral' };
 
+// Maps the backend's server-computed impact tier onto AIInsightBar's
+// High/Medium/Low vocabulary (same convention as Command Center's
+// CATEGORY_TO_IMPACT in useCommandCenterData.js).
+const SPREADER_IMPACT_TO_LABEL = { HIGH_IMPACT: 'High', MEDIUM_IMPACT: 'Medium', LOW_IMPACT: 'Low' };
+
 // Human labels for the backend's snake_case topicCategory values, shown in
 // the "Topics of Discussion" panel.
 const TOPIC_CATEGORY_LABELS = {
@@ -94,6 +99,14 @@ export default function useInfluencersData(selectedMovie) {
   const { data: topicsRaw, isLoading: isTopicsLoading } = useQuery({
     queryKey: ['topic-category-breakdown', entityId, 'newui-audience-influencers'],
     queryFn: () => dashboardService.getTopicCategoryBreakdown(entityId),
+    enabled: entityId != null,
+  });
+
+  // Backs the "AI INSIGHT" bar at the bottom of the tab - LLM-authored
+  // collaboration recommendations for the entity's top spreaders.
+  const { data: insightsRaw, isLoading: isInsightsLoading } = useQuery({
+    queryKey: ['top-spreader-insights', entityId, 'newui-audience-influencers'],
+    queryFn: ({ signal }) => dashboardService.getTopSpreaderInsights(entityId, { language: selectedMovie?.language, signal }),
     enabled: entityId != null,
   });
 
@@ -203,6 +216,21 @@ export default function useInfluencersData(selectedMovie) {
         });
     }
 
+    // "AI INSIGHT" bar: summary + up to 5 collaboration actions, each tagged
+    // with the server-computed impact tier (never LLM-authored). An entity
+    // with no spreaders carrying resolved post content returns
+    // summary: "" / actions: [], which falls back to the dummy insight rather
+    // than rendering an empty bar.
+    const realActions = insightsRaw?.actions ?? [];
+    const aiInsight = insightsRaw?.summary || base.aiInsight;
+    const actions =
+      insightsRaw?.summary
+        ? realActions.map((a) => ({
+            text: a.action,
+            impact: SPREADER_IMPACT_TO_LABEL[a.impact] ?? 'Medium',
+          }))
+        : base.actions;
+
     // The "Influencer Content Performance" panel and its "View all influencer
     // content" modal both derive their visible top-5 (and sort order) from
     // this full list at render time in InfluencersTab.jsx, mirroring how
@@ -211,14 +239,17 @@ export default function useInfluencersData(selectedMovie) {
       ...base,
       allInfluencers,
       topicsOfDiscussion,
+      aiInsight,
+      actions,
       ...(spreaders.length > 0 ? { allContent } : {}),
     };
-  }, [entityId, spreadersRaw, contentRaw, topicsRaw]);
+  }, [entityId, spreadersRaw, contentRaw, topicsRaw, insightsRaw]);
 
   return {
     ...merged,
     isInfluencersLoading: entityId != null && isLoading,
     isContentLoading: entityId != null && isContentLoading,
     isTopicsLoading: entityId != null && isTopicsLoading,
+    isInsightsLoading: entityId != null && isInsightsLoading,
   };
 }
