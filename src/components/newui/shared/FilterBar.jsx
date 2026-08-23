@@ -63,7 +63,7 @@ function FilterPill({ label, value, options, onChange }) {
 // The row of filter dropdown pills that sits under most section headers
 // (Platform / Content Type / Audience / Metric, etc). Static display-only —
 // selecting isn't wired up — unless a filter passes `options` + `onChange`.
-export default function FilterBar({ filters = [], right, rightIcon: RightIcon = Download }) {
+export default function FilterBar({ filters = [], right, rightIcon: RightIcon = Download, showRight = true }) {
   return (
     <div className="flex items-center justify-between gap-3 flex-wrap mb-5">
       <div className="flex items-center gap-3 flex-wrap">
@@ -71,11 +71,13 @@ export default function FilterBar({ filters = [], right, rightIcon: RightIcon = 
           <FilterPill key={f.label} {...f} />
         ))}
       </div>
-      <button className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-xs text-white/70 hover:bg-white/[0.08] transition-colors shrink-0">
-        <RightIcon className="w-3.5 h-3.5" />
-        {right ?? 'Last 30 days'}
-        <ChevronDown className="w-3.5 h-3.5 text-white/40" />
-      </button>
+      {showRight && (
+        <button className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-xs text-white/70 hover:bg-white/[0.08] transition-colors shrink-0">
+          <RightIcon className="w-3.5 h-3.5" />
+          {right ?? 'Last 30 days'}
+          <ChevronDown className="w-3.5 h-3.5 text-white/40" />
+        </button>
+      )}
     </div>
   );
 }

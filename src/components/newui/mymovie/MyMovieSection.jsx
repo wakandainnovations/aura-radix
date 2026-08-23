@@ -36,7 +36,6 @@ export default function MyMovieSection({ selectedMovie, fullAccess }) {
         title={data.title}
         status={data.status}
         releaseInDays={data.releaseInDays}
-        dateRangeLabel={data.dateRangeLabel}
         tabs={visibleTabs}
         activeTab={activeTab}
         onTabChange={setActiveTab}

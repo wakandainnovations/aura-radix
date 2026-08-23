@@ -29,14 +29,14 @@ export const performanceData = {
     { label: 'Fan Conversations', pct: 15, caption: 'Volume increase', iconKey: 'fan' },
   ],
   platformBreakdown: [
-    { label: 'X (Twitter)', value: 38, color: '#cbd5e1' },
+    { label: 'X (Twitter)', value: 38, color: '#2dd4bf' },
     { label: 'Instagram', value: 26, color: '#f472b6' },
     { label: 'YouTube', value: 16, color: '#f87171' },
     { label: 'Facebook', value: 10, color: '#3987e5' },
     { label: 'Others', value: 10, color: '#64748b' },
   ],
   platformSentimentBreakdown: [
-    { key: 'X', label: 'X (Twitter)', color: '#cbd5e1', positivePct: 58, neutralPct: 28, negativePct: 14 },
+    { key: 'X', label: 'X (Twitter)', color: '#2dd4bf', positivePct: 58, neutralPct: 28, negativePct: 14 },
     { key: 'INSTAGRAM', label: 'Instagram', color: '#f472b6', positivePct: 66, neutralPct: 24, negativePct: 10 },
     { key: 'YOUTUBE', label: 'YouTube', color: '#f87171', positivePct: 61, neutralPct: 25, negativePct: 14 },
     { key: 'FACEBOOK', label: 'Facebook', color: '#3987e5', positivePct: 55, neutralPct: 30, negativePct: 15 },
@@ -49,21 +49,21 @@ export const performanceData = {
   ],
   sentimentPlatformBreakdown: {
     positive: [
-      { key: 'X', label: 'X (Twitter)', color: '#cbd5e1', count: 881600, pct: 37 },
+      { key: 'X', label: 'X (Twitter)', color: '#2dd4bf', count: 881600, pct: 37 },
       { key: 'INSTAGRAM', label: 'Instagram', color: '#f472b6', count: 686400, pct: 29 },
       { key: 'YOUTUBE', label: 'YouTube', color: '#f87171', count: 390400, pct: 16 },
       { key: 'OTHERS', label: 'Others', color: '#64748b', count: 208000, pct: 9 },
       { key: 'FACEBOOK', label: 'Facebook', color: '#3987e5', count: 220000, pct: 9 },
     ],
     neutral: [
-      { key: 'X', label: 'X (Twitter)', color: '#cbd5e1', count: 425600, pct: 39 },
+      { key: 'X', label: 'X (Twitter)', color: '#2dd4bf', count: 425600, pct: 39 },
       { key: 'INSTAGRAM', label: 'Instagram', color: '#f472b6', count: 249600, pct: 23 },
       { key: 'YOUTUBE', label: 'YouTube', color: '#f87171', count: 160000, pct: 15 },
       { key: 'OTHERS', label: 'Others', color: '#64748b', count: 128000, pct: 12 },
       { key: 'FACEBOOK', label: 'Facebook', color: '#3987e5', count: 120000, pct: 11 },
     ],
     negative: [
-      { key: 'X', label: 'X (Twitter)', color: '#cbd5e1', count: 212800, pct: 40 },
+      { key: 'X', label: 'X (Twitter)', color: '#2dd4bf', count: 212800, pct: 40 },
       { key: 'INSTAGRAM', label: 'Instagram', color: '#f472b6', count: 104000, pct: 20 },
       { key: 'YOUTUBE', label: 'YouTube', color: '#f87171', count: 89600, pct: 17 },
       { key: 'OTHERS', label: 'Others', color: '#64748b', count: 64000, pct: 12 },

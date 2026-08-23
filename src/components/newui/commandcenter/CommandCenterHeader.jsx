@@ -1,4 +1,4 @@
-import { Search, Bell, User, Info } from 'lucide-react';
+import { Bell, User, Info } from 'lucide-react';
 import { releaseCountdownLabel } from '../dateUtils';
 
 function greetingFor(hour) {
@@ -18,17 +18,7 @@ export default function CommandCenterHeader({ userName, title, releaseInDays, st
           {greeting}{userName ? `, ${userName}` : ''} 👋
         </div>
 
-        <div className="flex items-center gap-3 flex-1 max-w-md min-w-[220px] justify-end">
-          <div className="relative w-full">
-            <Search className="w-4 h-4 text-white/30 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              className="w-full bg-white/[0.04] border border-white/10 rounded-lg pl-10 pr-14 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-blue-500"
-              placeholder="Search anything..."
-            />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-white/25 border border-white/10 rounded px-1.5 py-0.5">
-              ⌘K
-            </span>
-          </div>
+        <div className="flex items-center gap-3 justify-end">
           <button className="relative w-10 h-10 flex items-center justify-center rounded-lg bg-white/[0.04] border border-white/10 text-white/70 hover:bg-white/[0.08] transition-colors shrink-0">
             <Bell className="w-4 h-4" />
             {notificationCount > 0 && (

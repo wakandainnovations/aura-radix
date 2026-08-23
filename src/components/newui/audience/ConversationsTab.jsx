@@ -3,7 +3,6 @@ import { ChevronDown } from 'lucide-react';
 import { Panel, PanelLink, DropdownPill } from '../shared/Panel';
 import BarRow from '../shared/BarRow';
 import TrendLine from '../shared/TrendLine';
-import FilterBar from '../shared/FilterBar';
 import AIInsightBar from '../shared/AIInsightBar';
 import { thClass, tdClass, trClass, PLATFORM_COLOR } from '../theme';
 import { AXIS_TICKS } from './audienceData';
@@ -59,15 +58,6 @@ export default function ConversationsTab({ selectedMovie }) {
 
   return (
     <div className="p-6 space-y-4">
-      <FilterBar
-        filters={[
-          { label: 'Platform', value: 'All Platforms' },
-          { label: 'Content Type', value: 'All Content' },
-          { label: 'Audience', value: 'All Audiences' },
-          { label: 'Sentiment', value: 'All Sentiments' },
-        ]}
-      />
-
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-4">
         <Panel
           title={metricConfig.title}

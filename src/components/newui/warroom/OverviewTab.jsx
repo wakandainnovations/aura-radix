@@ -154,10 +154,10 @@ export default function OverviewTab() {
           </table>
         </Panel>
 
-        <Panel title="AI PRODUCER" info description="Analyzing live data" control={<Bot className="w-4 h-4 text-blue-400" />}>
+        <Panel title="AI COPILOT" info description="Analyzing live data" control={<Bot className="w-4 h-4 text-blue-400" />}>
           <div className="text-sm text-white/75 whitespace-pre-line flex-1">{d.aiMessage}</div>
           <div className="flex items-center gap-2 mt-3">
-            <input className="flex-1 bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/50 placeholder:text-white/30" placeholder="Ask AI Producer" readOnly />
+            <input className="flex-1 bg-white/[0.04] border border-white/10 rounded-lg px-3 py-2 text-sm text-white/50 placeholder:text-white/30" placeholder="Ask AI Copilot" readOnly />
             <button className="w-9 h-9 rounded-lg bg-blue-600 hover:bg-blue-500 flex items-center justify-center shrink-0">
               <Send className="w-4 h-4 text-white" />
             </button>

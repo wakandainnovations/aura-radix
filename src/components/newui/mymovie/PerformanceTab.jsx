@@ -46,11 +46,6 @@ export default function PerformanceTab({ data, isTrendLoading, isPlatformLoading
         <p className="text-sm text-white/40">Deep dive into how your movie is performing across platforms and audiences.</p>
       </div>
 
-      <div className="flex justify-end gap-2">
-        <DropdownPill>Metric: Buzz</DropdownPill>
-        <DropdownPill>Last 30 days</DropdownPill>
-      </div>
-
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {d.stats.map((s) => (
           <StatCard

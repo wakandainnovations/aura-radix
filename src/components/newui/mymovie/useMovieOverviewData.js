@@ -71,7 +71,7 @@ export default function useMovieOverviewData(selectedMovie) {
 
   const { data: sentimentRaw } = useQuery({
     queryKey: ['sentiment-trend', entityId, 'newui-overview'],
-    queryFn: () => dashboardService.getSentimentOverTime(entityId, 'DAY'),
+    queryFn: () => dashboardService.getSentimentOverTime(entityId, 'DAY90'),
     enabled: entityId != null,
   });
 

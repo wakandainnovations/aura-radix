@@ -20,7 +20,7 @@ const NAV_ITEMS = [
   { key: 'competitor-intelligence', label: 'Competitor Intelligence', icon: Target },
   { key: 'campaign-planner', label: 'Campaign Planner', icon: ClipboardList },
   { key: 'war-room', label: 'War Room', icon: ShieldAlert },
-  { key: 'ai-producer', label: 'AI Producer', icon: Bot },
+  { key: 'ai-producer', label: 'AI Copilot', icon: Bot },
 ];
 
 export default function NewUISidebar({

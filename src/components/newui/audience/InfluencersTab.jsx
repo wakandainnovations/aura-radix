@@ -120,6 +120,7 @@ export default function InfluencersTab({ selectedMovie }) {
             onChange: setPlatform,
           },
         ]}
+        showRight={false}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-4">

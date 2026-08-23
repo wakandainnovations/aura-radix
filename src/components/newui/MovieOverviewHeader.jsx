@@ -1,4 +1,4 @@
-import { Calendar, GitCompare, Share2, Bell, User } from 'lucide-react';
+import { Bell, User } from 'lucide-react';
 import { releaseCountdownLabel } from './dateUtils';
 
 const DEFAULT_TABS = ['Overview', 'Performance', 'Timeline', 'Assets', 'Reports'];
@@ -7,7 +7,6 @@ export default function MovieOverviewHeader({
   title,
   status,
   releaseInDays,
-  dateRangeLabel,
   tabs = DEFAULT_TABS,
   activeTab,
   onTabChange,
@@ -32,18 +31,6 @@ export default function MovieOverviewHeader({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <button className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-sm text-white/80 hover:bg-white/[0.08] transition-colors">
-            <Calendar className="w-4 h-4" />
-            {dateRangeLabel}
-          </button>
-          <button className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-sm text-white/80 hover:bg-white/[0.08] transition-colors">
-            <GitCompare className="w-4 h-4" />
-            Compare
-          </button>
-          <button className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-sm text-white/80 hover:bg-white/[0.08] transition-colors">
-            <Share2 className="w-4 h-4" />
-            Share
-          </button>
           <button className="relative w-10 h-10 flex items-center justify-center rounded-lg bg-white/[0.04] border border-white/10 text-white/70 hover:bg-white/[0.08] transition-colors">
             <Bell className="w-4 h-4" />
             {notificationCount > 0 && (

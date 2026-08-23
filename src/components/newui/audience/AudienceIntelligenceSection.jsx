@@ -36,6 +36,7 @@ export default function AudienceIntelligenceSection({ selectedMovie, fullAccess 
         tabs={visibleTabs}
         activeTab={activeTab}
         onTabChange={setActiveTab}
+        hideDateCompareShare
       />
       {activeTab === 'Influencers' || activeTab === 'Conversations' ? <TabComponent selectedMovie={selectedMovie} /> : <TabComponent />}
     </>

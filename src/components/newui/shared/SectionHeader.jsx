@@ -11,6 +11,7 @@ export default function SectionHeader({
   livePill,
   dateRangeLabel = 'May 1 – May 15, 2025',
   showExport = false,
+  hideDateCompareShare = false,
   actionButton,
   tabs,
   activeTab,
@@ -34,24 +35,28 @@ export default function SectionHeader({
 
         <div className="flex items-center gap-2 flex-wrap">
           {actionButton}
-          <button className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-sm text-white/80 hover:bg-white/[0.08] transition-colors">
-            <Calendar className="w-4 h-4" />
-            {dateRangeLabel}
-          </button>
-          <button className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-sm text-white/80 hover:bg-white/[0.08] transition-colors">
-            <GitCompare className="w-4 h-4" />
-            Compare
-          </button>
-          {showExport ? (
-            <button className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-sm text-white/80 hover:bg-white/[0.08] transition-colors">
-              <Download className="w-4 h-4" />
-              Export
-            </button>
-          ) : (
-            <button className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-sm text-white/80 hover:bg-white/[0.08] transition-colors">
-              <Share2 className="w-4 h-4" />
-              Share
-            </button>
+          {!hideDateCompareShare && (
+            <>
+              <button className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-sm text-white/80 hover:bg-white/[0.08] transition-colors">
+                <Calendar className="w-4 h-4" />
+                {dateRangeLabel}
+              </button>
+              <button className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-sm text-white/80 hover:bg-white/[0.08] transition-colors">
+                <GitCompare className="w-4 h-4" />
+                Compare
+              </button>
+              {showExport ? (
+                <button className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-sm text-white/80 hover:bg-white/[0.08] transition-colors">
+                  <Download className="w-4 h-4" />
+                  Export
+                </button>
+              ) : (
+                <button className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-sm text-white/80 hover:bg-white/[0.08] transition-colors">
+                  <Share2 className="w-4 h-4" />
+                  Share
+                </button>
+              )}
+            </>
           )}
           <button className="relative w-10 h-10 flex items-center justify-center rounded-lg bg-white/[0.04] border border-white/10 text-white/70 hover:bg-white/[0.08] transition-colors">
             <Bell className="w-4 h-4" />

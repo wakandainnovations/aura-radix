@@ -35,11 +35,17 @@ const SECTIONS = {
 // natural next step once the visual design is signed off: thread the
 // selected movie into each section instead of the dummy dataset.
 export default function NewCommandCenter() {
-  const [activeSection, setActiveSection] = useState('my-movie');
+  const [activeSection, setActiveSection] = useState('command-center');
   const [selectedMovie, setSelectedMovie] = useState(null);
   const { isAdmin, viewAsUserId, refresh: refreshLicense } = useLicense();
   const { username, setIsAuthenticated, setUsername } = useAuth();
   const [fullAccessOn, setFullAccessOn] = usePreviewTabsToggle();
+
+  // AI Copilot chat history lives here (not inside AIProducerSection) so it
+  // survives switching nav sections and only resets on logout (this
+  // component unmounts) or when the selected movie changes.
+  const [aiChatMessages, setAiChatMessages] = useState([]);
+  const [aiChatConversationId, setAiChatConversationId] = useState(null);
 
   // Non-admins always get the demo-restricted view; admins get it too unless
   // they've flipped the toggle on.
@@ -50,7 +56,7 @@ export default function NewCommandCenter() {
   // status changed), fall back to a section that's always visible.
   useEffect(() => {
     if (hiddenNavKeys.includes(activeSection)) {
-      setActiveSection('my-movie');
+      setActiveSection('command-center');
     }
   }, [hiddenNavKeys, activeSection]);
 
@@ -72,9 +78,15 @@ export default function NewCommandCenter() {
   // clobbering a choice the user already made from the switcher.
   const activeMovie = selectedMovie ?? movies[0] ?? null;
 
+  // Start a fresh AI Copilot conversation whenever the movie in focus changes.
+  useEffect(() => {
+    setAiChatMessages([]);
+    setAiChatConversationId(null);
+  }, [activeMovie?.id]);
+
   const data = dummyMovieOverview;
   const releaseInDays = daysUntilRelease(activeMovie?.releaseDate) ?? data.releaseInDays;
-  const SectionComponent = SECTIONS[activeSection] ?? MyMovieSection;
+  const SectionComponent = SECTIONS[activeSection] ?? CommandCenterSection;
 
   return (
     <div className={`h-screen flex ${PAGE_BG} text-white overflow-hidden`}>
@@ -99,6 +111,10 @@ export default function NewCommandCenter() {
           userName={username}
           onOpenWorkspace={() => setActiveSection('my-movie')}
           fullAccess={fullAccess}
+          chatMessages={aiChatMessages}
+          onChatMessagesChange={setAiChatMessages}
+          chatConversationId={aiChatConversationId}
+          onChatConversationIdChange={setAiChatConversationId}
         />
       </div>
     </div>

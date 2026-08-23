@@ -21,7 +21,7 @@ function pickEvenTicks(labels, count = 5) {
 }
 
 const PLATFORM_META = {
-  X: { label: 'X (Twitter)', color: '#cbd5e1' },
+  X: { label: 'X (Twitter)', color: '#2dd4bf' },
   INSTAGRAM: { label: 'Instagram', color: '#f472b6' },
   YOUTUBE: { label: 'YouTube', color: '#f87171' },
   REDDIT: { label: 'Reddit', color: '#3987e5' },
@@ -74,7 +74,7 @@ export default function useMoviePerformanceData(selectedMovie) {
 
   const { data: sentimentOverTimeRaw, isLoading: isTrendLoading } = useQuery({
     queryKey: ['sentiment-over-time', entityId, 'newui-my-movie-performance'],
-    queryFn: () => dashboardService.getSentimentOverTime(entityId, 'DAY'),
+    queryFn: () => dashboardService.getSentimentOverTime(entityId, 'DAY90'),
     enabled: entityId != null,
   });
 
