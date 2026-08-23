@@ -150,6 +150,16 @@ export const dashboardService = {
     return response;
   },
 
+  // Get the ranked breakdown of what aspects of the movie the conversation is
+  // actually about (cast performance, music, story, direction, box office,
+  // politics/personal-life crossover, etc.), used by the "Topics of Discussion" panel.
+  // Path: GET /api/dashboard/{entityId}/topic-category-breakdown
+  // Response: { entityId, entityName, totalClassifiedPosts, topics: [{ rank, topicCategory, count, sharePct }] }
+  getTopicCategoryBreakdown: async (entityId, { signal } = {}) => {
+    const response = await apiClient.get(`/dashboard/${entityId}/topic-category-breakdown`, { signal });
+    return response;
+  },
+
   // Get each top spreader's top posts about this entity, with per-post view count, engagement rate,
   // and sentiment - joined off the same author identity the top-spreaders endpoint returns.
   // Path: GET /api/dashboard/{entityId}/top-spreaders/content

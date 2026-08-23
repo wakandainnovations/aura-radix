@@ -15,7 +15,7 @@ function Bubble(props) {
 }
 import { Download } from 'lucide-react';
 import { Panel, PanelLink, DropdownPill } from '../shared/Panel';
-import VennCluster from '../shared/VennCluster';
+import LegendDonut from '../shared/LegendDonut';
 import FilterBar from '../shared/FilterBar';
 import AIInsightBar from '../shared/AIInsightBar';
 import SortableTh from '../shared/SortableTh';
@@ -250,30 +250,13 @@ export default function InfluencersTab({ selectedMovie }) {
           <AllInfluencerContentModal open={allContentOpen} onOpenChange={setAllContentOpen} data={d.allContent} />
         </Panel>
 
-        <Panel title="INFLUENCER AUDIENCE OVERLAPPING" info description="Overlap of influencer audiences with your target.">
-          <VennCluster
-            height={200}
-            circles={[
-              { xPct: 35, yPct: 42, size: 150, color: '#a78bfa' },
-              { xPct: 60, yPct: 42, size: 150, color: '#3987e5' },
-              { xPct: 47, yPct: 62, size: 150, color: '#34d399' },
-            ]}
-            zoneLabels={[
-              { text: '18%', xPct: 22, yPct: 32 },
-              { text: '15%', xPct: 72, yPct: 32 },
-              { text: '15%', xPct: 47, yPct: 78 },
-              { text: '21%', xPct: 47, yPct: 52 },
-            ]}
-          />
-          <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-2">
-            {d.overlap.map((o) => (
-              <div key={o.label} className="flex items-center gap-1.5 text-xs text-white/50">
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: o.color }} />
-                {o.label}
-              </div>
-            ))}
-          </div>
-          <PanelLink>View overlap details</PanelLink>
+        <Panel title="TOPICS OF DISCUSSION" info description="What aspects of the movie the conversation is actually about.">
+          {d.isTopicsLoading ? (
+            <PanelSkeleton />
+          ) : (
+            <LegendDonut data={d.topicsOfDiscussion} innerRadius="0%" size={150} legendCols={1} />
+          )}
+          <PanelLink>View topic details</PanelLink>
         </Panel>
       </div>
 

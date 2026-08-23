@@ -14,9 +14,10 @@ function DonutTooltip({ active, payload }) {
   );
 }
 
-// Donut chart with a centered total/label and a side legend. `data` items:
+// Donut (or, with innerRadius="0%", plain pie) chart with a centered total/label
+// and a side legend. `data` items:
 // { label, value (numeric weight for the arc), pctLabel (display string), color, sub (optional secondary text) }
-export default function LegendDonut({ data, centerValue, centerLabel, size = 160, legendCols = 1 }) {
+export default function LegendDonut({ data, centerValue, centerLabel, size = 160, legendCols = 1, innerRadius = '68%' }) {
   return (
     <div className="flex items-center gap-6 flex-wrap">
       <div className="relative shrink-0" style={{ width: size, height: size }}>
@@ -26,7 +27,7 @@ export default function LegendDonut({ data, centerValue, centerLabel, size = 160
               data={data}
               dataKey="value"
               nameKey="label"
-              innerRadius="68%"
+              innerRadius={innerRadius}
               outerRadius="100%"
               stroke="#05070d"
               strokeWidth={2}

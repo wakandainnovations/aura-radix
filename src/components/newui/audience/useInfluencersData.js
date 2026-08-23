@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { marketingAggregationService } from '../../../api/marketingAggregationService';
 import { dashboardService } from '../../../api/dashboardService';
 import { formatCompact } from '../formatCompact';
+import { SERIES_COLORS } from '../theme';
 import { influencersData } from './audienceData';
 
 const PLATFORM_LABELS = {
@@ -21,6 +22,19 @@ function platformLabel(code) {
 }
 
 const SENTIMENT_LABEL = { POSITIVE: 'Positive', NEGATIVE: 'Negative', NEUTRAL: 'Neutral', TOTAL: 'Neutral' };
+
+// Human labels for the backend's snake_case topicCategory values, shown in
+// the "Topics of Discussion" panel.
+const TOPIC_CATEGORY_LABELS = {
+  box_office_commercial: 'Box office / commercial',
+  cast_performance: 'Cast performance',
+  politics_personal_life_crossover: 'Politics / personal-life crossover',
+  music_songs: 'Music / songs',
+  story_screenplay: 'Story / screenplay',
+  direction_technical_craft: 'Direction / technical craft',
+  general: 'General / unspecified',
+};
+
 
 // Backend sends postDate as a full Instant (e.g. "2025-05-12T10:30:00Z"), unlike the date-only
 // strings the rest of this UI formats with dateUtils' formatShortDate.
@@ -75,6 +89,12 @@ export default function useInfluencersData(selectedMovie) {
     queryFn: () => dashboardService.getTopSpreaderContent(entityId, { language: selectedMovie?.language }),
     enabled: entityId != null,
     ...SPREADER_QUERY_OPTIONS,
+  });
+
+  const { data: topicsRaw, isLoading: isTopicsLoading } = useQuery({
+    queryKey: ['topic-category-breakdown', entityId, 'newui-audience-influencers'],
+    queryFn: () => dashboardService.getTopicCategoryBreakdown(entityId),
+    enabled: entityId != null,
   });
 
   const merged = useMemo(() => {
@@ -152,6 +172,37 @@ export default function useInfluencersData(selectedMovie) {
       })
     );
 
+    // Topic-category breakdown for the "Topics of Discussion" pie chart. The
+    // backend's classifier isn't constrained to the seven documented buckets -
+    // it also emits long-tail free-form values (hashtags, "trailer",
+    // "technology", "official_promo", ...), which would otherwise fragment the
+    // pie into dozens of near-zero slivers. Anything outside the known
+    // taxonomy is folded into "General / unspecified", the existing catch-all
+    // bucket, then the whole set is re-ranked by count so colors/order still
+    // reflect actual share.
+    const topicRows = Array.isArray(topicsRaw?.topics) ? topicsRaw.topics : [];
+    let topicsOfDiscussion = base.topicsOfDiscussion;
+    if (topicRows.length > 0) {
+      const counts = Object.fromEntries(Object.keys(TOPIC_CATEGORY_LABELS).map((k) => [k, 0]));
+      for (const t of topicRows) {
+        const key = TOPIC_CATEGORY_LABELS[t.topicCategory] ? t.topicCategory : 'general';
+        counts[key] = (counts[key] ?? 0) + (t.count ?? 0);
+      }
+      const total = Object.values(counts).reduce((a, b) => a + b, 0);
+      topicsOfDiscussion = Object.entries(counts)
+        .filter(([, count]) => count > 0)
+        .sort((a, b) => b[1] - a[1])
+        .map(([key, count], i) => {
+          const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+          return {
+            label: TOPIC_CATEGORY_LABELS[key],
+            value: pct,
+            pctLabel: `${pct}%`,
+            color: SERIES_COLORS[i % SERIES_COLORS.length],
+          };
+        });
+    }
+
     // The "Influencer Content Performance" panel and its "View all influencer
     // content" modal both derive their visible top-5 (and sort order) from
     // this full list at render time in InfluencersTab.jsx, mirroring how
@@ -159,13 +210,15 @@ export default function useInfluencersData(selectedMovie) {
     return {
       ...base,
       allInfluencers,
+      topicsOfDiscussion,
       ...(spreaders.length > 0 ? { allContent } : {}),
     };
-  }, [entityId, spreadersRaw, contentRaw]);
+  }, [entityId, spreadersRaw, contentRaw, topicsRaw]);
 
   return {
     ...merged,
     isInfluencersLoading: entityId != null && isLoading,
     isContentLoading: entityId != null && isContentLoading,
+    isTopicsLoading: entityId != null && isTopicsLoading,
   };
 }

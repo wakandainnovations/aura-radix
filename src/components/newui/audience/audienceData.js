@@ -298,10 +298,14 @@ export const influencersData = {
     { id: 4, title: 'Lord Gaaga BGM is Pure Goosebumps!', influencer: 'Tamil Talkies', platform: 'YouTube', date: 'May 8, 2025', reach: '620K', reachValue: 620000, engagement: '41K', engRate: '6.6%', engRateValue: 6.6, sentiment: 'Positive' },
     { id: 5, title: 'First Look Breakdown', influencer: 'Galatta Media', platform: 'Instagram', date: 'May 7, 2025', reach: '540K', reachValue: 540000, engagement: '28K', engRate: '5.2%', engRateValue: 5.2, sentiment: 'Neutral' },
   ],
-  overlap: [
-    { label: 'Filmy Reacts Audience', color: '#a78bfa' },
-    { label: 'Cinema Vikatan Audience', color: '#3987e5' },
-    { label: 'Behindwoods TV Audience', color: '#34d399' },
+  topicsOfDiscussion: [
+    { label: 'Box office / commercial', value: 28, pctLabel: '28%', color: '#3987e5' },
+    { label: 'Cast performance', value: 22, pctLabel: '22%', color: '#a78bfa' },
+    { label: 'Music / songs', value: 18, pctLabel: '18%', color: '#34d399' },
+    { label: 'Story / screenplay', value: 14, pctLabel: '14%', color: '#fbbf24' },
+    { label: 'Direction / technical craft', value: 9, pctLabel: '9%', color: '#f87171' },
+    { label: 'Politics / personal-life crossover', value: 6, pctLabel: '6%', color: '#22d3ee' },
+    { label: 'General / unspecified', value: 3, pctLabel: '3%', color: '#94a3b8' },
   ],
   aiInsight: 'Cinema Vikatan and Behindwoods TV are delivering the highest impact with strong positive sentiment. Consider collaborations with Filmy Reacts for high engagement and Tamil Talkies for music-driven content.',
   actions: [
