@@ -28,6 +28,9 @@ const SENTIMENT_LABEL = { POSITIVE: 'Positive', NEGATIVE: 'Negative', NEUTRAL: '
 // CATEGORY_TO_IMPACT in useCommandCenterData.js).
 const SPREADER_IMPACT_TO_LABEL = { HIGH_IMPACT: 'High', MEDIUM_IMPACT: 'Medium', LOW_IMPACT: 'Low' };
 
+// Sort order (ascending) for ranking actions by impact tier, High first.
+const IMPACT_RANK = { HIGH_IMPACT: 0, MEDIUM_IMPACT: 1, LOW_IMPACT: 2 };
+
 // Human labels for the backend's snake_case topicCategory values, shown in
 // the "Topics of Discussion" panel.
 const TOPIC_CATEGORY_LABELS = {
@@ -216,19 +219,23 @@ export default function useInfluencersData(selectedMovie) {
         });
     }
 
-    // "AI INSIGHT" bar: summary + up to 5 collaboration actions, each tagged
-    // with the server-computed impact tier (never LLM-authored). An entity
-    // with no spreaders carrying resolved post content returns
-    // summary: "" / actions: [], which falls back to the dummy insight rather
-    // than rendering an empty bar.
+    // "AI INSIGHT" bar: summary + top 3 collaboration actions (of up to 5 the
+    // backend returns), ranked High > Medium > Low by the server-computed
+    // impact tier (never LLM-authored) so the marketing team sees the
+    // highest-impact recommendations first. An entity with no spreaders
+    // carrying resolved post content returns summary: "" / actions: [], which
+    // falls back to the dummy insight rather than rendering an empty bar.
     const realActions = insightsRaw?.actions ?? [];
     const aiInsight = insightsRaw?.summary || base.aiInsight;
     const actions =
       insightsRaw?.summary
-        ? realActions.map((a) => ({
-            text: a.action,
-            impact: SPREADER_IMPACT_TO_LABEL[a.impact] ?? 'Medium',
-          }))
+        ? [...realActions]
+            .sort((a, b) => (IMPACT_RANK[a.impact] ?? 99) - (IMPACT_RANK[b.impact] ?? 99))
+            .slice(0, 3)
+            .map((a) => ({
+              text: a.action,
+              impact: SPREADER_IMPACT_TO_LABEL[a.impact] ?? 'Medium',
+            }))
         : base.actions;
 
     // The "Influencer Content Performance" panel and its "View all influencer
