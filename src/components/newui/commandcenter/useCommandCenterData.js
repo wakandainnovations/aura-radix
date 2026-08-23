@@ -288,7 +288,7 @@ export default function useCommandCenterData(selectedMovie) {
         }
         case 'reach':
           return reachRaw
-            ? { ...s, value: formatCompact(reachRaw.uniqueUsers), caption: 'Unique People', spark: undefined }
+            ? { ...s, value: formatCompact(reachRaw.uniqueUsers), caption: 'Unique People Posting', spark: undefined }
             : s;
         case 'awareness':
           return awarenessRaw

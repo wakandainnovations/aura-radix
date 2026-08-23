@@ -54,7 +54,7 @@ export const dummyCommandCenter = {
     { key: 'health', label: 'Movie Health', value: 92, suffix: '/100', caption: 'Excellent', hue: 'green', spark: spark(70, 74, 78, 81, 85, 88, 90, 92), sparklineColor: '#34d399' },
     { key: 'buzz', label: 'Buzz', value: '+18%', caption: 'vs yesterday', hue: 'violet', spark: spark(60, 64, 61, 68, 72, 75, 79, 82), sparklineColor: '#a78bfa' },
     { key: 'sentiment', label: 'Sentiment', value: '81%', caption: 'Positive', hue: 'green', barPct: 81, sparklineColor: '#34d399' },
-    { key: 'reach', label: 'Reach', value: '3.2M', caption: 'Unique People', hue: 'blue', spark: spark(1.2, 1.6, 1.9, 2.1, 2.5, 2.8, 3.0, 3.2), sparklineColor: '#3987e5' },
+    { key: 'reach', label: 'Reach', value: '3.2M', caption: 'Unique People Posting', hue: 'blue', spark: spark(1.2, 1.6, 1.9, 2.1, 2.5, 2.8, 3.0, 3.2), sparklineColor: '#3987e5' },
     { key: 'awareness', label: 'Awareness', value: 'High', caption: 'Top of Funnel', hue: 'cyan', spark: spark(40, 48, 55, 60, 66, 72, 78, 84), sparklineColor: '#22d3ee' },
   ],
 
