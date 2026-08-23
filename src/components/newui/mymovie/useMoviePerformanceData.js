@@ -166,7 +166,16 @@ export default function useMoviePerformanceData(selectedMovie) {
     });
     const hasSeries = days.length > 0;
 
-    const buzzOverTime = hasSeries ? days.map((d) => ({ date: d.label, value: d.total })) : base.buzzOverTime;
+    // Plots a running (cumulative) sum of daily totals rather than each
+    // day's own count - same treatment Audience Intelligence's Conversations
+    // tab uses for its Total Mentions panel.
+    const buzzOverTime = hasSeries
+      ? days.reduce((acc, d) => {
+          const running = (acc[acc.length - 1]?.value ?? 0) + d.total;
+          acc.push({ date: d.label, value: running });
+          return acc;
+        }, [])
+      : base.buzzOverTime;
     const buzzOverTimeTicks = hasSeries ? pickEvenTicks(days.map((d) => d.label)) : undefined;
 
     // getPlatformMentions returns a sentiment breakdown per platform

@@ -317,6 +317,14 @@ export const influencersData = {
 
 export const conversationsData = {
   volumeOverTime: series(700000, 3200000).map((d) => ({ date: d.date, value: d.value })),
+  volumeTotal: '3.2M',
+  volumeDeltaPct: 18,
+  positiveOverTime: series(560000, 2600000).map((d) => ({ date: d.date, value: d.value })),
+  positiveTotal: '2.6M',
+  positiveDeltaPct: 22,
+  negativeOverTime: series(90000, 450000).map((d) => ({ date: d.date, value: d.value })),
+  negativeTotal: '450K',
+  negativeDeltaPct: -6,
   sentimentBreakdown: [
     { label: 'Positive', value: 81, pctLabel: '81% ↑5pts', color: '#34d399' },
     { label: 'Neutral', value: 5, pctLabel: '5% ↓1pt', color: '#94a3b8' },
