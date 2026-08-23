@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { Panel, PanelLink, DropdownPill } from '../shared/Panel';
-import LegendDonut from '../shared/LegendDonut';
 import BarRow from '../shared/BarRow';
 import TrendLine from '../shared/TrendLine';
 import FilterBar from '../shared/FilterBar';
@@ -29,7 +28,7 @@ export default function ConversationsTab() {
         ]}
       />
 
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px_360px] gap-4">
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-4">
         <Panel title="CONVERSATION VOLUME OVER TIME" info description="Track how conversations about your movie are trending." control={<DropdownPill>Buzz</DropdownPill>}>
           <div className="flex items-baseline gap-3 mb-2">
             <span className="text-2xl font-extrabold text-white">3.2M</span>
@@ -37,11 +36,6 @@ export default function ConversationsTab() {
           </div>
           <TrendLine data={d.volumeOverTime} series={[{ key: 'value', label: 'Buzz', color: '#a78bfa' }]} ticks={AXIS_TICKS} area />
           <PanelLink>View detailed trend</PanelLink>
-        </Panel>
-
-        <Panel title="SENTIMENT BREAKDOWN" info description="Overall sentiment distribution.">
-          <LegendDonut data={d.sentimentBreakdown} centerValue="81%" centerLabel="Positive" size={130} />
-          <PanelLink>View sentiment analysis</PanelLink>
         </Panel>
 
         <Panel title="TOP CONVERSATION TOPICS" info description="What people are talking about most.">
@@ -68,7 +62,7 @@ export default function ConversationsTab() {
         </Panel>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px_360px] gap-4">
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-4">
         <Panel title="LATEST CONVERSATIONS" info description="Real conversations from across platforms.">
           <div className="flex items-center gap-1.5 flex-wrap mb-3 -mx-1">
             {FEED_FILTERS.map((f) => (
@@ -107,32 +101,6 @@ export default function ConversationsTab() {
               ))}
           </div>
           <PanelLink>View all conversations</PanelLink>
-        </Panel>
-
-        <Panel title="SENTIMENT BY PLATFORM" info description="Where sentiment is strongest (or weakest).">
-          <table className="w-full">
-            <thead>
-              <tr>
-                <th className={thClass}>Platform</th>
-                <th className={`${thClass} text-right`}>Pos</th>
-                <th className={`${thClass} text-right`}>Neu</th>
-                <th className={`${thClass} text-right`}>Neg</th>
-                <th className={`${thClass} text-right`}>Net</th>
-              </tr>
-            </thead>
-            <tbody>
-              {d.sentimentByPlatform.map((p) => (
-                <tr key={p.platform} className={trClass}>
-                  <td className={tdClass}>{p.platform}</td>
-                  <td className={`${tdClass} text-right text-emerald-400`}>{p.positive}%</td>
-                  <td className={`${tdClass} text-right text-white/40`}>{p.neutral}%</td>
-                  <td className={`${tdClass} text-right text-red-400`}>{p.negative}%</td>
-                  <td className={`${tdClass} text-right text-white/70`}>{p.net}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <PanelLink>View platform breakdown</PanelLink>
         </Panel>
 
         <Panel title="CONVERSATION DRIVERS" info description="What's driving the most engagement.">
