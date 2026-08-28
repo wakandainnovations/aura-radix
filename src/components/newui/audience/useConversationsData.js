@@ -39,7 +39,7 @@ const PLATFORM_LABELS = {
   whatsapp: 'WhatsApp',
 };
 
-function platformLabel(code) {
+export function platformLabel(code) {
   if (!code) return 'Others';
   return PLATFORM_LABELS[code.toLowerCase()] ?? code;
 }
@@ -230,6 +230,11 @@ export default function useConversationsData(selectedMovie, volumePeriod = 'DAY9
       .filter((aspect) => aspect.category !== 'other' || otherDominates)
       .map((aspect) => ({
         label: reviewAspectLabel(aspect.category),
+        // Raw enum value the backend's reviewAspectCategory mentions filter
+        // expects (README 16/26e), e.g. "climax" -> "CLIMAX" - lets the
+        // Conversation Drivers panel drill down into the classified posts
+        // behind a bar without guessing the taxonomy string from the label.
+        filterCategory: aspect.category ? aspect.category.toUpperCase() : null,
         posts: aspect.totalPosts ?? 0,
         views: aspect.totalViews ?? 0,
         sharePct: aspect.sharePct ?? 0,

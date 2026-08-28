@@ -17,7 +17,10 @@ function DonutTooltip({ active, payload }) {
 // Donut (or, with innerRadius="0%", plain pie) chart with a centered total/label
 // and a side legend. `data` items:
 // { label, value (numeric weight for the arc), pctLabel (display string), color, sub (optional secondary text) }
-export default function LegendDonut({ data, centerValue, centerLabel, size = 160, legendCols = 1, innerRadius = '68%' }) {
+// Pass `onSliceClick(datum)` to make both the arc and its legend row a
+// drill-down trigger (e.g. Topics of Discussion opening the classified posts
+// behind a slice) - omitted, the chart renders exactly as before.
+export default function LegendDonut({ data, centerValue, centerLabel, size = 160, legendCols = 1, innerRadius = '68%', onSliceClick }) {
   return (
     <div className="flex items-center gap-6 flex-wrap">
       <div className="relative shrink-0" style={{ width: size, height: size }}>
@@ -34,7 +37,12 @@ export default function LegendDonut({ data, centerValue, centerLabel, size = 160
               isAnimationActive={false}
             >
               {data.map((d, i) => (
-                <Cell key={i} fill={d.color} />
+                <Cell
+                  key={i}
+                  fill={d.color}
+                  cursor={onSliceClick ? 'pointer' : undefined}
+                  onClick={onSliceClick ? () => onSliceClick(d) : undefined}
+                />
               ))}
             </Pie>
             <Tooltip content={<DonutTooltip />} />
@@ -47,15 +55,22 @@ export default function LegendDonut({ data, centerValue, centerLabel, size = 160
       </div>
 
       <div className={`grid gap-x-5 gap-y-2.5 flex-1 min-w-[120px] ${legendCols === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-        {data.map((d, i) => (
-          <div key={i} className="min-w-0 text-sm">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
-              <span className="text-white/70 truncate">{d.label}</span>
-            </div>
-            <div className="text-white/85 font-medium pl-[18px] text-xs">{d.pctLabel ?? `${d.value}%`}</div>
-          </div>
-        ))}
+        {data.map((d, i) => {
+          const Row = onSliceClick ? 'button' : 'div';
+          return (
+            <Row
+              key={i}
+              {...(onSliceClick && { type: 'button', onClick: () => onSliceClick(d) })}
+              className={`min-w-0 text-sm text-left ${onSliceClick ? 'group cursor-pointer' : ''}`}
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
+                <span className={`text-white/70 truncate ${onSliceClick ? 'group-hover:text-white/95' : ''}`}>{d.label}</span>
+              </div>
+              <div className="text-white/85 font-medium pl-[18px] text-xs">{d.pctLabel ?? `${d.value}%`}</div>
+            </Row>
+          );
+        })}
       </div>
     </div>
   );

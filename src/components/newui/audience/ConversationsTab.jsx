@@ -8,6 +8,7 @@ import { thClass, tdClass, trClass, PLATFORM_COLOR } from '../theme';
 import { AXIS_TICKS } from './audienceData';
 import { formatCompact } from '../formatCompact';
 import useConversationsData from './useConversationsData';
+import AspectPostsModal from './AspectPostsModal';
 
 const SENTIMENT_TONE = { Positive: 'text-emerald-400 bg-emerald-500/15', Neutral: 'text-amber-400 bg-amber-500/15', Negative: 'text-red-400 bg-red-500/15' };
 const FEED_FILTERS = ['All', 'X (Twitter)', 'Instagram', 'Reddit'];
@@ -81,6 +82,7 @@ export default function ConversationsTab({ selectedMovie }) {
   const [feedFilter, setFeedFilter] = useState('All');
   const [driverTab, setDriverTab] = useState(DRIVER_TABS[0].label);
   const [sentimentMetric, setSentimentMetric] = useState('total');
+  const [aspectModal, setAspectModal] = useState(null); // { category, label } | null
   const metricConfig = SENTIMENT_METRIC_CONFIG[sentimentMetric];
 
   // Re-rank drivers by the active tab's metric and scale each bar against the
@@ -224,6 +226,7 @@ export default function ConversationsTab({ selectedMovie }) {
                   pct={driverMax > 0 ? ((driver[driverConfig.key] ?? 0) / driverMax) * 100 : 0}
                   valueLabel={driverConfig.format(driver)}
                   color={DRIVER_SENTIMENT_COLOR[driver.sentiment] ?? DRIVER_SENTIMENT_COLOR.neutral}
+                  onClick={driver.filterCategory ? () => setAspectModal({ category: driver.filterCategory, label: driver.label }) : undefined}
                 />
               ))}
             </div>
@@ -233,6 +236,14 @@ export default function ConversationsTab({ selectedMovie }) {
       </div>
 
       <AIInsightBar insight={d.aiInsight} actions={d.actions} ctaLabel="View AI Recommendations" />
+
+      <AspectPostsModal
+        open={!!aspectModal}
+        onOpenChange={(next) => !next && setAspectModal(null)}
+        entityId={selectedMovie?.id}
+        category={aspectModal?.category}
+        label={aspectModal?.label}
+      />
     </div>
   );
 }

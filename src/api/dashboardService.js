@@ -77,14 +77,27 @@ export const dashboardService = {
 
   // Get filtered mentions with pagination
   // Path: GET /api/dashboard/{entityId}/mentions
-  // Query Params: platform?, page (default: 0), size (default: 10)
+  // Query Params: platform?, page (default: 0), size (default: 10),
+  //   reviewAspectCategory? (exact backend enum, e.g. "SCREENPLAY" - the
+  //   classification drill-down filter for the "Aspect Sentiment"/Conversation
+  //   Drivers panels, see README 16), topicCategory?/contentIntent?/authorType?/region?
+  //   (case-insensitive, pass the exact `category`/`region` string a breakdown
+  //   returned - `region` matches Audience Pulse's `region` field, e.g. "tamil_nadu")
   // Response: { content: Mention[], pageable, totalElements, totalPages, last }
+  //   Each mention now also carries `available_actions` (always
+  //   ["draft-reply","escalate","mobilize","report-abuse"]) and
+  //   `action_history_summary: { drafts, posted, escalated }`.
   getMentions: async (entityId, filters = {}) => {
     try {
       const params = {
         page: filters.page || 0,
         size: filters.size || 200,
         ...(filters.platform && { platform: filters.platform }),
+        ...(filters.reviewAspectCategory && { reviewAspectCategory: filters.reviewAspectCategory }),
+        ...(filters.topicCategory && { topicCategory: filters.topicCategory }),
+        ...(filters.contentIntent && { contentIntent: filters.contentIntent }),
+        ...(filters.authorType && { authorType: filters.authorType }),
+        ...(filters.region && { region: filters.region }),
       };
       const response = await apiClient.get(
         `/dashboard/${entityId}/mentions`,

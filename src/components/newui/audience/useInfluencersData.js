@@ -201,9 +201,16 @@ export default function useInfluencersData(selectedMovie, platform = 'all') {
     let topicsOfDiscussion = base.topicsOfDiscussion;
     if (topicRows.length > 0) {
       const counts = Object.fromEntries(Object.keys(TOPIC_CATEGORY_LABELS).map((k) => [k, 0]));
+      // Tracks every raw topicCategory string folded into each display bucket
+      // (a 1:1 match for the six canonical buckets, but "general" can absorb
+      // many distinct long-tail values) so a click can drill down via the
+      // mentions endpoint's topicCategory filter (README 16), which only
+      // accepts one raw value per call.
+      const rawByBucket = Object.fromEntries(Object.keys(TOPIC_CATEGORY_LABELS).map((k) => [k, []]));
       for (const t of topicRows) {
         const key = TOPIC_CATEGORY_LABELS[t.topicCategory] ? t.topicCategory : 'general';
         counts[key] = (counts[key] ?? 0) + (t.count ?? 0);
+        rawByBucket[key].push({ category: t.topicCategory, count: t.count ?? 0 });
       }
       const total = Object.values(counts).reduce((a, b) => a + b, 0);
       topicsOfDiscussion = Object.entries(counts)
@@ -211,11 +218,20 @@ export default function useInfluencersData(selectedMovie, platform = 'all') {
         .sort((a, b) => b[1] - a[1])
         .map(([key, count], i) => {
           const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+          // Capped to the top 10 raw sub-categories by volume so a click on a
+          // long-tail-heavy bucket (namely "General / unspecified") triggers
+          // a bounded number of drill-down requests instead of one per
+          // distinct hashtag/free-form value the classifier ever emitted.
+          const rawCategories = rawByBucket[key]
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 10)
+            .map((r) => r.category);
           return {
             label: TOPIC_CATEGORY_LABELS[key],
             value: pct,
             pctLabel: `${pct}%`,
             color: SERIES_COLORS[i % SERIES_COLORS.length],
+            rawCategories,
           };
         });
     }

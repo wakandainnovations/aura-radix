@@ -28,6 +28,21 @@ export const mentionActionService = {
     return response;
   },
 
+  // POST /api/mentions/{mentionId}/actions/override-review-aspect (README 26e)
+  // Human correction of a misclassified reviewAspectCategory - the fix for a bad
+  // post spotted via the reviewAspectCategory filter on GET /dashboard/{entityId}/mentions.
+  // Always overwrites the current value (LLM-assigned or previously overridden) and
+  // persists an audit row surfaced in getActions() as a REVIEW_ASPECT_OVERRIDE entry.
+  // `category` must be one of the backend's ReviewAspectCategory enum values
+  // (e.g. "SCREENPLAY") - an unrecognized value is rejected with 400.
+  overrideReviewAspect: async (mentionId, { category, reason } = {}) => {
+    const response = await apiClient.post(`/mentions/${mentionId}/actions/override-review-aspect`, {
+      category,
+      ...(reason && { reason }),
+    });
+    return response;
+  },
+
   // DELETE /api/mentions/{mentionId} (README 26b)
   // Hard-deletes a false-positive/irrelevant mention and all records hanging off
   // it. Returns 204 on success. A 404 means it's already gone server-side (double

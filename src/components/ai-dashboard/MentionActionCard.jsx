@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   MessageSquare, Send, AlertTriangle, Users, Loader2,
-  ChevronDown, ChevronUp, FileText, Clock, Flag, Ticket, Ban, Eye
+  ChevronDown, ChevronUp, FileText, Clock, Flag, Ticket, Ban, Eye, Pencil
 } from 'lucide-react';
 import { formatImpressions } from '../../utils/helpers';
 import { mentionActionService } from '../../api/mentionActionService';
@@ -12,6 +12,14 @@ const ACTION_ICONS = {
   REPLY_DRAFT: FileText,
   CRISIS_PLAN: AlertTriangle,
   MOBILIZE: Users,
+  REVIEW_ASPECT_OVERRIDE: Pencil,
+};
+
+const ACTION_LABELS = {
+  REPLY_DRAFT: 'REPLY_DRAFT',
+  CRISIS_PLAN: 'CRISIS_PLAN',
+  MOBILIZE: 'MOBILIZE',
+  REVIEW_ASPECT_OVERRIDE: 'CLASSIFICATION FIXED',
 };
 
 const SENTIMENT_COLORS = {
@@ -453,9 +461,9 @@ export default function MentionActionCard({ mention, onMentionDeleted }) {
                 {actions.map((action, i) => {
                   const ActionIcon = ACTION_ICONS[action.type] || FileText;
                   return (
-                    <div key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div key={i} className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                       <ActionIcon className="w-3 h-3" />
-                      <span className="font-medium">{action.type}</span>
+                      <span className="font-medium">{ACTION_LABELS[action.type] || action.type}</span>
                       {action.actor && <span>by {action.actor}</span>}
                       {action.createdAt && (
                         <span>{new Date(action.createdAt).toLocaleString()}</span>
@@ -467,6 +475,14 @@ export default function MentionActionCard({ mention, onMentionDeleted }) {
                             : 'bg-blue-500/20 text-blue-400'
                         }`}>
                           {action.draftStatus}
+                        </span>
+                      )}
+                      {action.type === 'REVIEW_ASPECT_OVERRIDE' && (
+                        <span className="flex items-center gap-1">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-accent">
+                            {action.previousCategory || 'unclassified'} → {action.newCategory}
+                          </span>
+                          {action.reason && <span className="italic">"{action.reason}"</span>}
                         </span>
                       )}
                     </div>

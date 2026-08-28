@@ -303,6 +303,10 @@ export default function useMoviePerformanceData(selectedMovie) {
         ? realRegions.slice(0, 5).map((r) => ({
             label: displayRegionName(r.region),
             pct: knownTotalPct > 0 ? Math.round((r.sharePct / knownTotalPct) * 100) : 0,
+            // Raw predicted_region value the mentions endpoint's region filter
+            // expects (README 16), e.g. "tamil_nadu" - only present on real
+            // backend rows, so the dummy fallback below stays non-clickable.
+            region: r.region,
           }))
         : base.topRegions;
 
@@ -323,6 +327,11 @@ export default function useMoviePerformanceData(selectedMovie) {
             pct: Math.round(intent.sharePct),
             caption: `${formatCompact(intent.count)} posts`,
             iconKey: intent.contentIntent,
+            // Raw contentIntent value the mentions endpoint's filter expects
+            // (README 16) - only present on real backend rows, so the panel
+            // can gate its drill-down click on this rather than the dummy
+            // fallback's placeholder iconKeys ('song', 'trailer', ...).
+            category: intent.contentIntent,
           }))
         : base.topDrivers;
 

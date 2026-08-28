@@ -26,6 +26,7 @@ import useInfluencersData from './useInfluencersData';
 import AllInfluencersModal from './AllInfluencersModal';
 import AllInfluencerContentModal from './AllInfluencerContentModal';
 import AllRecommendationsModal from './AllRecommendationsModal';
+import TopicPostsModal from './TopicPostsModal';
 
 const INFLUENCER_SORT_ACCESSORS = {
   views: (row) => row.viewsValue,
@@ -89,6 +90,7 @@ export default function InfluencersTab({ selectedMovie }) {
   const topInfluencers = sortedAllInfluencers.slice(0, 8);
   const [allContentOpen, setAllContentOpen] = useState(false);
   const [allRecommendationsOpen, setAllRecommendationsOpen] = useState(false);
+  const [topicModal, setTopicModal] = useState(null); // { label, rawCategories } | null
   // Same full-list-sorts-then-slices pattern as topInfluencers above, so
   // changing the sort column re-ranks across every post the API returned,
   // not just a pre-sliced top 5.
@@ -268,9 +270,22 @@ export default function InfluencersTab({ selectedMovie }) {
           {d.isTopicsLoading ? (
             <PanelSkeleton />
           ) : (
-            <LegendDonut data={d.topicsOfDiscussion} innerRadius="0%" size={150} legendCols={1} />
+            <LegendDonut
+              data={d.topicsOfDiscussion}
+              innerRadius="0%"
+              size={150}
+              legendCols={1}
+              onSliceClick={(slice) => (slice.rawCategories?.length ? setTopicModal(slice) : undefined)}
+            />
           )}
           <PanelLink>View topic details</PanelLink>
+          <TopicPostsModal
+            open={!!topicModal}
+            onOpenChange={(next) => !next && setTopicModal(null)}
+            entityId={selectedMovie?.id}
+            rawCategories={topicModal?.rawCategories}
+            label={topicModal?.label}
+          />
         </Panel>
       </div>
 

@@ -8,6 +8,8 @@ import TrendLine from '../shared/TrendLine';
 import IndiaStatesMap from '../shared/IndiaStatesMap';
 import PlatformPerformanceModal from './PlatformPerformanceModal';
 import SentimentTrendsModal from './SentimentTrendsModal';
+import DriverPostsModal from './DriverPostsModal';
+import RegionPostsModal from './RegionPostsModal';
 import { AXIS_TICKS_15D } from './myMovieTabsData';
 
 const STAT_ICONS = { buzz: Volume2, sentiment: Smile, awareness: Eye, engagement: Users, momentum: Rocket };
@@ -34,10 +36,12 @@ function PanelSkeleton() {
   );
 }
 
-export default function PerformanceTab({ data, isTrendLoading, isPlatformLoading, isRegionsLoading, isTopDriversLoading }) {
+export default function PerformanceTab({ data, entityId, isTrendLoading, isPlatformLoading, isRegionsLoading, isTopDriversLoading }) {
   const d = data;
   const [platformModalOpen, setPlatformModalOpen] = useState(false);
   const [sentimentModalOpen, setSentimentModalOpen] = useState(false);
+  const [driverModal, setDriverModal] = useState(null); // { category, label } | null
+  const [regionModal, setRegionModal] = useState(null); // { region, label } | null
 
   return (
     <div className="p-6 space-y-4">
@@ -80,13 +84,18 @@ export default function PerformanceTab({ data, isTrendLoading, isPlatformLoading
             <div className="space-y-4 flex-1">
               {d.topDrivers.map((driver) => {
                 const Icon = DRIVER_ICONS[driver.iconKey] ?? MessagesSquare;
+                const Row = driver.category ? 'button' : 'div';
                 return (
-                  <div key={driver.label} className="flex items-center gap-3">
+                  <Row
+                    key={driver.label}
+                    {...(driver.category && { type: 'button', onClick: () => setDriverModal({ category: driver.category, label: driver.label }) })}
+                    className={`w-full flex items-center gap-3 text-left ${driver.category ? 'group cursor-pointer' : ''}`}
+                  >
                     <div className="w-8 h-8 rounded-lg bg-white/[0.05] flex items-center justify-center shrink-0">
                       <Icon className="w-4 h-4 text-white/60" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm text-white/80 mb-1">{driver.label}</div>
+                      <div className={`text-sm text-white/80 mb-1 ${driver.category ? 'group-hover:text-white/95' : ''}`}>{driver.label}</div>
                       <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
                         <div className="h-full rounded-full bg-emerald-400" style={{ width: `${Math.min(driver.pct * 2, 100)}%` }} />
                       </div>
@@ -95,12 +104,19 @@ export default function PerformanceTab({ data, isTrendLoading, isPlatformLoading
                       <div className="text-emerald-400 text-sm font-semibold">{driver.pct}%</div>
                       <div className="text-[11px] text-white/35">{driver.caption}</div>
                     </div>
-                  </div>
+                  </Row>
                 );
               })}
             </div>
           )}
           <PanelLink>View all drivers</PanelLink>
+          <DriverPostsModal
+            open={!!driverModal}
+            onOpenChange={(next) => !next && setDriverModal(null)}
+            entityId={entityId}
+            category={driverModal?.category}
+            label={driverModal?.label}
+          />
         </Panel>
       </div>
 
@@ -136,13 +152,27 @@ export default function PerformanceTab({ data, isTrendLoading, isPlatformLoading
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2.5">
                 {d.topRegions.map((r) => (
-                  <BarRow key={r.label} label={r.label} pct={r.pct * 3} valueLabel={`${r.pct}%`} color="#a78bfa" />
+                  <BarRow
+                    key={r.label}
+                    label={r.label}
+                    pct={r.pct * 3}
+                    valueLabel={`${r.pct}%`}
+                    color="#a78bfa"
+                    onClick={r.region ? () => setRegionModal({ region: r.region, label: r.label }) : undefined}
+                  />
                 ))}
               </div>
               <IndiaStatesMap regions={d.topRegionsForMap} height={140} />
             </div>
           )}
           <PanelLink>View all regions</PanelLink>
+          <RegionPostsModal
+            open={!!regionModal}
+            onOpenChange={(next) => !next && setRegionModal(null)}
+            entityId={entityId}
+            region={regionModal?.region}
+            label={regionModal?.label}
+          />
         </Panel>
       </div>
     </div>

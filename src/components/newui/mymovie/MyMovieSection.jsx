@@ -46,6 +46,7 @@ export default function MyMovieSection({ selectedMovie, fullAccess }) {
       ) : activeTab === 'Performance' ? (
         <PerformanceTab
           data={performanceData}
+          entityId={selectedMovie?.id}
           isTrendLoading={performanceData.isTrendLoading}
           isPlatformLoading={performanceData.isPlatformLoading}
           isRegionsLoading={performanceData.isRegionsLoading}
