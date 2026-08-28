@@ -46,6 +46,39 @@ function platformLabel(code) {
 
 const SENTIMENT_LABEL = { POSITIVE: 'Positive', NEGATIVE: 'Negative', NEUTRAL: 'Neutral' };
 
+// Human labels for the backend's snake_case review-aspect category values,
+// shown in the "Conversation Drivers" panel (same convention as
+// useInfluencersData's TOPIC_CATEGORY_LABELS).
+const REVIEW_ASPECT_LABELS = {
+  music_songs: 'Music / songs',
+  direction: 'Direction',
+  acting_cast_performance: 'Acting / cast performance',
+  story: 'Story',
+  screenplay: 'Screenplay',
+  lead_pair: 'Lead pair',
+  runtime: 'Runtime',
+  first_half: 'First half',
+  second_half: 'Second half',
+  climax: 'Climax',
+  vfx: 'VFX',
+  // Only ever shown when `other` dominates the breakdown (see
+  // OTHER_DOMINANT_THRESHOLD below) - "Other" would read as a shrug, while
+  // this names what it actually is: talk the taxonomy doesn't have a
+  // specific bucket for.
+  other: 'General discussion',
+};
+
+// `other` is the classifier's catch-all bucket, not a real driver - it's
+// dropped from the panel unless it's most of the conversation, in which case
+// hiding it would make the panel look emptier than it is (e.g. a biopic like
+// GD Naidu where 85%+ of posts don't fit the movie-aspect taxonomy at all).
+const OTHER_DOMINANT_THRESHOLD = 50;
+
+function reviewAspectLabel(category) {
+  if (!category) return 'Other';
+  return REVIEW_ASPECT_LABELS[category] ?? category.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 // Turns per-day counts for one metric (total/positive/negative) into a chart
 // series - a running cumulative sum for `cumulative: true` (Overall/Buzz), or
 // each day's own count for `cumulative: false` (Positive/Negative, matching
@@ -78,12 +111,14 @@ function formatPostTime(instant) {
 }
 
 // Feeds the Conversations tab's "Total Mentions" (Overall/Positive/Negative
-// sentiment timeline) and "Latest Conversations" panels from the same two
-// endpoints the classic UI already uses elsewhere:
-// dashboardService.getSentimentOverTime (Command Center's sentiment trend
-// graph) and dashboardService.getMentions (the cross-platform posts feed
-// behind SocialMediaFeed). Everything else on this tab (topics, drivers, AI
-// insight) has no backend endpoint yet and stays on dummy data.
+// sentiment timeline), "Latest Conversations", and "Conversation Drivers"
+// panels from backend endpoints: dashboardService.getSentimentOverTime
+// (Command Center's sentiment trend graph), dashboardService.getMentions (the
+// cross-platform posts feed behind SocialMediaFeed), and
+// dashboardService.getReviewAspectBreakdown (the same LLM-classified
+// music/story/climax/first-half/second-half/etc. taxonomy documented on that
+// endpoint). Everything else on this tab (topics, AI insight) has no backend
+// endpoint yet and stays on dummy data.
 //
 // `volumePeriod` accepts the same period values as classic UI's
 // TimeRangeSelector (DAY/DAY15/DAY30/DAY90/WEEK/MONTH) - undocumented on
@@ -102,6 +137,16 @@ export default function useConversationsData(selectedMovie, volumePeriod = 'DAY9
   const { data: mentionsRaw, isLoading: isLatestLoading } = useQuery({
     queryKey: ['mentions', entityId, 'newui-audience-conversations'],
     queryFn: () => dashboardService.getMentions(entityId, { size: 50 }),
+    enabled: entityId != null,
+  });
+
+  // refresh: true so each mount nudges the entity's classification backlog
+  // forward (the endpoint only classifies a bounded batch of not-yet-scored
+  // posts per call, not the full backlog - see getReviewAspectBreakdown's
+  // doc comment) rather than only relying on the backend's own 2h sweep.
+  const { data: reviewAspectRaw, isLoading: isDriversLoading } = useQuery({
+    queryKey: ['review-aspect-breakdown', entityId, 'newui-audience-conversations'],
+    queryFn: () => dashboardService.getReviewAspectBreakdown(entityId, { refresh: true }),
     enabled: entityId != null,
   });
 
@@ -168,6 +213,33 @@ export default function useConversationsData(selectedMovie, volumePeriod = 'DAY9
         }));
     }
 
+    // "Conversation Drivers" - every aspect is carried through with all three
+    // of its metrics, so the panel's Engagement/Volume/Velocity tabs can
+    // re-rank the same rows client-side without a refetch. `other` (the
+    // classifier's catch-all) is dropped unless it dominates the breakdown -
+    // normally it tells the user nothing about what's driving talk, but
+    // hiding a bucket that's 85%+ of all posts (e.g. a biopic whose chatter
+    // mostly doesn't fit the movie-aspect taxonomy at all) would make the
+    // panel look far emptier than the conversation actually is.
+    // Rows aren't sliced here - the panel takes the top N for whichever metric
+    // is active, which is not the same set as the backend's sharePct ranking.
+    const aspects = reviewAspectRaw?.aspects ?? [];
+    const other = aspects.find((aspect) => aspect.category === 'other');
+    const otherDominates = (other?.sharePct ?? 0) > OTHER_DOMINANT_THRESHOLD;
+    const realDrivers = aspects
+      .filter((aspect) => aspect.category !== 'other' || otherDominates)
+      .map((aspect) => ({
+        label: reviewAspectLabel(aspect.category),
+        posts: aspect.totalPosts ?? 0,
+        views: aspect.totalViews ?? 0,
+        sharePct: aspect.sharePct ?? 0,
+        // engagementRate arrives as a 0..1 fraction; the panel renders percents.
+        engagementRate: aspect.engagementRate != null ? aspect.engagementRate * 100 : null,
+        postsPerDay: aspect.postsPerDay ?? 0,
+        sentiment: (aspect.majoritySentiment ?? 'neutral').toLowerCase(),
+      }));
+    const drivers = realDrivers.length > 0 ? realDrivers : base.drivers;
+
     return {
       ...base,
       volumeOverTime,
@@ -181,12 +253,14 @@ export default function useConversationsData(selectedMovie, volumePeriod = 'DAY9
       positiveDeltaPct,
       negativeDeltaPct,
       latest,
+      drivers,
     };
-  }, [entityId, sentimentRaw, mentionsRaw]);
+  }, [entityId, sentimentRaw, mentionsRaw, reviewAspectRaw]);
 
   return {
     ...merged,
     isVolumeLoading: entityId != null && isVolumeLoading,
     isLatestLoading: entityId != null && isLatestLoading,
+    isDriversLoading: entityId != null && isDriversLoading,
   };
 }

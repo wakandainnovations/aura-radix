@@ -160,6 +160,26 @@ export const dashboardService = {
     return response;
   },
 
+  // Get the ranked breakdown of what specific review aspect the conversation is about (music/songs,
+  // direction, acting/cast performance, story, screenplay, lead pair, runtime, first half, second half,
+  // climax, VFX, other) with each aspect's post count, reach, engagement rate, posting velocity, and
+  // sentiment - used by the "Aspect Sentiment" and Conversation Drivers panels. Posts are classified
+  // into this taxonomy by a backend LLM pass and cached per post, so refresh=true only forces this
+  // entity's own not-yet-classified backlog to be classified before returning (a background sweep
+  // otherwise keeps the data fresh every 2h).
+  // Path: GET /api/dashboard/{entityId}/review-aspect-breakdown
+  // Response: { entityId, entityName, totalClassifiedPosts, aspects: [{ rank (by sharePct),
+  //   category, totalPosts, averageSentimentScore (-1..1, null when unscored),
+  //   sharePct, majoritySentiment: positive|neutral|negative, totalViews,
+  //   engagementRate (0..1 fraction, null when unmeasurable), postsPerDay }] }
+  getReviewAspectBreakdown: async (entityId, { refresh = false, signal } = {}) => {
+    const response = await apiClient.get(`/dashboard/${entityId}/review-aspect-breakdown`, {
+      params: { refresh },
+      signal,
+    });
+    return response;
+  },
+
   // Get each top spreader's top posts about this entity, with per-post view count, engagement rate,
   // and sentiment - joined off the same author identity the top-spreaders endpoint returns.
   // Path: GET /api/dashboard/{entityId}/top-spreaders/content

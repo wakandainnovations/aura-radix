@@ -351,12 +351,16 @@ export const conversationsData = {
     { platform: 'Reddit', positive: 62, neutral: 10, negative: 28, net: '+34' },
     { platform: 'News & Blogs', positive: 76, neutral: 8, negative: 16, net: '+60' },
   ],
+  // Placeholder mirroring the review-aspect-breakdown shape the Conversation
+  // Drivers panel renders (share of posts, engagement rate, posts/day and
+  // majority sentiment per aspect) so the dummy fallback works across all
+  // three metric tabs.
   drivers: [
-    { label: 'Climax Fight Scene', pct: 32 },
-    { label: "Shoonya's Character", pct: 24 },
-    { label: 'BGM & Music', pct: 18 },
-    { label: 'Trailer & Visuals', pct: 14 },
-    { label: 'Release Date Speculation', pct: 12 },
+    { label: 'Climax', posts: 82, views: 154200, sharePct: 32, engagementRate: 8.4, postsPerDay: 6.3, sentiment: 'positive' },
+    { label: 'Music / songs', posts: 74, views: 210500, sharePct: 24, engagementRate: 7.1, postsPerDay: 3.1, sentiment: 'positive' },
+    { label: 'Acting / cast performance', posts: 51, views: 118400, sharePct: 18, engagementRate: 6.2, postsPerDay: 2.4, sentiment: 'positive' },
+    { label: 'Story', posts: 29, views: 60300, sharePct: 14, engagementRate: 4.5, postsPerDay: 1.9, sentiment: 'neutral' },
+    { label: 'Second half', posts: 19, views: 41200, sharePct: 12, engagementRate: 5.8, postsPerDay: 1.6, sentiment: 'negative' },
   ],
   aiInsight: 'Positive sentiment is strong across YouTube and Instagram, driven by action and character appeal. Address concerns around story depth on Reddit and X with behind-the-scenes content and interviews.',
   actions: [

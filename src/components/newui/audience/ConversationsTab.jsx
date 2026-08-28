@@ -6,11 +6,38 @@ import TrendLine from '../shared/TrendLine';
 import AIInsightBar from '../shared/AIInsightBar';
 import { thClass, tdClass, trClass, PLATFORM_COLOR } from '../theme';
 import { AXIS_TICKS } from './audienceData';
+import { formatCompact } from '../formatCompact';
 import useConversationsData from './useConversationsData';
 
 const SENTIMENT_TONE = { Positive: 'text-emerald-400 bg-emerald-500/15', Neutral: 'text-amber-400 bg-amber-500/15', Negative: 'text-red-400 bg-red-500/15' };
 const FEED_FILTERS = ['All', 'X (Twitter)', 'Instagram', 'Reddit'];
-const DRIVER_TABS = ['Engagement', 'Volume', 'Velocity'];
+
+// Each Conversation Drivers tab re-ranks the same aspects by a different
+// metric from review-aspect-breakdown, so switching tabs is client-side only.
+const DRIVER_TABS = [
+  {
+    label: 'Engagement',
+    key: 'engagementRate',
+    format: (d) => (d.engagementRate == null ? '—' : `${d.engagementRate.toFixed(1)}%`),
+    sublabel: (d) => `${formatCompact(d.views)} views · ${formatCompact(d.posts)} posts`,
+  },
+  {
+    label: 'Volume',
+    key: 'sharePct',
+    format: (d) => `${d.sharePct.toFixed(1)}%`,
+    sublabel: (d) => `${formatCompact(d.posts)} posts`,
+  },
+  {
+    label: 'Velocity',
+    key: 'postsPerDay',
+    format: (d) => `${d.postsPerDay.toFixed(1)}/day`,
+    sublabel: (d) => `${formatCompact(d.posts)} posts`,
+  },
+];
+
+// Bars are colored by the aspect's majority sentiment so the panel shows not
+// just what's driving talk but whether that talk is good news.
+const DRIVER_SENTIMENT_COLOR = { positive: '#34d399', neutral: '#fbbf24', negative: '#f87171' };
 
 // Same option set as classic UI's TimeRangeSelector.jsx. Defaults to 90 days
 // rather than a shorter window because sentiment-over-time's DAY bucket only
@@ -52,9 +79,18 @@ export default function ConversationsTab({ selectedMovie }) {
   const [volumeRange, setVolumeRange] = useState('DAY90');
   const d = useConversationsData(selectedMovie, volumeRange);
   const [feedFilter, setFeedFilter] = useState('All');
-  const [driverTab, setDriverTab] = useState('Engagement');
+  const [driverTab, setDriverTab] = useState(DRIVER_TABS[0].label);
   const [sentimentMetric, setSentimentMetric] = useState('total');
   const metricConfig = SENTIMENT_METRIC_CONFIG[sentimentMetric];
+
+  // Re-rank drivers by the active tab's metric and scale each bar against the
+  // top row, since engagement rate and posts/day have no natural 0-100 range
+  // the way share-of-posts does.
+  const driverConfig = DRIVER_TABS.find((t) => t.label === driverTab) ?? DRIVER_TABS[0];
+  const rankedDrivers = [...d.drivers]
+    .sort((a, b) => (b[driverConfig.key] ?? 0) - (a[driverConfig.key] ?? 0))
+    .slice(0, 5);
+  const driverMax = Math.max(...rankedDrivers.map((r) => r[driverConfig.key] ?? 0), 0);
 
   return (
     <div className="p-6 space-y-4">
@@ -162,25 +198,36 @@ export default function ConversationsTab({ selectedMovie }) {
           <PanelLink>View all conversations</PanelLink>
         </Panel>
 
-        <Panel title="CONVERSATION DRIVERS" info description="What's driving the most engagement.">
+        <Panel title="CONVERSATION DRIVERS" info description="Which parts of the movie are driving talk, ranked by engagement, share of posts, or posting velocity — and whether that talk is positive.">
           <div className="flex items-center gap-1.5 flex-wrap mb-3 -mx-1">
             {DRIVER_TABS.map((t) => (
               <button
-                key={t}
-                onClick={() => setDriverTab(t)}
+                key={t.label}
+                onClick={() => setDriverTab(t.label)}
                 className={`px-2.5 py-1 rounded-lg text-[11px] font-medium mx-1 transition-colors ${
-                  t === driverTab ? 'bg-blue-600/20 text-blue-400' : 'text-white/50 hover:bg-white/[0.04]'
+                  t.label === driverTab ? 'bg-blue-600/20 text-blue-400' : 'text-white/50 hover:bg-white/[0.04]'
                 }`}
               >
-                {t}
+                {t.label}
               </button>
             ))}
           </div>
-          <div className="space-y-3 flex-1">
-            {d.drivers.map((driver) => (
-              <BarRow key={driver.label} label={driver.label} pct={driver.pct * 2.5} valueLabel={`${driver.pct}%`} color="#a78bfa" />
-            ))}
-          </div>
+          {d.isDriversLoading ? (
+            <PanelSkeleton />
+          ) : (
+            <div className="space-y-3 flex-1">
+              {rankedDrivers.map((driver) => (
+                <BarRow
+                  key={driver.label}
+                  label={driver.label}
+                  sublabel={driverConfig.sublabel(driver)}
+                  pct={driverMax > 0 ? ((driver[driverConfig.key] ?? 0) / driverMax) * 100 : 0}
+                  valueLabel={driverConfig.format(driver)}
+                  color={DRIVER_SENTIMENT_COLOR[driver.sentiment] ?? DRIVER_SENTIMENT_COLOR.neutral}
+                />
+              ))}
+            </div>
+          )}
           <PanelLink>View all drivers</PanelLink>
         </Panel>
       </div>
