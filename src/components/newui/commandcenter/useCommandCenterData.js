@@ -54,6 +54,10 @@ const TONE_TO_KIND = { good: 'arrow', bad: 'arrowDown', warning: 'plus' };
 const CATEGORY_TO_IMPACT = { HIGH_IMPACT: 'High', MEDIUM_IMPACT: 'Medium', LOW_IMPACT: 'Low' };
 const IMPACT_TO_ICON = { High: 'trending', Medium: 'external', Low: 'eye' };
 
+// Backend's RecommendedActionItem.status (ACTIVE|DONE|IRRELEVANT) onto this
+// panel's lowercase status vocabulary (active|done|irrelevant).
+const ACTION_STATUS_TO_UI = { ACTIVE: 'active', DONE: 'done', IRRELEVANT: 'irrelevant' };
+
 // Merges the selected real movie entity's identity fields (title, release
 // countdown, poster image, genre/language), the real audience-pulse top
 // regions, the real "People Love"/"People Concerned About" aspect chips, the
@@ -62,7 +66,7 @@ const IMPACT_TO_ICON = { High: 'trending', Medium: 'external', Low: 'eye' };
 // watch, the audience pulse map, campaign timeline) has no backend concept
 // yet, so it stays as static dummy data — same approach as
 // useMovieOverviewData for the My Movie tab.
-export default function useCommandCenterData(selectedMovie) {
+export default function useCommandCenterData(selectedMovie, movieSwitchNonce = 0) {
   const entityId = selectedMovie?.id;
 
   const { data: audiencePulseRaw, isLoading: isAudiencePulseLoading } = useQuery({
@@ -90,8 +94,13 @@ export default function useCommandCenterData(selectedMovie) {
   });
 
   const { data: recommendedActionsRaw, isLoading: isRecommendedActionsLoading } = useQuery({
-    queryKey: ['recommended-actions', entityId, 'newui-command-center'],
-    queryFn: ({ signal }) => dashboardService.getRecommendedActions(entityId, { signal }),
+    // movieSwitchNonce only increments on an explicit "Switch Movie" pick
+    // (see NewCommandCenter), so folding it into the key forces a fresh
+    // fetch with refresh=true for that pick without re-requesting a refresh
+    // on every incidental remount/refetch of the same entity.
+    queryKey: ['recommended-actions', entityId, movieSwitchNonce, 'newui-command-center'],
+    queryFn: ({ signal }) =>
+      dashboardService.getRecommendedActions(entityId, { refresh: movieSwitchNonce > 0, signal }),
     enabled: entityId != null,
   });
 
@@ -196,6 +205,8 @@ export default function useCommandCenterData(selectedMovie) {
         ? realRecommendedActions.map((a) => {
             const impact = CATEGORY_TO_IMPACT[a.category] ?? 'Medium';
             return {
+              candidateId: a.candidateId,
+              status: ACTION_STATUS_TO_UI[a.status] ?? 'active',
               impact,
               icon: IMPACT_TO_ICON[impact],
               title: a.title,

@@ -15,8 +15,8 @@ import useCommandCenterData from './useCommandCenterData';
 
 const STAT_ICONS = { health: HeartPulse, buzz: MonitorPlay, sentiment: Smile, reach: Users, awareness: Radio };
 
-export default function CommandCenterSection({ selectedMovie, userName, onOpenWorkspace }) {
-  const data = useCommandCenterData(selectedMovie);
+export default function CommandCenterSection({ selectedMovie, movieSwitchNonce, userName, onOpenWorkspace }) {
+  const data = useCommandCenterData(selectedMovie, movieSwitchNonce);
   const [askModalOpen, setAskModalOpen] = useState(false);
   const [askPrompt, setAskPrompt] = useState('');
 

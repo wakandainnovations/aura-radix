@@ -46,13 +46,13 @@ function ActionRow({ action, onSetStatus, rowRef, isHighlighted }) {
         {action.status === 'active' ? (
           <>
             <button
-              onClick={() => onSetStatus(action.title, 'done')}
+              onClick={() => onSetStatus(action, 'done')}
               className="flex items-center gap-1 text-xs font-medium text-emerald-400 hover:text-emerald-300 transition-colors px-2 py-1 rounded-md hover:bg-emerald-500/10"
             >
               <Check className="w-3.5 h-3.5" /> Mark Done
             </button>
             <button
-              onClick={() => onSetStatus(action.title, 'irrelevant')}
+              onClick={() => onSetStatus(action, 'irrelevant')}
               className="flex items-center gap-1 text-xs font-medium text-white/40 hover:text-white/70 transition-colors px-2 py-1 rounded-md hover:bg-white/[0.06]"
             >
               <Ban className="w-3.5 h-3.5" /> Mark Irrelevant
@@ -60,7 +60,7 @@ function ActionRow({ action, onSetStatus, rowRef, isHighlighted }) {
           </>
         ) : (
           <button
-            onClick={() => onSetStatus(action.title, 'active')}
+            onClick={() => onSetStatus(action, 'active')}
             className="flex items-center gap-1 text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors px-2 py-1 rounded-md hover:bg-blue-500/10"
           >
             <RotateCcw className="w-3.5 h-3.5" /> Mark Active

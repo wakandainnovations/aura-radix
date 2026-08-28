@@ -1,9 +1,14 @@
 import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Target, ExternalLink, TrendingUp, Eye, Check, Ban, ArrowRight } from 'lucide-react';
 import { CARD } from '../theme';
-import useActionStatuses from './useActionStatuses';
+import { dashboardService } from '../../../api/dashboardService';
 import RecommendedActionsModal from './RecommendedActionsModal';
 import { RelatedUsersPreview } from './RelatedUsers';
+
+// This panel's lowercase status vocabulary onto the backend's
+// RecommendedActionItem.status (ACTIVE|DONE|IRRELEVANT).
+const UI_STATUS_TO_ACTION_STATUS = { active: 'ACTIVE', done: 'DONE', irrelevant: 'IRRELEVANT' };
 
 const IMPACT_TONE = {
   High: 'bg-red-500/15 text-red-400',
@@ -13,7 +18,7 @@ const IMPACT_TONE = {
 
 const ICONS = { external: ExternalLink, trending: TrendingUp, eye: Eye };
 
-function ActionCard({ action, onMarkDone, onMarkIrrelevant, onOpenItem }) {
+function ActionCard({ action, onMarkDone, onMarkIrrelevant, onOpenItem, pending }) {
   const CornerIcon = ICONS[action.icon] ?? ExternalLink;
   return (
     <div className={`${CARD} p-4 flex flex-col`}>
@@ -53,13 +58,15 @@ function ActionCard({ action, onMarkDone, onMarkIrrelevant, onOpenItem }) {
       <div className="mt-3 flex items-center gap-2 pt-3 border-t border-white/[0.06]">
         <button
           onClick={onMarkDone}
-          className="flex items-center gap-1 text-xs font-medium text-emerald-400 hover:text-emerald-300 transition-colors px-2 py-1 rounded-md hover:bg-emerald-500/10"
+          disabled={pending}
+          className="flex items-center gap-1 text-xs font-medium text-emerald-400 hover:text-emerald-300 transition-colors px-2 py-1 rounded-md hover:bg-emerald-500/10 disabled:opacity-50"
         >
           <Check className="w-3.5 h-3.5" /> Done
         </button>
         <button
           onClick={onMarkIrrelevant}
-          className="flex items-center gap-1 text-xs font-medium text-white/40 hover:text-white/70 transition-colors px-2 py-1 rounded-md hover:bg-white/[0.06]"
+          disabled={pending}
+          className="flex items-center gap-1 text-xs font-medium text-white/40 hover:text-white/70 transition-colors px-2 py-1 rounded-md hover:bg-white/[0.06] disabled:opacity-50"
         >
           <Ban className="w-3.5 h-3.5" /> Irrelevant
         </button>
@@ -85,11 +92,28 @@ function ActionCardSkeleton() {
 }
 
 export default function RecommendedActions({ actions, isLoading = false, entityId }) {
-  const [statuses, setStatus] = useActionStatuses(entityId);
+  const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [focusTitle, setFocusTitle] = useState(null);
 
-  const withStatus = actions.map((a) => ({ ...a, status: statuses[a.title] ?? 'active' }));
+  const statusMutation = useMutation({
+    mutationFn: ({ candidateId, status }) =>
+      dashboardService.updateRecommendedActionStatus(entityId, candidateId, UI_STATUS_TO_ACTION_STATUS[status]),
+    onSuccess: () => {
+      // Query key also carries a movieSwitchNonce and a page-scope tag this
+      // component doesn't have; a partial key still matches by prefix.
+      queryClient.invalidateQueries({ queryKey: ['recommended-actions', entityId] });
+    },
+  });
+
+  // Dummy fallback actions (no real backend candidate yet) have no
+  // candidateId — there's nothing to persist a status change against.
+  function handleSetStatus(action, status) {
+    if (action.candidateId == null) return;
+    statusMutation.mutate({ candidateId: action.candidateId, status });
+  }
+
+  const withStatus = actions.map((a) => ({ ...a, status: a.status ?? 'active' }));
   const activeActions = withStatus.filter((a) => a.status === 'active');
 
   const openItemDetail = (title) => {
@@ -132,11 +156,14 @@ export default function RecommendedActions({ actions, isLoading = false, entityI
         ) : activeActions.length > 0 ? (
           activeActions.map((a) => (
             <ActionCard
-              key={a.title}
+              key={a.candidateId ?? a.title}
               action={a}
-              onMarkDone={() => setStatus(a.title, 'done')}
-              onMarkIrrelevant={() => setStatus(a.title, 'irrelevant')}
+              onMarkDone={() => handleSetStatus(a, 'done')}
+              onMarkIrrelevant={() => handleSetStatus(a, 'irrelevant')}
               onOpenItem={() => openItemDetail(a.title)}
+              pending={
+                statusMutation.isPending && statusMutation.variables?.candidateId === a.candidateId
+              }
             />
           ))
         ) : (
@@ -151,7 +178,7 @@ export default function RecommendedActions({ actions, isLoading = false, entityI
           open={modalOpen}
           onOpenChange={handleModalOpenChange}
           actions={withStatus}
-          onSetStatus={setStatus}
+          onSetStatus={handleSetStatus}
           highlightTitle={focusTitle}
         />
       )}

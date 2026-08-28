@@ -252,9 +252,10 @@ export const dashboardService = {
   // candidates (category/confidencePct/window) selected and phrased by an LLM,
   // filtered by default to the phase whose window contains today.
   // Path: GET /api/dashboard/{entityId}/recommended-actions
-  // Response: { entityId, entityName, daysToRelease, actions: [{ category, title, reason,
+  // Response: { entityId, entityName, daysToRelease, actions: [{ candidateId, category, title, reason,
   //   confidencePct, relatedFactor, windowStartDaysFromRelease, windowEndDaysFromRelease, windowLabel,
-  //   exampleHandles: string[], relevantUsers: [{ userId, platform, profileUrl }] (max 20,
+  //   status: ACTIVE|DONE|IRRELEVANT, exampleHandles: string[],
+  //   relevantUsers: [{ userId, platform, profileUrl }] (max 20,
   //   only present when the action text references specific user handles; userId is the
   //   display handle itself, not a numeric id — there's no separate display-name field) }],
   //   generatedAt }
@@ -263,6 +264,19 @@ export const dashboardService = {
       params: { refresh, allPhases },
       signal,
     });
+    return response;
+  },
+
+  // Update a Recommended Actions candidate's status (mark done/irrelevant,
+  // or revert to active).
+  // Path: PATCH /api/dashboard/{entityId}/recommended-actions/{actionId}/status
+  // Body: { status: ACTIVE|DONE|IRRELEVANT }
+  updateRecommendedActionStatus: async (entityId, actionId, status, { signal } = {}) => {
+    const response = await apiClient.patch(
+      `/dashboard/${entityId}/recommended-actions/${actionId}/status`,
+      { status },
+      { signal }
+    );
     return response;
   },
 

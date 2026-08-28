@@ -37,6 +37,11 @@ const SECTIONS = {
 export default function NewCommandCenter() {
   const [activeSection, setActiveSection] = useState('command-center');
   const [selectedMovie, setSelectedMovie] = useState(null);
+  // Bumped only when the user explicitly picks a movie from the "Switch
+  // Movie" picker (not when activeMovie falls back to movies[0] below), so
+  // the Command Center's recommended-actions fetch can request a fresh
+  // (refresh=true) plan for that one selection instead of serving cache.
+  const [movieSwitchNonce, setMovieSwitchNonce] = useState(0);
   const { isAdmin, viewAsUserId, refresh: refreshLicense } = useLicense();
   const { username, setIsAuthenticated, setUsername } = useAuth();
   const [fullAccessOn, setFullAccessOn] = usePreviewTabsToggle();
@@ -59,6 +64,11 @@ export default function NewCommandCenter() {
       setActiveSection('command-center');
     }
   }, [hiddenNavKeys, activeSection]);
+
+  const handleSelectMovie = (movie) => {
+    setSelectedMovie(movie);
+    setMovieSwitchNonce((n) => n + 1);
+  };
 
   const handleLogout = () => {
     authService.logout();
@@ -99,7 +109,7 @@ export default function NewCommandCenter() {
         releaseInDays={releaseInDays}
         movies={movies}
         selectedMovie={activeMovie}
-        onSelectMovie={setSelectedMovie}
+        onSelectMovie={handleSelectMovie}
         userName={username}
         onLogout={handleLogout}
         hiddenNavKeys={hiddenNavKeys}
@@ -108,6 +118,7 @@ export default function NewCommandCenter() {
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         <SectionComponent
           selectedMovie={activeMovie}
+          movieSwitchNonce={movieSwitchNonce}
           userName={username}
           onOpenWorkspace={() => setActiveSection('my-movie')}
           fullAccess={fullAccess}
