@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { X, ChevronLeft, ChevronRight, CalendarDays, Flag } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, CalendarDays, Flag, Pencil } from 'lucide-react';
 import { todayDateStr } from '../dateUtils';
 import { STAGE_LABEL_TOOLTIP } from './checkpointStageTooltips';
 import InfoTooltip from '../shared/InfoTooltip';
+import EditCheckpointModal from './EditCheckpointModal';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -25,8 +26,9 @@ function dateKey(year, month, day) {
   return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
-export default function CheckpointCalendarModal({ open, onOpenChange, checkpoints = [] }) {
+export default function CheckpointCalendarModal({ open, onOpenChange, checkpoints = [], entityId }) {
   const [viewDate, setViewDate] = useState(() => new Date());
+  const [editCheckpoint, setEditCheckpoint] = useState(null);
 
   // Jumps to whichever month actually has checkpoints (nearest upcoming one,
   // or the most recent past one if all checkpoints are behind us) each time
@@ -64,6 +66,8 @@ export default function CheckpointCalendarModal({ open, onOpenChange, checkpoint
       .filter((c) => c.checkpointDate?.startsWith(prefix))
       .sort((a, b) => a.checkpointDate.localeCompare(b.checkpointDate));
   }, [checkpoints, year, month]);
+
+  const undatedCheckpoints = useMemo(() => checkpoints.filter((c) => !c.checkpointDate), [checkpoints]);
 
   function shiftMonth(delta) {
     setViewDate(new Date(year, month + delta, 1));
@@ -127,15 +131,25 @@ export default function CheckpointCalendarModal({ open, onOpenChange, checkpoint
                     {day && <div className="text-white/50">{day}</div>}
                     {dayCheckpoints?.map((c) => (
                       <InfoTooltip key={c.id} content={STAGE_LABEL_TOOLTIP[c.stage]}>
-                        <div
-                          className={`mt-1 flex items-center gap-1 px-1 py-0.5 rounded text-[10px] truncate ${
+                        <button
+                          type="button"
+                          onClick={() => entityId != null && setEditCheckpoint(c)}
+                          className={`mt-1 flex items-center gap-1 px-1 py-0.5 rounded text-[10px] truncate w-full text-left ${
                             c.isDefault ? 'bg-blue-500/15 text-blue-300' : 'bg-amber-500/15 text-amber-300'
-                          } ${STAGE_LABEL_TOOLTIP[c.stage] ? 'cursor-help' : ''}`}
-                          title={!STAGE_LABEL_TOOLTIP[c.stage] && c.isDefault ? 'Default lifecycle-stage checkpoint' : undefined}
+                          } ${entityId != null ? 'hover:brightness-125 cursor-pointer' : ''} ${
+                            STAGE_LABEL_TOOLTIP[c.stage] ? 'cursor-help' : ''
+                          }`}
+                          title={
+                            entityId != null
+                              ? 'Click to edit'
+                              : !STAGE_LABEL_TOOLTIP[c.stage] && c.isDefault
+                                ? 'Default lifecycle-stage checkpoint'
+                                : undefined
+                          }
                         >
                           <Flag className="w-2.5 h-2.5 shrink-0" />
                           <span className="truncate">{c.description}</span>
-                        </div>
+                        </button>
                       </InfoTooltip>
                     ))}
                   </div>
@@ -148,7 +162,7 @@ export default function CheckpointCalendarModal({ open, onOpenChange, checkpoint
               {monthCheckpoints.length > 0 ? (
                 <div className="space-y-1.5">
                   {monthCheckpoints.map((c) => (
-                    <div key={c.id} className="flex items-center gap-2.5 text-sm">
+                    <div key={c.id} className="flex items-center gap-2.5 text-sm group">
                       <Flag className={`w-3.5 h-3.5 shrink-0 ${c.isDefault ? 'text-blue-400' : 'text-amber-400'}`} />
                       <span className="text-white/50 shrink-0">{c.checkpointDate}</span>
                       <InfoTooltip content={STAGE_LABEL_TOOLTIP[c.stage]}>
@@ -162,6 +176,15 @@ export default function CheckpointCalendarModal({ open, onOpenChange, checkpoint
                           {c.description}
                         </span>
                       </InfoTooltip>
+                      {entityId != null && (
+                        <button
+                          onClick={() => setEditCheckpoint(c)}
+                          className="ml-auto shrink-0 p-1 rounded text-white/25 hover:text-blue-400 hover:bg-white/[0.06] opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Edit checkpoint"
+                        >
+                          <Pencil className="w-3 h-3" />
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -169,9 +192,51 @@ export default function CheckpointCalendarModal({ open, onOpenChange, checkpoint
                 <p className="text-sm text-white/35">No checkpoints this month.</p>
               )}
             </div>
+
+            {undatedCheckpoints.length > 0 && (
+              <div className="mt-5 pt-4 border-t border-white/[0.06]">
+                <div className="text-xs font-medium text-white/40 mb-2">Checkpoints without a date yet</div>
+                <div className="space-y-1.5">
+                  {undatedCheckpoints.map((c) => (
+                    <div key={c.id} className="flex items-center gap-2.5 text-sm group">
+                      <Flag className={`w-3.5 h-3.5 shrink-0 ${c.isDefault ? 'text-blue-400' : 'text-amber-400'}`} />
+                      <InfoTooltip content={STAGE_LABEL_TOOLTIP[c.stage]}>
+                        <span
+                          className={`text-white/80 truncate ${
+                            STAGE_LABEL_TOOLTIP[c.stage]
+                              ? 'cursor-help underline decoration-dotted decoration-white/30 underline-offset-2'
+                              : ''
+                          }`}
+                        >
+                          {c.description}
+                        </span>
+                      </InfoTooltip>
+                      {entityId != null && (
+                        <button
+                          onClick={() => setEditCheckpoint(c)}
+                          className="ml-auto shrink-0 flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                        >
+                          <Pencil className="w-3 h-3" />
+                          Set date
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </Dialog.Content>
       </Dialog.Portal>
+
+      {entityId != null && (
+        <EditCheckpointModal
+          open={editCheckpoint != null}
+          onOpenChange={(next) => !next && setEditCheckpoint(null)}
+          entityId={entityId}
+          checkpoint={editCheckpoint}
+        />
+      )}
     </Dialog.Root>
   );
 }

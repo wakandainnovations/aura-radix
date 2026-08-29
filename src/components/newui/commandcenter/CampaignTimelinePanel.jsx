@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { Check, Play, Circle, Plus } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Check, Play, Circle, Plus, Pencil } from 'lucide-react';
 import { Panel, PanelLink } from '../shared/Panel';
 import AddCheckpointModal from './AddCheckpointModal';
+import EditCheckpointModal from './EditCheckpointModal';
 import CheckpointCalendarModal from './CheckpointCalendarModal';
 import { STAGE_LABEL_TOOLTIP } from './checkpointStageTooltips';
 import InfoTooltip from '../shared/InfoTooltip';
@@ -23,6 +24,9 @@ function StepIcon({ status }) {
 export default function CampaignTimelinePanel({ steps, checkpoints = [], entityId }) {
   const [addOpen, setAddOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [editCheckpoint, setEditCheckpoint] = useState(null);
+
+  const checkpointsById = useMemo(() => new Map(checkpoints.map((c) => [String(c.id), c])), [checkpoints]);
 
   return (
     <Panel
@@ -36,7 +40,7 @@ export default function CampaignTimelinePanel({ steps, checkpoints = [], entityI
             const style = STEP_STYLE[step.status];
             return (
               <div key={step.key} className="flex items-start">
-                <div className="flex flex-col items-center gap-1.5 w-16 shrink-0">
+                <div className="flex flex-col items-center gap-1.5 w-16 shrink-0 group">
                   <div
                     className={`w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 ${style.ring} ${step.isDefault ? 'border-dashed' : ''}`}
                     title={step.isDefault ? 'Default lifecycle-stage checkpoint' : undefined}
@@ -55,7 +59,18 @@ export default function CampaignTimelinePanel({ steps, checkpoints = [], entityI
                         {step.label}
                       </div>
                     </InfoTooltip>
-                    <div className="text-[10px] text-white/30 leading-tight">{step.date}</div>
+                    <div className="flex items-center justify-center gap-1">
+                      <div className="text-[10px] text-white/30 leading-tight">{step.date}</div>
+                      {entityId != null && (
+                        <button
+                          onClick={() => setEditCheckpoint(checkpointsById.get(step.key) ?? null)}
+                          className="opacity-0 group-hover:opacity-100 text-white/30 hover:text-blue-400 transition-opacity"
+                          title="Edit checkpoint date"
+                        >
+                          <Pencil className="w-2.5 h-2.5" />
+                        </button>
+                      )}
+                    </div>
                     {step.impact && (
                       <div
                         className={`text-[10px] font-semibold leading-tight mt-0.5 ${IMPACT_TONE_CLASS[step.impact.tone]}`}
@@ -83,9 +98,22 @@ export default function CampaignTimelinePanel({ steps, checkpoints = [], entityI
         </button>
       )}
 
-      <CheckpointCalendarModal open={calendarOpen} onOpenChange={setCalendarOpen} checkpoints={checkpoints} />
+      <CheckpointCalendarModal
+        open={calendarOpen}
+        onOpenChange={setCalendarOpen}
+        checkpoints={checkpoints}
+        entityId={entityId}
+      />
       {entityId != null && (
-        <AddCheckpointModal open={addOpen} onOpenChange={setAddOpen} entityId={entityId} />
+        <>
+          <AddCheckpointModal open={addOpen} onOpenChange={setAddOpen} entityId={entityId} />
+          <EditCheckpointModal
+            open={editCheckpoint != null}
+            onOpenChange={(next) => !next && setEditCheckpoint(null)}
+            entityId={entityId}
+            checkpoint={editCheckpoint}
+          />
+        </>
       )}
     </Panel>
   );
