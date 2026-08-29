@@ -43,6 +43,52 @@ export const mentionActionService = {
     return response;
   },
 
+  // POST /api/mentions/{mentionId}/actions/override-topic-category (README 26f)
+  // Human correction of a misclassified topicCategory. Unlike overrideReviewAspect,
+  // this never writes to the upstream ingestion tables - it appends a
+  // TopicCategoryOverride row that every read path (this breakdown, the mentions
+  // filter, this endpoint's own previousCategory) resolves ahead of the raw
+  // upstream column. `category` is a plain string, not a validated enum - pass the
+  // exact topicCategory value the breakdown response returned.
+  overrideTopicCategory: async (mentionId, { category, reason } = {}) => {
+    const response = await apiClient.post(`/mentions/${mentionId}/actions/override-topic-category`, {
+      category,
+      ...(reason && { reason }),
+    });
+    return response;
+  },
+
+  // POST /api/mentions/{mentionId}/actions/override-author-type (README 26g)
+  // Same append-only overlay design as overrideTopicCategory, for authorType.
+  overrideAuthorType: async (mentionId, { category, reason } = {}) => {
+    const response = await apiClient.post(`/mentions/${mentionId}/actions/override-author-type`, {
+      category,
+      ...(reason && { reason }),
+    });
+    return response;
+  },
+
+  // POST /api/mentions/{mentionId}/actions/override-content-intent (README 26h)
+  // Same append-only overlay design as overrideTopicCategory, for contentIntent.
+  overrideContentIntent: async (mentionId, { category, reason } = {}) => {
+    const response = await apiClient.post(`/mentions/${mentionId}/actions/override-content-intent`, {
+      category,
+      ...(reason && { reason }),
+    });
+    return response;
+  },
+
+  // POST /api/mentions/{mentionId}/actions/override-region (README 26i)
+  // Same append-only overlay design as overrideTopicCategory, for region
+  // (predicted_region).
+  overrideRegion: async (mentionId, { category, reason } = {}) => {
+    const response = await apiClient.post(`/mentions/${mentionId}/actions/override-region`, {
+      category,
+      ...(reason && { reason }),
+    });
+    return response;
+  },
+
   // DELETE /api/mentions/{mentionId} (README 26b)
   // Hard-deletes a false-positive/irrelevant mention and all records hanging off
   // it. Returns 204 on success. A 404 means it's already gone server-side (double

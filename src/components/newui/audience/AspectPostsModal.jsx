@@ -4,9 +4,11 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { X, MessagesSquare, Pencil, Loader2 } from 'lucide-react';
 import { dashboardService } from '../../../api/dashboardService';
 import { mentionActionService } from '../../../api/mentionActionService';
+import { useLicense } from '../../../hooks/useLicense';
 import { formatImpressions } from '../../../utils/helpers';
 import { PLATFORM_COLOR } from '../theme';
 import { platformLabel } from './useConversationsData';
+import ErrorState from '../shared/ErrorState';
 
 const SENTIMENT_TONE = {
   POSITIVE: 'text-emerald-400 bg-emerald-500/15',
@@ -50,6 +52,7 @@ function formatPostTime(instant) {
 // (README 26e) as the intended spot-check-then-correct workflow.
 function MentionRow({ mention, entityId, category }) {
   const queryClient = useQueryClient();
+  const { isAdmin } = useLicense();
   const [editing, setEditing] = useState(false);
   const [newCategory, setNewCategory] = useState(category ?? ASPECT_OPTIONS[0].value);
   const [reason, setReason] = useState('');
@@ -105,7 +108,7 @@ function MentionRow({ mention, entityId, category }) {
 
       {corrected ? (
         <p className="text-[11px] text-emerald-400 mt-2">Recategorized to {aspectLabel(corrected.newCategory)}</p>
-      ) : editing ? (
+      ) : !isAdmin ? null : editing ? (
         <div className="mt-2.5 pt-2.5 border-t border-white/[0.06] space-y-2">
           <select
             value={newCategory}
@@ -157,7 +160,7 @@ function MentionRow({ mention, entityId, category }) {
 // so the aggregate bar can be spot-checked against real content rather than
 // trusted blindly, with an inline fix (README 26e) for anything misclassified.
 export default function AspectPostsModal({ open, onOpenChange, entityId, category, label }) {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ['mentions', entityId, 'reviewAspectCategory', category],
     queryFn: () => dashboardService.getMentions(entityId, { reviewAspectCategory: category, size: 50 }),
     enabled: open && entityId != null && !!category,
@@ -188,6 +191,8 @@ export default function AspectPostsModal({ open, onOpenChange, entityId, categor
           <div className="flex-1 overflow-y-auto px-5 py-4 space-y-2.5">
             {isLoading ? (
               <p className="text-sm text-white/40 text-center py-8">Loading posts…</p>
+            ) : isError ? (
+              <ErrorState error={error} />
             ) : mentions.length > 0 ? (
               mentions.map((m) => <MentionRow key={m.id} mention={m} entityId={entityId} category={category} />)
             ) : (
