@@ -242,25 +242,33 @@ export default function useCommandCenterData(selectedMovie, movieSwitchNonce = 0
     }));
 
     // Falls back to the dummy launch-plan steps (which carry no impact score)
-    // until this entity has at least one real checkpoint. Once it does, each
-    // step's impact score is looked up from the checkpoint-impact endpoint by
-    // checkpointId, and status is derived from comparing the checkpoint date
-    // to today rather than relying on a manually-set status field.
+    // until this entity has at least one dated real checkpoint. Every MOVIE
+    // entity is now auto-seeded with 9 default lifecycle-stage checkpoints,
+    // 5 of which start with checkpointDate: null until the user sets one (see
+    // AuraService README §7b) — those can't be placed on a chronological
+    // timeline, so they're excluded here rather than crashing the sort below.
+    // Once there's at least one dated checkpoint, each step's impact score is
+    // looked up from the checkpoint-impact endpoint by checkpointId, and
+    // status is derived from comparing the checkpoint date to today rather
+    // than relying on a manually-set status field.
     const realCheckpoints = checkpointsRaw ?? [];
+    const datedCheckpoints = realCheckpoints.filter((cp) => cp.checkpointDate);
     const impactByCheckpointId = new Map(
       (checkpointImpactRaw?.impacts ?? []).map((imp) => [imp.checkpointId, imp])
     );
     const today = todayDateStr();
     const campaignTimeline =
-      realCheckpoints.length > 0
-        ? [...realCheckpoints]
+      datedCheckpoints.length > 0
+        ? [...datedCheckpoints]
             .sort((a, b) => a.checkpointDate.localeCompare(b.checkpointDate))
             .map((cp) => ({
               key: String(cp.id),
               label: cp.description,
+              stage: cp.stage,
               date: formatShortDate(cp.checkpointDate),
               status: cp.checkpointDate < today ? 'done' : cp.checkpointDate > today ? 'upcoming' : 'current',
               impact: checkpointImpactLabel(impactByCheckpointId.get(cp.id)),
+              isDefault: cp.isDefault ?? false,
             }))
         : base.campaignTimeline;
 

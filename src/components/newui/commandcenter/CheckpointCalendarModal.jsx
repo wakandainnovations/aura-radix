@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, ChevronLeft, ChevronRight, CalendarDays, Flag } from 'lucide-react';
 import { todayDateStr } from '../dateUtils';
+import { STAGE_LABEL_TOOLTIP } from './checkpointStageTooltips';
+import InfoTooltip from '../shared/InfoTooltip';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -124,13 +126,17 @@ export default function CheckpointCalendarModal({ open, onOpenChange, checkpoint
                   >
                     {day && <div className="text-white/50">{day}</div>}
                     {dayCheckpoints?.map((c) => (
-                      <div
-                        key={c.id}
-                        className="mt-1 flex items-center gap-1 px-1 py-0.5 rounded bg-amber-500/15 text-amber-300 text-[10px] truncate"
-                      >
-                        <Flag className="w-2.5 h-2.5 shrink-0" />
-                        <span className="truncate">{c.description}</span>
-                      </div>
+                      <InfoTooltip key={c.id} content={STAGE_LABEL_TOOLTIP[c.stage]}>
+                        <div
+                          className={`mt-1 flex items-center gap-1 px-1 py-0.5 rounded text-[10px] truncate ${
+                            c.isDefault ? 'bg-blue-500/15 text-blue-300' : 'bg-amber-500/15 text-amber-300'
+                          } ${STAGE_LABEL_TOOLTIP[c.stage] ? 'cursor-help' : ''}`}
+                          title={!STAGE_LABEL_TOOLTIP[c.stage] && c.isDefault ? 'Default lifecycle-stage checkpoint' : undefined}
+                        >
+                          <Flag className="w-2.5 h-2.5 shrink-0" />
+                          <span className="truncate">{c.description}</span>
+                        </div>
+                      </InfoTooltip>
                     ))}
                   </div>
                 );
@@ -143,9 +149,19 @@ export default function CheckpointCalendarModal({ open, onOpenChange, checkpoint
                 <div className="space-y-1.5">
                   {monthCheckpoints.map((c) => (
                     <div key={c.id} className="flex items-center gap-2.5 text-sm">
-                      <Flag className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      <Flag className={`w-3.5 h-3.5 shrink-0 ${c.isDefault ? 'text-blue-400' : 'text-amber-400'}`} />
                       <span className="text-white/50 shrink-0">{c.checkpointDate}</span>
-                      <span className="text-white/80 truncate">{c.description}</span>
+                      <InfoTooltip content={STAGE_LABEL_TOOLTIP[c.stage]}>
+                        <span
+                          className={`text-white/80 truncate ${
+                            STAGE_LABEL_TOOLTIP[c.stage]
+                              ? 'cursor-help underline decoration-dotted decoration-white/30 underline-offset-2'
+                              : ''
+                          }`}
+                        >
+                          {c.description}
+                        </span>
+                      </InfoTooltip>
                     </div>
                   ))}
                 </div>

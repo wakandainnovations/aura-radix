@@ -3,6 +3,8 @@ import { Check, Play, Circle, Plus } from 'lucide-react';
 import { Panel, PanelLink } from '../shared/Panel';
 import AddCheckpointModal from './AddCheckpointModal';
 import CheckpointCalendarModal from './CheckpointCalendarModal';
+import { STAGE_LABEL_TOOLTIP } from './checkpointStageTooltips';
+import InfoTooltip from '../shared/InfoTooltip';
 
 const STEP_STYLE = {
   done: { ring: 'border-emerald-400 text-emerald-400', line: 'bg-emerald-400', label: 'text-white/70' },
@@ -35,11 +37,24 @@ export default function CampaignTimelinePanel({ steps, checkpoints = [], entityI
             return (
               <div key={step.key} className="flex items-start">
                 <div className="flex flex-col items-center gap-1.5 w-16 shrink-0">
-                  <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 ${style.ring}`}>
+                  <div
+                    className={`w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 ${style.ring} ${step.isDefault ? 'border-dashed' : ''}`}
+                    title={step.isDefault ? 'Default lifecycle-stage checkpoint' : undefined}
+                  >
                     <StepIcon status={step.status} />
                   </div>
                   <div className="text-center">
-                    <div className={`text-[11px] font-medium leading-tight ${style.label}`}>{step.label}</div>
+                    <InfoTooltip content={STAGE_LABEL_TOOLTIP[step.stage]}>
+                      <div
+                        className={`text-[11px] font-medium leading-tight ${style.label} ${
+                          STAGE_LABEL_TOOLTIP[step.stage]
+                            ? 'cursor-help underline decoration-dotted decoration-white/30 underline-offset-2'
+                            : ''
+                        }`}
+                      >
+                        {step.label}
+                      </div>
+                    </InfoTooltip>
                     <div className="text-[10px] text-white/30 leading-tight">{step.date}</div>
                     {step.impact && (
                       <div

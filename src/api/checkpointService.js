@@ -8,11 +8,12 @@ import { unwrapEntitlement, entitlementPayload } from './entitlement';
 const payload = (res) => entitlementPayload(unwrapEntitlement(res));
 
 export const checkpointService = {
-  create: async ({ entityId, checkpointDate, description }) => {
+  create: async ({ entityId, checkpointDate, description, checkpointType }) => {
     const response = await apiClient.post('/checkpoints', {
       entityId,
       checkpointDate,
       description,
+      checkpointType,
     });
     return payload(response);
   },
@@ -22,10 +23,14 @@ export const checkpointService = {
     return payload(response);
   },
 
-  update: async (checkpointId, { checkpointDate, description } = {}) => {
+  // `selectedAnchors` only applies to the ANCHOR_SEED (stage 1, "Pre-Announcement")
+  // checkpoint; the backend 400s if it's sent for any other checkpoint.
+  update: async (checkpointId, { checkpointDate, description, checkpointType, selectedAnchors } = {}) => {
     const body = {};
     if (checkpointDate !== undefined) body.checkpointDate = checkpointDate;
     if (description !== undefined) body.description = description;
+    if (checkpointType !== undefined) body.checkpointType = checkpointType;
+    if (selectedAnchors !== undefined) body.selectedAnchors = selectedAnchors;
     const response = await apiClient.patch(`/checkpoints/${checkpointId}`, body);
     return payload(response);
   },
