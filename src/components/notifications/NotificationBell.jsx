@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Bell, Zap, AlertTriangle, X } from 'lucide-react';
+import { Bell, Zap, AlertTriangle, X, ExternalLink } from 'lucide-react';
 import { alertService } from '../../api/alertService';
 
 // Mirrors AlertsPanel's KIND_CONFIG so the dropdown reads consistently with the
@@ -51,6 +51,19 @@ export default function NotificationBell({ onViewAll, buttonClassName, panelClas
     onViewAll?.();
   };
 
+  // Same "jump straight to the post/comment" behavior as the Alerts panel's
+  // "Source" link — an alert about a specific mention should open that
+  // mention, not just dump the user into the full Alerts view. Falls back to
+  // onViewAll for alerts that don't carry a permalink.
+  const handleAlertClick = (alert) => {
+    setOpen(false);
+    if (alert.permalink) {
+      window.open(alert.permalink, '_blank', 'noopener,noreferrer');
+    } else {
+      onViewAll?.();
+    }
+  };
+
   return (
     <div className="relative" ref={containerRef}>
       <button
@@ -96,7 +109,8 @@ export default function NotificationBell({ onViewAll, buttonClassName, panelClas
                 return (
                   <button
                     key={alert.id}
-                    onClick={handleViewAll}
+                    onClick={() => handleAlertClick(alert)}
+                    title={alert.permalink ? 'Open source post' : undefined}
                     className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-accent transition-colors"
                   >
                     <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${meta.color}`} />
@@ -108,6 +122,12 @@ export default function NotificationBell({ onViewAll, buttonClassName, panelClas
                       <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground">
                         {alert.entityName && <span className="truncate">{alert.entityName}</span>}
                         {alert.triggeredAt && <span>{new Date(alert.triggeredAt).toLocaleString()}</span>}
+                        {alert.permalink && (
+                          <span className="inline-flex items-center gap-0.5 text-primary ml-auto shrink-0">
+                            <ExternalLink className="w-3 h-3" />
+                            Source
+                          </span>
+                        )}
                       </div>
                     </div>
                   </button>
