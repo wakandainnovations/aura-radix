@@ -278,11 +278,11 @@ export default function useCommandCenterData(selectedMovie, movieSwitchNonce = 0
       const resolvedId = competitorEntityIds[i];
       const reachQuery = competitorReachQueries[i];
       // No resolvable id (name didn't match any of the caller's own movies)
-      // is treated the same as a fetch error: either way there's no
-      // unique-users figure to show, so the panel falls back to "N/A".
+      // is treated the same as a fetch error or a still-pending fetch: either
+      // way there's no unique-users figure yet, so this stays null and the
+      // panel leaves it blank rather than showing a placeholder.
       const uniqueUsers =
         resolvedId != null && reachQuery?.isSuccess ? reachQuery.data?.uniqueUsers ?? null : null;
-      const isUniqueUsersUnavailable = resolvedId == null || reachQuery?.isError;
       return {
         // The documented snapshot DTO has no id field, but PRCommandCenter's
         // handleAddCompetitor already relies on one of these being present to
@@ -292,8 +292,6 @@ export default function useCommandCenterData(selectedMovie, movieSwitchNonce = 0
         totalMentions: c.totalMentions,
         positiveRatio: c.positiveRatio,
         uniqueUsers,
-        isUniqueUsersUnavailable,
-        isUniqueUsersLoading: resolvedId != null && (reachQuery?.isPending ?? false),
       };
     });
 

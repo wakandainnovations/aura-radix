@@ -26,11 +26,10 @@ function formatMentions(count) {
   return String(count);
 }
 
-// "N/A" whenever the competitor's own entity id couldn't be resolved or its
-// /reach-direct call failed; otherwise the formatted unique-users count, or
-// nothing at all while that per-competitor fetch is still in flight.
+// Left blank (rather than showing an "N/A" label) whenever the competitor's
+// own entity id couldn't be resolved, its /reach-direct call failed, or that
+// per-competitor fetch is still in flight — only a resolved count is shown.
 function formatUniqueUsers(competitor) {
-  if (competitor.isUniqueUsersUnavailable) return 'N/A';
   if (competitor.uniqueUsers == null) return null;
   return formatCompact(competitor.uniqueUsers);
 }
