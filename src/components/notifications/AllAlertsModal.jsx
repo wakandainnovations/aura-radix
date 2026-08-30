@@ -60,7 +60,9 @@ export default function AllAlertsModal({ open, onOpenChange }) {
     },
   });
 
-  const alerts = data?.content || [];
+  const alerts = [...(data?.content || [])].sort(
+    (a, b) => new Date(b.triggeredAt) - new Date(a.triggeredAt)
+  );
   const totalPages = data?.totalPages || 0;
 
   const handleFilterChange = (status) => {

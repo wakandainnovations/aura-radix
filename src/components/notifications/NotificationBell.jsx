@@ -33,7 +33,9 @@ export default function NotificationBell({ onViewAll, buttonClassName, panelClas
     refetchIntervalInBackground: true,
   });
 
-  const alerts = data?.content || [];
+  const alerts = [...(data?.content || [])].sort(
+    (a, b) => new Date(b.triggeredAt) - new Date(a.triggeredAt)
+  );
   const count = data?.totalElements ?? alerts.length;
 
   // Close the dropdown when clicking anywhere outside it.
