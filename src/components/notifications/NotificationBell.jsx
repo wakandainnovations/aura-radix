@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Bell, Zap, AlertTriangle, X, ExternalLink } from 'lucide-react';
 import { alertService } from '../../api/alertService';
+import AllAlertsModal from './AllAlertsModal';
 
 // Mirrors AlertsPanel's KIND_CONFIG so the dropdown reads consistently with the
 // full Alerts view. Kept minimal (label + icon) — the panel owns the rich layout.
@@ -19,6 +20,7 @@ const DEFAULT_PANEL_CLASS =
 
 export default function NotificationBell({ onViewAll, buttonClassName, panelClassName }) {
   const [open, setOpen] = useState(false);
+  const [showAllAlerts, setShowAllAlerts] = useState(false);
   const containerRef = useRef(null);
 
   // OPEN alerts are the natural "unread" signal — acknowledging/dismissing in the
@@ -46,21 +48,28 @@ export default function NotificationBell({ onViewAll, buttonClassName, panelClas
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
 
+  // Classic UI passes onViewAll to navigate to its full Alert Management
+  // view; the new UI has no such view, so it gets an in-place modal with the
+  // same acknowledge/dismiss actions instead.
   const handleViewAll = () => {
     setOpen(false);
-    onViewAll?.();
+    if (onViewAll) {
+      onViewAll();
+    } else {
+      setShowAllAlerts(true);
+    }
   };
 
   // Same "jump straight to the post/comment" behavior as the Alerts panel's
   // "Source" link — an alert about a specific mention should open that
   // mention, not just dump the user into the full Alerts view. Falls back to
-  // onViewAll for alerts that don't carry a permalink.
+  // handleViewAll for alerts that don't carry a permalink.
   const handleAlertClick = (alert) => {
-    setOpen(false);
     if (alert.permalink) {
+      setOpen(false);
       window.open(alert.permalink, '_blank', 'noopener,noreferrer');
     } else {
-      onViewAll?.();
+      handleViewAll();
     }
   };
 
@@ -144,6 +153,8 @@ export default function NotificationBell({ onViewAll, buttonClassName, panelClas
           </button>
         </div>
       )}
+
+      <AllAlertsModal open={showAllAlerts} onOpenChange={setShowAllAlerts} />
     </div>
   );
 }
