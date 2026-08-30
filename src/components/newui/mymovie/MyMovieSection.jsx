@@ -39,7 +39,6 @@ export default function MyMovieSection({ selectedMovie, fullAccess }) {
         tabs={visibleTabs}
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        notificationCount={3}
       />
       {activeTab === 'Overview' ? (
         <OverviewTab data={data} />

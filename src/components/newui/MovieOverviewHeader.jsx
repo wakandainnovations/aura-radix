@@ -1,7 +1,13 @@
-import { Bell, User } from 'lucide-react';
+import { User } from 'lucide-react';
 import { releaseCountdownLabel } from './dateUtils';
+import NotificationBell from '../notifications/NotificationBell';
 
 const DEFAULT_TABS = ['Overview', 'Performance', 'Timeline', 'Assets', 'Reports'];
+
+const BELL_BUTTON_CLASS =
+  'relative w-10 h-10 flex items-center justify-center rounded-lg bg-white/[0.04] border border-white/10 text-white/70 hover:bg-white/[0.08] transition-colors';
+const BELL_PANEL_CLASS =
+  'absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-xl border border-white/[0.07] bg-[#0b0e19] shadow-2xl z-50';
 
 export default function MovieOverviewHeader({
   title,
@@ -10,7 +16,6 @@ export default function MovieOverviewHeader({
   tabs = DEFAULT_TABS,
   activeTab,
   onTabChange,
-  notificationCount = 0,
 }) {
   const { isPast, days } = releaseCountdownLabel(releaseInDays);
   return (
@@ -31,14 +36,7 @@ export default function MovieOverviewHeader({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <button className="relative w-10 h-10 flex items-center justify-center rounded-lg bg-white/[0.04] border border-white/10 text-white/70 hover:bg-white/[0.08] transition-colors">
-            <Bell className="w-4 h-4" />
-            {notificationCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
-                {notificationCount > 9 ? '9+' : notificationCount}
-              </span>
-            )}
-          </button>
+          <NotificationBell buttonClassName={BELL_BUTTON_CLASS} panelClassName={BELL_PANEL_CLASS} />
           <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/[0.04] border border-white/10 text-white/70 hover:bg-white/[0.08] transition-colors">
             <User className="w-4 h-4" />
           </button>

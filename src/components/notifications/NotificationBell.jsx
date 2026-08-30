@@ -12,7 +12,12 @@ const KIND_META = {
 
 const POLL_INTERVAL = 60000; // 1 minute — keeps the badge timely without hammering the API
 
-export default function NotificationBell({ onViewAll }) {
+const DEFAULT_BUTTON_CLASS =
+  'relative p-2 h-10 w-10 flex items-center justify-center rounded-lg bg-accent text-muted-foreground hover:text-foreground transition-colors';
+const DEFAULT_PANEL_CLASS =
+  'absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-xl border border-border bg-card shadow-2xl z-50';
+
+export default function NotificationBell({ onViewAll, buttonClassName, panelClassName }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef(null);
 
@@ -50,7 +55,7 @@ export default function NotificationBell({ onViewAll }) {
     <div className="relative" ref={containerRef}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="relative p-2 h-10 w-10 flex items-center justify-center rounded-lg bg-accent text-muted-foreground hover:text-foreground transition-colors"
+        className={buttonClassName ?? DEFAULT_BUTTON_CLASS}
         title={count > 0 ? `${count} open alert${count === 1 ? '' : 's'}` : 'No open alerts'}
       >
         <Bell className="w-5 h-5" />
@@ -62,7 +67,7 @@ export default function NotificationBell({ onViewAll }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-xl border border-border bg-card shadow-2xl z-50">
+        <div className={panelClassName ?? DEFAULT_PANEL_CLASS}>
           <div className="flex items-center justify-between px-4 py-3 border-b border-border sticky top-0 bg-card">
             <div className="flex items-center gap-2">
               <Bell className="w-4 h-4 text-amber-400" />

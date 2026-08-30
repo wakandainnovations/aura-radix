@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { SIDEBAR_BG } from './theme';
 import SwitchMovieMenu from './SwitchMovieMenu';
+import PreviewTabsToggle from './PreviewTabsToggle';
 
 const NAV_ITEMS = [
   { key: 'command-center', label: 'Command Center', icon: LayoutGrid },
@@ -34,6 +35,9 @@ export default function NewUISidebar({
   userName,
   onLogout,
   hiddenNavKeys = [],
+  isAdmin = false,
+  fullAccess = false,
+  onToggleFullAccess,
 }) {
   const displayName = userName || 'Account';
   const navItems = NAV_ITEMS.filter((item) => !hiddenNavKeys.includes(item.key));
@@ -75,6 +79,12 @@ export default function NewUISidebar({
           releaseInDays={releaseInDays}
         />
       </div>
+
+      {isAdmin && (
+        <div className="px-3 pb-3">
+          <PreviewTabsToggle fullAccess={fullAccess} onToggle={onToggleFullAccess} />
+        </div>
+      )}
 
       <div className="border-t border-white/[0.07] px-4 py-3">
         <DropdownMenu.Root>

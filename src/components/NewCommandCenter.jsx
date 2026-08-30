@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import NewUISidebar from './newui/NewUISidebar';
-import PreviewTabsToggle from './newui/PreviewTabsToggle';
 import CommandCenterSection from './newui/commandcenter/CommandCenterSection';
 import MyMovieSection from './newui/mymovie/MyMovieSection';
 import AudienceIntelligenceSection from './newui/audience/AudienceIntelligenceSection';
@@ -100,8 +99,6 @@ export default function NewCommandCenter() {
 
   return (
     <div className={`h-screen flex ${PAGE_BG} text-white overflow-hidden`}>
-      {isAdmin && <PreviewTabsToggle fullAccess={fullAccessOn} onToggle={setFullAccessOn} />}
-
       <NewUISidebar
         activeItem={activeSection}
         onSelect={setActiveSection}
@@ -113,6 +110,9 @@ export default function NewCommandCenter() {
         userName={username}
         onLogout={handleLogout}
         hiddenNavKeys={hiddenNavKeys}
+        isAdmin={isAdmin}
+        fullAccess={fullAccessOn}
+        onToggleFullAccess={setFullAccessOn}
       />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">

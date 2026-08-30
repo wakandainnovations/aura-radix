@@ -1,8 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { Bot, Settings, Mic, Send, ThumbsUp, ThumbsDown, Copy, Bell, User, Sparkles } from 'lucide-react';
+import { Bot, Settings, Mic, Send, ThumbsUp, ThumbsDown, Copy, User, Sparkles } from 'lucide-react';
 import { CARD, PAGE_BG } from '../theme';
 import { tryPrompts } from './aiProducerData';
 import { movieQueryService } from '../../../api/movieQueryService';
+import NotificationBell from '../../notifications/NotificationBell';
+
+const BELL_BUTTON_CLASS =
+  'relative w-10 h-10 flex items-center justify-center rounded-lg bg-white/[0.04] border border-white/10 text-white/70 hover:bg-white/[0.08] transition-colors';
+const BELL_PANEL_CLASS =
+  'absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-xl border border-white/[0.07] bg-[#0b0e19] shadow-2xl z-50';
 
 function AIBubble({ msg }) {
   return (
@@ -107,9 +113,7 @@ export default function AIProducerSection({
           <p className="text-sm text-white/40 mt-1">Your AI co-pilot for smarter, faster decisions.</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/[0.04] border border-white/10 text-white/70">
-            <Bell className="w-4 h-4" />
-          </button>
+          <NotificationBell buttonClassName={BELL_BUTTON_CLASS} panelClassName={BELL_PANEL_CLASS} />
           <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/[0.04] border border-white/10 text-white/70">
             <User className="w-4 h-4" />
           </button>
