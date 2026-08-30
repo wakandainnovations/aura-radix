@@ -8,9 +8,10 @@ const KIND_CONFIG = {
   INFLUENCER_NEGATIVE: { icon: AlertTriangle, label: 'Influencer Negative', color: 'text-red-400' },
 };
 
+// Backend status enum is OPEN / ACKED / DISMISSED — not "ACKNOWLEDGED".
 const STATUS_COLORS = {
   OPEN: 'bg-red-500/20 text-red-400 border-red-500/30',
-  ACKNOWLEDGED: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+  ACKED: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
   DISMISSED: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
 };
 
@@ -79,7 +80,7 @@ export default function AlertsPanel({ entityId }) {
         </div>
         <div className="flex items-center gap-2">
           <div className="flex gap-1">
-            {['', 'OPEN', 'ACKNOWLEDGED', 'DISMISSED'].map((s) => (
+            {['', 'OPEN', 'ACKED', 'DISMISSED'].map((s) => (
               <button
                 key={s}
                 onClick={() => { setStatusFilter(s); setPage(0); }}
