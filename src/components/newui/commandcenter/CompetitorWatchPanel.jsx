@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Panel, PanelLink } from '../shared/Panel';
 import AddCompetitorModal from './AddCompetitorModal';
+import { formatCompact } from '../formatCompact';
 
 // Mirrors CompetitivePositioning's formatPercentage: the backend sends
 // positiveRatio as a 0-1 fraction, but tolerate an already-scaled 0-100
@@ -25,8 +26,18 @@ function formatMentions(count) {
   return String(count);
 }
 
+// "N/A" whenever the competitor's own entity id couldn't be resolved or its
+// /reach-direct call failed; otherwise the formatted unique-users count, or
+// nothing at all while that per-competitor fetch is still in flight.
+function formatUniqueUsers(competitor) {
+  if (competitor.isUniqueUsersUnavailable) return 'N/A';
+  if (competitor.uniqueUsers == null) return null;
+  return formatCompact(competitor.uniqueUsers);
+}
+
 function CompetitorRow({ competitor }) {
   const mentions = formatMentions(competitor.totalMentions);
+  const uniqueUsers = formatUniqueUsers(competitor);
   return (
     <div className="flex items-center gap-3">
       <div className="w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center text-xs font-semibold text-white/60 shrink-0">
@@ -41,7 +52,13 @@ function CompetitorRow({ competitor }) {
             </span>
           )}
         </div>
-        {mentions && <div className="text-[11px] text-white/35 truncate">{mentions} mentions</div>}
+        {(mentions || uniqueUsers) && (
+          <div className="text-[11px] text-white/35 truncate">
+            {mentions && <span>{mentions} mentions</span>}
+            {mentions && uniqueUsers && <span> · </span>}
+            {uniqueUsers && <span>{uniqueUsers} unique users</span>}
+          </div>
+        )}
       </div>
     </div>
   );

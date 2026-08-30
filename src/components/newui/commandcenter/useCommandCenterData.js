@@ -1,11 +1,13 @@
 import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueries } from '@tanstack/react-query';
 import { dummyCommandCenter } from './commandCenterData';
 import { dummyMovieOverview } from '../dummyMovieData';
 import { daysUntilRelease, timeAgoLabel, formatShortDate, todayDateStr } from '../dateUtils';
 import { formatCompact } from '../formatCompact';
 import { dashboardService } from '../../../api/dashboardService';
 import { checkpointService } from '../../../api/checkpointService';
+import { entityService } from '../../../api/entityService';
+import { useLicense } from '../../../hooks/useLicense';
 
 // The window (in days) of mentions immediately before vs. after a checkpoint
 // that the "impact score" is computed over, matching the default window the
@@ -68,6 +70,7 @@ const ACTION_STATUS_TO_UI = { ACTIVE: 'active', DONE: 'done', IRRELEVANT: 'irrel
 // useMovieOverviewData for the My Movie tab.
 export default function useCommandCenterData(selectedMovie, movieSwitchNonce = 0) {
   const entityId = selectedMovie?.id;
+  const { isAdmin } = useLicense();
 
   const { data: audiencePulseRaw, isLoading: isAudiencePulseLoading } = useQuery({
     queryKey: ['audience-pulse', entityId, 'newui-command-center'],
@@ -138,6 +141,46 @@ export default function useCommandCenterData(selectedMovie, movieSwitchNonce = 0
     queryKey: ['competitive-snapshot', entityId, 'newui-command-center'],
     queryFn: ({ signal }) => dashboardService.getCompetitorSnapshot(entityId, { signal }),
     enabled: entityId != null,
+  });
+
+  // The competitor-snapshot DTO carries each competitor's name only, no
+  // entity id (see getCompetitorSnapshot doc), so their ids have to be
+  // resolved by matching entityName against the caller's own movie catalog —
+  // the same list AddCompetitorModal draws its candidates from, since a
+  // competitor is always one of the caller's own tracked movies.
+  // An admin's plain GET /entities/movie spans every owner's catalog (see
+  // AddCompetitorModal), which risks resolving a same-named movie from a
+  // different owner, so scope it to the primary entity's actual owner first.
+  const { data: primaryEntityForCompetitorLookup } = useQuery({
+    queryKey: ['entity-detail', entityId, 'movie', 'newui-command-center-competitor-lookup'],
+    queryFn: () => entityService.getById(entityId, 'movie'),
+    enabled: isAdmin && entityId != null && (competitorSnapshotRaw?.length ?? 0) > 1,
+  });
+  const competitorLookupOwnerId = isAdmin ? primaryEntityForCompetitorLookup?.ownerId : undefined;
+
+  const { data: ownedMovies } = useQuery({
+    queryKey: ['entities', 'movie', 'newui-command-center-competitor-lookup', competitorLookupOwnerId ?? 'self'],
+    queryFn: () => entityService.getAll('movie', { ownerId: competitorLookupOwnerId }),
+    enabled:
+      (competitorSnapshotRaw?.length ?? 0) > 1 && (!isAdmin || primaryEntityForCompetitorLookup != null),
+  });
+
+  const competitorEntityIds = useMemo(() => {
+    const nameToId = new Map((ownedMovies ?? []).map((m) => [m.name, m.id]));
+    return (competitorSnapshotRaw ?? []).slice(1).map((c) => nameToId.get(c.entityName) ?? null);
+  }, [competitorSnapshotRaw, ownedMovies]);
+
+  // Fetched one competitor at a time — there's no backend endpoint that
+  // batches unique-users across entities — with retries off and each query
+  // isolated so one competitor's failure/timeout doesn't block the others;
+  // the panel reads each result independently and falls back to "N/A".
+  const competitorReachQueries = useQueries({
+    queries: competitorEntityIds.map((id) => ({
+      queryKey: ['reach-direct', id, 'newui-command-center-competitor'],
+      queryFn: ({ signal }) => dashboardService.getReachDirect(id, { signal }),
+      enabled: id != null,
+      retry: false,
+    })),
   });
 
   const { data: checkpointsRaw, isLoading: isCheckpointsLoading } = useQuery({
@@ -231,15 +274,28 @@ export default function useCommandCenterData(selectedMovie, movieSwitchNonce = 0
     // added yet, so the panel can prompt the user to add one instead of
     // showing data for movies that aren't actually being tracked.
     const realCompetitors = (competitorSnapshotRaw ?? []).slice(1);
-    const competitorWatch = realCompetitors.map((c) => ({
-      // The documented snapshot DTO has no id field, but PRCommandCenter's
-      // handleAddCompetitor already relies on one of these being present to
-      // dedupe against on re-add; kept here for the same reason.
-      id: c.id ?? c.entityId,
-      name: c.entityName,
-      totalMentions: c.totalMentions,
-      positiveRatio: c.positiveRatio,
-    }));
+    const competitorWatch = realCompetitors.map((c, i) => {
+      const resolvedId = competitorEntityIds[i];
+      const reachQuery = competitorReachQueries[i];
+      // No resolvable id (name didn't match any of the caller's own movies)
+      // is treated the same as a fetch error: either way there's no
+      // unique-users figure to show, so the panel falls back to "N/A".
+      const uniqueUsers =
+        resolvedId != null && reachQuery?.isSuccess ? reachQuery.data?.uniqueUsers ?? null : null;
+      const isUniqueUsersUnavailable = resolvedId == null || reachQuery?.isError;
+      return {
+        // The documented snapshot DTO has no id field, but PRCommandCenter's
+        // handleAddCompetitor already relies on one of these being present to
+        // dedupe against on re-add; kept here for the same reason.
+        id: c.id ?? c.entityId ?? resolvedId ?? undefined,
+        name: c.entityName,
+        totalMentions: c.totalMentions,
+        positiveRatio: c.positiveRatio,
+        uniqueUsers,
+        isUniqueUsersUnavailable,
+        isUniqueUsersLoading: resolvedId != null && (reachQuery?.isPending ?? false),
+      };
+    });
 
     // Falls back to the dummy launch-plan steps (which carry no impact score)
     // until this entity has at least one dated real checkpoint. Every MOVIE
@@ -365,6 +421,8 @@ export default function useCommandCenterData(selectedMovie, movieSwitchNonce = 0
     reachRaw,
     awarenessRaw,
     competitorSnapshotRaw,
+    competitorEntityIds,
+    competitorReachQueries,
     checkpointsRaw,
     checkpointImpactRaw,
   ]);
