@@ -26,7 +26,7 @@ import PlaybooksView from './workspace/PlaybooksView';
 import AbuseReportsView from './workspace/AbuseReportsView';
 import WorkspaceExportView from './workspace/WorkspaceExportView';
 import CommandPalette from './navigation/CommandPalette';
-import LoginModal from './auth/LoginModal';
+import LoginPage from './auth/LoginPage';
 import NotificationBell from './notifications/NotificationBell';
 // Import API services
 import { entityService, dashboardService, analyticsService, authService } from '../api';
@@ -88,7 +88,6 @@ export default function PRCommandCenter() {
   const [selectedThreatLevels, setSelectedThreatLevels] = useState([]);
   const [commandOpen, setCommandOpen] = useState(false);
   const [addEntityModalOpen, setAddEntityModalOpen] = useState(false);
-  const [loginOpen, setLoginOpen] = useState(false);
   const [timeRange, setTimeRange] = useState('60m');
   const [competitors, setCompetitors] = useState([]);
   const [dateRange, setDateRange] = useState('DAY');
@@ -439,6 +438,21 @@ export default function PRCommandCenter() {
     setSelectedEntities(prev => prev.filter(e => e.id !== entityId));
   }, []);
 
+  // Nothing behind the login gate — no nav, no header, no tab list — mounts
+  // until the user is authenticated.
+  if (!isAuthenticated) {
+    return (
+      <LoginPage
+        onLoginSuccess={() => {
+          setIsAuthenticated(true);
+          setUsername(localStorage.getItem('username'));
+          refreshLicense();
+          handleFetchData();
+        }}
+      />
+    );
+  }
+
   return (
     <div className="h-screen flex bg-background text-foreground">
       {/* Left Navbar */}
@@ -505,72 +519,43 @@ export default function PRCommandCenter() {
               )}
             </div>
 
-            {/* Add Entity Button - only shown when authenticated */}
-            {isAuthenticated && (
-              <button
-                onClick={() => setAddEntityModalOpen(true)}
-                disabled={selectedEntities.length >= maxEntities}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 transition-colors text-sm font-medium border border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
-                title={selectedEntities.length >= maxEntities ? `Maximum ${maxEntities} entities allowed` : 'Add entity'}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                Add Entity
-              </button>
-            )}
+            {/* Add Entity Button */}
+            <button
+              onClick={() => setAddEntityModalOpen(true)}
+              disabled={selectedEntities.length >= maxEntities}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 transition-colors text-sm font-medium border border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
+              title={selectedEntities.length >= maxEntities ? `Maximum ${maxEntities} entities allowed` : 'Add entity'}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Add Entity
+            </button>
           </div>
 
           <div className="flex items-center gap-2">
-            {!isAuthenticated ? (
-              <button
-                onClick={() => setLoginOpen(true)}
-                className="px-4 py-2 h-10 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-colors"
-              >
-                Login
-              </button>
-            ) : (
-              <>
-                <AdminUserSelector />
-                <NotificationBell onViewAll={() => setActiveView('alert-management')} />
-                <span className="text-sm text-muted-foreground">Logged in</span>
-                <button
-                  onClick={() => {
-                    authService.logout();
-                    setIsAuthenticated(false);
-                    setUsername(null);
-                    refreshLicense();
-                    if (activeView === 'ai-analytics') {
-                      setActiveView('dashboard');
-                    }
-                    setSelectedEntities([]);
-                    setAddEntityModalOpen(false);
-                  }}
-                  className="px-4 py-2 h-10 text-sm font-medium rounded-lg bg-red-600 text-white hover:opacity-90 transition-colors"
-                >
-                  Logout
-                </button>
-              </>
-            )}
+            <AdminUserSelector />
+            <NotificationBell onViewAll={() => setActiveView('alert-management')} />
+            <span className="text-sm text-muted-foreground">Logged in</span>
+            <button
+              onClick={() => {
+                authService.logout();
+                setIsAuthenticated(false);
+                setUsername(null);
+                refreshLicense();
+                if (activeView === 'ai-analytics') {
+                  setActiveView('dashboard');
+                }
+                setSelectedEntities([]);
+                setAddEntityModalOpen(false);
+              }}
+              className="px-4 py-2 h-10 text-sm font-medium rounded-lg bg-red-600 text-white hover:opacity-90 transition-colors"
+            >
+              Logout
+            </button>
           </div>
         </div>
-
-        {/* Unauthenticated Screen - Show when not logged in */}
-        {!isAuthenticated && (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <h2 className="text-5xl font-bold text-foreground mb-4">Welcome to Project Aura</h2>
-              <p className="text-muted-foreground mb-8">Please log in to get started</p>
-              <button
-                onClick={() => setLoginOpen(true)}
-                className="px-6 py-3 bg-primary text-primary-foreground font-medium rounded-lg hover:opacity-90 transition-colors"
-              >
-                Open Login
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Welcome Screen - Show on first load before entities are fetched */}
         {isAuthenticated && isLoadingEntities && (
@@ -821,32 +806,14 @@ export default function PRCommandCenter() {
       />
 
       {/* Add Entity Modal - REWORKED */}
-      {isAuthenticated && (
-        <AddEntityModal
-          open={addEntityModalOpen}
-          onOpenChange={setAddEntityModalOpen}
-          onEntitySelect={handleAddEntity}
-          movieEntities={movieEntities}
-          celebrityEntities={celebrityEntities}
-          currentEntityIds={selectedEntities.map(e => e.id)}
-          maxEntities={maxEntities}
-        />
-      )}
-
-      {/* Login Modal */}
-      <LoginModal 
-        open={loginOpen} 
-        onOpenChange={setLoginOpen}
-        onLoginSuccess={() => {
-          // Set authenticated state
-          setIsAuthenticated(true);
-          setUsername(localStorage.getItem('username'));
-          // Load license/entitlements/admin status for the now-authenticated user.
-          refreshLicense();
-
-          // Refetch entities and other queries now that we're authenticated
-          handleFetchData();
-        }}
+      <AddEntityModal
+        open={addEntityModalOpen}
+        onOpenChange={setAddEntityModalOpen}
+        onEntitySelect={handleAddEntity}
+        movieEntities={movieEntities}
+        celebrityEntities={celebrityEntities}
+        currentEntityIds={selectedEntities.map(e => e.id)}
+        maxEntities={maxEntities}
       />
     </div>
   );
