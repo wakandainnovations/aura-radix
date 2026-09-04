@@ -30,8 +30,6 @@ const STATUS_BADGE = {
 export default function AllAlertsModal({ open, onOpenChange }) {
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(0);
-  const [dismissingId, setDismissingId] = useState(null);
-  const [dismissReason, setDismissReason] = useState('');
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -52,12 +50,8 @@ export default function AllAlertsModal({ open, onOpenChange }) {
   });
 
   const dismissMutation = useMutation({
-    mutationFn: ({ alertId, reason }) => alertService.dismiss(alertId, reason),
-    onSuccess: () => {
-      setDismissingId(null);
-      setDismissReason('');
-      invalidate();
-    },
+    mutationFn: (alertId) => alertService.dismiss(alertId),
+    onSuccess: invalidate,
   });
 
   const alerts = [...(data?.content || [])].sort(
@@ -118,7 +112,6 @@ export default function AllAlertsModal({ open, onOpenChange }) {
               alerts.map((alert) => {
                 const meta = KIND_META[alert.kind] || KIND_META.SPIKE;
                 const Icon = meta.icon;
-                const isDismissing = dismissingId === alert.id;
                 return (
                   <div key={alert.id} className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3.5">
                     <div className="flex items-start gap-3">
@@ -159,11 +152,9 @@ export default function AllAlertsModal({ open, onOpenChange }) {
                             <Check className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => {
-                              setDismissingId(alert.id);
-                              setDismissReason('');
-                            }}
-                            className="p-1.5 rounded-lg bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-colors"
+                            onClick={() => dismissMutation.mutate(alert.id)}
+                            disabled={dismissMutation.isPending && dismissMutation.variables === alert.id}
+                            className="p-1.5 rounded-lg bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-colors disabled:opacity-50"
                             title="Dismiss"
                           >
                             <X className="w-4 h-4" />
@@ -171,36 +162,6 @@ export default function AllAlertsModal({ open, onOpenChange }) {
                         </div>
                       )}
                     </div>
-
-                    {isDismissing && (
-                      <div className="mt-3 pt-3 border-t border-white/[0.06]">
-                        <textarea
-                          value={dismissReason}
-                          onChange={(e) => setDismissReason(e.target.value)}
-                          placeholder="Reason for dismissal..."
-                          autoFocus
-                          className="w-full bg-white/[0.03] border border-white/10 rounded-lg p-2.5 text-xs text-white/80 placeholder:text-white/30 resize-none h-16 focus:outline-none focus:ring-1 focus:ring-blue-500/50"
-                        />
-                        <div className="flex justify-end gap-2 mt-2">
-                          <button
-                            onClick={() => {
-                              setDismissingId(null);
-                              setDismissReason('');
-                            }}
-                            className="px-3 py-1.5 text-xs rounded-lg bg-white/[0.04] text-white/60 hover:text-white/80 hover:bg-white/[0.08]"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={() => dismissMutation.mutate({ alertId: alert.id, reason: dismissReason })}
-                            disabled={!dismissReason.trim() || dismissMutation.isPending}
-                            className="px-3 py-1.5 text-xs rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
-                          >
-                            Dismiss
-                          </button>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 );
               })

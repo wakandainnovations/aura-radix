@@ -21,8 +21,6 @@ export default function AlertsPanel({ entityId }) {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [statusFilter, setStatusFilter] = useState('');
-  const [dismissModal, setDismissModal] = useState(null);
-  const [dismissReason, setDismissReason] = useState('');
   const [actionLoading, setActionLoading] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -58,13 +56,10 @@ export default function AlertsPanel({ entityId }) {
     }
   };
 
-  const handleDismiss = async () => {
-    if (!dismissModal || !dismissReason.trim()) return;
-    setActionLoading(dismissModal);
+  const handleDismiss = async (alertId) => {
+    setActionLoading(alertId);
     try {
-      await alertService.dismiss(dismissModal, dismissReason);
-      setDismissModal(null);
-      setDismissReason('');
+      await alertService.dismiss(alertId);
       fetchAlerts();
     } finally {
       setActionLoading(null);
@@ -166,7 +161,7 @@ export default function AlertsPanel({ entityId }) {
                       <Check className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => setDismissModal(alert.id)}
+                      onClick={() => handleDismiss(alert.id)}
                       disabled={actionLoading === alert.id}
                       className="p-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors disabled:opacity-50"
                       title="Dismiss"
@@ -209,35 +204,6 @@ export default function AlertsPanel({ entityId }) {
           onClose={() => setShowCreateModal(false)}
           onCreated={fetchAlerts}
         />
-      )}
-
-      {dismissModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-card border border-border rounded-xl p-6 w-full max-w-md shadow-2xl">
-            <h4 className="text-foreground font-semibold mb-3">Dismiss Alert</h4>
-            <textarea
-              value={dismissReason}
-              onChange={(e) => setDismissReason(e.target.value)}
-              placeholder="Reason for dismissal..."
-              className="w-full bg-background border border-border rounded-lg p-3 text-sm text-foreground placeholder:text-muted-foreground resize-none h-24 focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-            <div className="flex justify-end gap-2 mt-4">
-              <button
-                onClick={() => { setDismissModal(null); setDismissReason(''); }}
-                className="px-4 py-2 text-sm rounded-lg bg-accent text-muted-foreground hover:text-foreground"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDismiss}
-                disabled={!dismissReason.trim() || actionLoading === dismissModal}
-                className="px-4 py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
-              >
-                Dismiss
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );

@@ -17,8 +17,10 @@ export const alertService = {
     return response;
   },
 
-  dismiss: async (alertId, reason) => {
-    const response = await apiClient.post(`/alerts/${alertId}/dismiss`, { reason });
+  // Backend requires a non-blank reason (DismissAlertRequest is @NotBlank);
+  // the UI dismisses in one click, so we send a fixed default.
+  dismiss: async (alertId) => {
+    const response = await apiClient.post(`/alerts/${alertId}/dismiss`, { reason: 'Dismissed by user' });
     return response;
   },
 
