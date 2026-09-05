@@ -167,7 +167,7 @@ export default function useMoviePerformanceData(selectedMovie) {
     const hasSeries = days.length > 0;
 
     // Plots a running (cumulative) sum of daily totals rather than each
-    // day's own count - same treatment the Conversations section uses for
+    // day's own count - same treatment the Mentions section uses for
     // its Total Mentions panel.
     const buzzOverTime = hasSeries
       ? days.reduce((acc, d) => {

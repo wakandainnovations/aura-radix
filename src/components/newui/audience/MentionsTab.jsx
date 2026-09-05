@@ -6,13 +6,13 @@ import TrendLine from '../shared/TrendLine';
 import { PLATFORM_COLOR } from '../theme';
 import { AXIS_TICKS } from './audienceData';
 import { formatCompact } from '../formatCompact';
-import useConversationsData from './useConversationsData';
+import useMentionsData from './useMentionsData';
 import AspectPostsModal from './AspectPostsModal';
 
 const SENTIMENT_TONE = { Positive: 'text-emerald-400 bg-emerald-500/15', Neutral: 'text-amber-400 bg-amber-500/15', Negative: 'text-red-400 bg-red-500/15' };
 const FEED_FILTERS = ['All', 'X (Twitter)', 'Instagram', 'Reddit'];
 
-// Each Conversation Drivers tab re-ranks the same aspects by a different
+// Each Mention Drivers tab re-ranks the same aspects by a different
 // metric from review-aspect-breakdown, so switching tabs is client-side only.
 const DRIVER_TABS = [
   {
@@ -75,9 +75,9 @@ function PanelSkeleton() {
   );
 }
 
-export default function ConversationsTab({ selectedMovie }) {
+export default function MentionsTab({ selectedMovie }) {
   const [volumeRange, setVolumeRange] = useState('DAY90');
-  const d = useConversationsData(selectedMovie, volumeRange);
+  const d = useMentionsData(selectedMovie, volumeRange);
   const [feedFilter, setFeedFilter] = useState('All');
   const [driverTab, setDriverTab] = useState(DRIVER_TABS[0].label);
   const [sentimentMetric, setSentimentMetric] = useState('total');
@@ -99,7 +99,7 @@ export default function ConversationsTab({ selectedMovie }) {
         <Panel
           title={metricConfig.title}
           info
-          description="Track how conversations about your movie are trending."
+          description="Track how mentions of your movie are trending."
           control={
             <div className="flex items-center gap-2">
               <DropdownPill options={SENTIMENT_METRIC_OPTIONS} value={sentimentMetric} onChange={setSentimentMetric} />
@@ -130,7 +130,7 @@ export default function ConversationsTab({ selectedMovie }) {
           <PanelLink>View detailed trend</PanelLink>
         </Panel>
 
-        <Panel title="CONVERSATION DRIVERS" info description="Which parts of the movie are driving talk, ranked by engagement, share of posts, or posting velocity — and whether that talk is positive.">
+        <Panel title="MENTION DRIVERS" info description="Which parts of the movie are driving talk, ranked by engagement, share of posts, or posting velocity — and whether that talk is positive.">
           <div className="flex items-center gap-1.5 flex-wrap mb-3 -mx-1">
             {DRIVER_TABS.map((t) => (
               <button
@@ -166,7 +166,7 @@ export default function ConversationsTab({ selectedMovie }) {
       </div>
 
       <div className="grid grid-cols-1 gap-4">
-        <Panel title="LATEST CONVERSATIONS" info description="Real conversations from across platforms.">
+        <Panel title="LATEST MENTIONS" info description="Real mentions from across platforms.">
           <div className="flex items-center gap-1.5 flex-wrap mb-3 -mx-1">
             {FEED_FILTERS.map((f) => (
               <button
@@ -207,7 +207,7 @@ export default function ConversationsTab({ selectedMovie }) {
                 ))}
             </div>
           )}
-          <PanelLink>View all conversations</PanelLink>
+          <PanelLink>View all mentions</PanelLink>
         </Panel>
       </div>
 

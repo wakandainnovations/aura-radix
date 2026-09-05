@@ -7,7 +7,7 @@ import { mentionActionService } from '../../../api/mentionActionService';
 import { useLicense } from '../../../hooks/useLicense';
 import { formatImpressions } from '../../../utils/helpers';
 import { PLATFORM_COLOR } from '../theme';
-import { platformLabel } from '../audience/useConversationsData';
+import { platformLabel } from '../audience/useMentionsData';
 import ErrorState from '../shared/ErrorState';
 
 const SENTIMENT_TONE = {

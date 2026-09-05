@@ -315,7 +315,7 @@ export const influencersData = {
   ],
 };
 
-export const conversationsData = {
+export const mentionsData = {
   volumeOverTime: series(700000, 3200000).map((d) => ({ date: d.date, value: d.value })),
   volumeTotal: '3.2M',
   volumeDeltaPct: 18,

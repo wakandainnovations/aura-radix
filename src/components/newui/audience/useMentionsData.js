@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { dashboardService } from '../../../api/dashboardService';
 import { formatCompact } from '../formatCompact';
 import { formatImpressions } from '../../../utils/helpers';
-import { conversationsData } from './audienceData';
+import { mentionsData } from './audienceData';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -47,7 +47,7 @@ export function platformLabel(code) {
 const SENTIMENT_LABEL = { POSITIVE: 'Positive', NEGATIVE: 'Negative', NEUTRAL: 'Neutral' };
 
 // Human labels for the backend's snake_case review-aspect category values,
-// shown in the "Conversation Drivers" panel (same convention as
+// shown in the "Mention Drivers" panel (same convention as
 // useInfluencersData's TOPIC_CATEGORY_LABELS).
 const REVIEW_ASPECT_LABELS = {
   music_songs: 'Music / songs',
@@ -110,8 +110,8 @@ function formatPostTime(instant) {
   }
 }
 
-// Feeds the Conversations tab's "Total Mentions" (Overall/Positive/Negative
-// sentiment timeline), "Latest Conversations", and "Conversation Drivers"
+// Feeds the Mentions tab's "Total Mentions" (Overall/Positive/Negative
+// sentiment timeline), "Latest Mentions", and "Mention Drivers"
 // panels from backend endpoints: dashboardService.getSentimentOverTime
 // (Command Center's sentiment trend graph), dashboardService.getMentions (the
 // cross-platform posts feed behind SocialMediaFeed), and
@@ -125,17 +125,17 @@ function formatPostTime(instant) {
 // dashboardService.getSentimentOverTime but already relied on by
 // TimeRangeSelector.jsx to widen the lookback window beyond the trailing ~8
 // days DAY alone returns.
-export default function useConversationsData(selectedMovie, volumePeriod = 'DAY90') {
+export default function useMentionsData(selectedMovie, volumePeriod = 'DAY90') {
   const entityId = selectedMovie?.id;
 
   const { data: sentimentRaw, isLoading: isVolumeLoading } = useQuery({
-    queryKey: ['sentiment-trend', entityId, volumePeriod, 'newui-audience-conversations'],
+    queryKey: ['sentiment-trend', entityId, volumePeriod, 'newui-audience-mentions'],
     queryFn: () => dashboardService.getSentimentOverTime(entityId, volumePeriod),
     enabled: entityId != null,
   });
 
   const { data: mentionsRaw, isLoading: isLatestLoading } = useQuery({
-    queryKey: ['mentions', entityId, 'newui-audience-conversations'],
+    queryKey: ['mentions', entityId, 'newui-audience-mentions'],
     queryFn: () => dashboardService.getMentions(entityId, { size: 50 }),
     enabled: entityId != null,
   });
@@ -145,13 +145,13 @@ export default function useConversationsData(selectedMovie, volumePeriod = 'DAY9
   // posts per call, not the full backlog - see getReviewAspectBreakdown's
   // doc comment) rather than only relying on the backend's own 2h sweep.
   const { data: reviewAspectRaw, isLoading: isDriversLoading } = useQuery({
-    queryKey: ['review-aspect-breakdown', entityId, 'newui-audience-conversations'],
+    queryKey: ['review-aspect-breakdown', entityId, 'newui-audience-mentions'],
     queryFn: () => dashboardService.getReviewAspectBreakdown(entityId, { refresh: true }),
     enabled: entityId != null,
   });
 
   const merged = useMemo(() => {
-    const base = conversationsData;
+    const base = mentionsData;
     if (!entityId) return base;
 
     // Per-day totals from sentiment-over-time, same total-derivation as
@@ -195,7 +195,7 @@ export default function useConversationsData(selectedMovie, volumePeriod = 'DAY9
       negativeDeltaPct = negative.deltaPct;
     }
 
-    // "Latest Conversations" - the same cross-platform mentions feed classic
+    // "Latest Mentions" - the same cross-platform mentions feed classic
     // UI's SocialMediaFeed renders, reshaped into this panel's card fields.
     const mentions = Array.isArray(mentionsRaw?.content) ? mentionsRaw.content : [];
     let latest = base.latest;
@@ -213,7 +213,7 @@ export default function useConversationsData(selectedMovie, volumePeriod = 'DAY9
         }));
     }
 
-    // "Conversation Drivers" - every aspect is carried through with all three
+    // "Mention Drivers" - every aspect is carried through with all three
     // of its metrics, so the panel's Engagement/Volume/Velocity tabs can
     // re-rank the same rows client-side without a refetch. `other` (the
     // classifier's catch-all) is dropped unless it dominates the breakdown -
@@ -232,7 +232,7 @@ export default function useConversationsData(selectedMovie, volumePeriod = 'DAY9
         label: reviewAspectLabel(aspect.category),
         // Raw enum value the backend's reviewAspectCategory mentions filter
         // expects (README 16/26e), e.g. "climax" -> "CLIMAX" - lets the
-        // Conversation Drivers panel drill down into the classified posts
+        // Mention Drivers panel drill down into the classified posts
         // behind a bar without guessing the taxonomy string from the label.
         filterCategory: aspect.category ? aspect.category.toUpperCase() : null,
         posts: aspect.totalPosts ?? 0,
