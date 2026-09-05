@@ -1,4 +1,4 @@
-import { Calendar, GitCompare, Share2, User, Download } from 'lucide-react';
+import { Calendar, GitCompare, Share2, Download } from 'lucide-react';
 import TabRow from './TabRow';
 import NotificationBell from '../../notifications/NotificationBell';
 
@@ -9,7 +9,7 @@ const BELL_PANEL_CLASS =
 
 // Generic top header for every section besides My Movie (which has its own
 // poster/status/countdown header — see MovieOverviewHeader). Title + subtitle,
-// date range/compare/share/bell/avatar controls, tab row, optional "LIVE" pill
+// date range/compare/share/bell controls, tab row, optional "LIVE" pill
 // and optional right-most action button (e.g. "+ New Campaign").
 export default function SectionHeader({
   title,
@@ -64,9 +64,6 @@ export default function SectionHeader({
             </>
           )}
           <NotificationBell buttonClassName={BELL_BUTTON_CLASS} panelClassName={BELL_PANEL_CLASS} />
-          <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/[0.04] border border-white/10 text-white/70 hover:bg-white/[0.08] transition-colors">
-            <User className="w-4 h-4" />
-          </button>
         </div>
       </div>
 

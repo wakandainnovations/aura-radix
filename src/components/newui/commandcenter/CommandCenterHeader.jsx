@@ -1,4 +1,4 @@
-import { User, Info } from 'lucide-react';
+import { Info } from 'lucide-react';
 import { releaseCountdownLabel } from '../dateUtils';
 import NotificationBell from '../../notifications/NotificationBell';
 
@@ -26,9 +26,6 @@ export default function CommandCenterHeader({ userName, title, releaseInDays, st
 
         <div className="flex items-center gap-3 justify-end">
           <NotificationBell buttonClassName={BELL_BUTTON_CLASS} panelClassName={BELL_PANEL_CLASS} />
-          <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-white/[0.04] border border-white/10 text-white/70 hover:bg-white/[0.08] transition-colors shrink-0">
-            <User className="w-4 h-4" />
-          </button>
         </div>
       </div>
 
