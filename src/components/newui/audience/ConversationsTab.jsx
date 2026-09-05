@@ -3,8 +3,7 @@ import { ChevronDown } from 'lucide-react';
 import { Panel, PanelLink, DropdownPill } from '../shared/Panel';
 import BarRow from '../shared/BarRow';
 import TrendLine from '../shared/TrendLine';
-import AIInsightBar from '../shared/AIInsightBar';
-import { thClass, tdClass, trClass, PLATFORM_COLOR } from '../theme';
+import { PLATFORM_COLOR } from '../theme';
 import { AXIS_TICKS } from './audienceData';
 import { formatCompact } from '../formatCompact';
 import useConversationsData from './useConversationsData';
@@ -17,12 +16,6 @@ const FEED_FILTERS = ['All', 'X (Twitter)', 'Instagram', 'Reddit'];
 // metric from review-aspect-breakdown, so switching tabs is client-side only.
 const DRIVER_TABS = [
   {
-    label: 'Engagement',
-    key: 'engagementRate',
-    format: (d) => (d.engagementRate == null ? '—' : `${d.engagementRate.toFixed(1)}%`),
-    sublabel: (d) => `${formatCompact(d.views)} views · ${formatCompact(d.posts)} posts`,
-  },
-  {
     label: 'Volume',
     key: 'sharePct',
     format: (d) => `${d.sharePct.toFixed(1)}%`,
@@ -33,6 +26,12 @@ const DRIVER_TABS = [
     key: 'postsPerDay',
     format: (d) => `${d.postsPerDay.toFixed(1)}/day`,
     sublabel: (d) => `${formatCompact(d.posts)} posts`,
+  },
+  {
+    label: 'Engagement',
+    key: 'engagementRate',
+    format: (d) => (d.engagementRate == null ? '—' : `${d.engagementRate.toFixed(1)}%`),
+    sublabel: (d) => `${formatCompact(d.views)} views · ${formatCompact(d.posts)} posts`,
   },
 ];
 
@@ -131,31 +130,42 @@ export default function ConversationsTab({ selectedMovie }) {
           <PanelLink>View detailed trend</PanelLink>
         </Panel>
 
-        <Panel title="TOP CONVERSATION TOPICS" info description="What people are talking about most.">
-          <table className="w-full">
-            <thead>
-              <tr>
-                <th className={thClass}>Topic</th>
-                <th className={`${thClass} text-right`}>Volume</th>
-              </tr>
-            </thead>
-            <tbody>
-              {d.topics.map((t) => (
-                <tr key={t.label} className={trClass}>
-                  <td className={tdClass}>{t.label}</td>
-                  <td className={`${tdClass} text-right`}>
-                    <div className="text-white/70">{t.value}</div>
-                    <div className="text-[11px] text-emerald-400">↑ {t.delta}</div>
-                  </td>
-                </tr>
+        <Panel title="CONVERSATION DRIVERS" info description="Which parts of the movie are driving talk, ranked by engagement, share of posts, or posting velocity — and whether that talk is positive.">
+          <div className="flex items-center gap-1.5 flex-wrap mb-3 -mx-1">
+            {DRIVER_TABS.map((t) => (
+              <button
+                key={t.label}
+                onClick={() => setDriverTab(t.label)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-medium mx-1 transition-colors ${
+                  t.label === driverTab ? 'bg-blue-600/20 text-blue-400' : 'text-white/50 hover:bg-white/[0.04]'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+          {d.isDriversLoading ? (
+            <PanelSkeleton />
+          ) : (
+            <div className="space-y-3 flex-1">
+              {rankedDrivers.map((driver) => (
+                <BarRow
+                  key={driver.label}
+                  label={driver.label}
+                  sublabel={driverConfig.sublabel(driver)}
+                  pct={driverMax > 0 ? ((driver[driverConfig.key] ?? 0) / driverMax) * 100 : 0}
+                  valueLabel={driverConfig.format(driver)}
+                  color={DRIVER_SENTIMENT_COLOR[driver.sentiment] ?? DRIVER_SENTIMENT_COLOR.neutral}
+                  onClick={driver.filterCategory ? () => setAspectModal({ category: driver.filterCategory, label: driver.label }) : undefined}
+                />
               ))}
-            </tbody>
-          </table>
-          <PanelLink>View all topics</PanelLink>
+            </div>
+          )}
+          <PanelLink>View all drivers</PanelLink>
         </Panel>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-4">
+      <div className="grid grid-cols-1 gap-4">
         <Panel title="LATEST CONVERSATIONS" info description="Real conversations from across platforms.">
           <div className="flex items-center gap-1.5 flex-wrap mb-3 -mx-1">
             {FEED_FILTERS.map((f) => (
@@ -199,43 +209,7 @@ export default function ConversationsTab({ selectedMovie }) {
           )}
           <PanelLink>View all conversations</PanelLink>
         </Panel>
-
-        <Panel title="CONVERSATION DRIVERS" info description="Which parts of the movie are driving talk, ranked by engagement, share of posts, or posting velocity — and whether that talk is positive.">
-          <div className="flex items-center gap-1.5 flex-wrap mb-3 -mx-1">
-            {DRIVER_TABS.map((t) => (
-              <button
-                key={t.label}
-                onClick={() => setDriverTab(t.label)}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-medium mx-1 transition-colors ${
-                  t.label === driverTab ? 'bg-blue-600/20 text-blue-400' : 'text-white/50 hover:bg-white/[0.04]'
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-          {d.isDriversLoading ? (
-            <PanelSkeleton />
-          ) : (
-            <div className="space-y-3 flex-1">
-              {rankedDrivers.map((driver) => (
-                <BarRow
-                  key={driver.label}
-                  label={driver.label}
-                  sublabel={driverConfig.sublabel(driver)}
-                  pct={driverMax > 0 ? ((driver[driverConfig.key] ?? 0) / driverMax) * 100 : 0}
-                  valueLabel={driverConfig.format(driver)}
-                  color={DRIVER_SENTIMENT_COLOR[driver.sentiment] ?? DRIVER_SENTIMENT_COLOR.neutral}
-                  onClick={driver.filterCategory ? () => setAspectModal({ category: driver.filterCategory, label: driver.label }) : undefined}
-                />
-              ))}
-            </div>
-          )}
-          <PanelLink>View all drivers</PanelLink>
-        </Panel>
       </div>
-
-      <AIInsightBar insight={d.aiInsight} actions={d.actions} ctaLabel="View AI Recommendations" />
 
       <AspectPostsModal
         open={!!aspectModal}

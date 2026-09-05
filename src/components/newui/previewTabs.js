@@ -14,7 +14,7 @@ export const DEMO_HIDDEN_NAV_KEYS = ['campaign-planner', 'competitor-intelligenc
 
 export const DEMO_VISIBLE_SUBTABS = {
   'my-movie': ['Performance'],
-  'audience-intelligence': ['Influencers', 'Conversations'],
+  'audience-intelligence': ['Influencers'],
 };
 
 // Given every tab a section defines and whether the viewer has full access,
