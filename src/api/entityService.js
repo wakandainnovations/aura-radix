@@ -163,4 +163,14 @@ export const entityService = {
       throw error;
     }
   },
+
+  // Kick off the backend's one-off review-aspect backlog catch-up for an entity.
+  // Path: POST /api/admin/entities/{entityId}/review-aspect-backfill
+  // Response: 202 { id, name, status: "started" | "already_in_progress" }
+  // Admin-only on the backend (ROLE_ADMIN); callers should not surface failures
+  // from this to the user since it's a best-effort background trigger.
+  triggerReviewAspectBackfill: async (entityId) => {
+    const response = await apiClient.post(`/admin/entities/${entityId}/review-aspect-backfill`);
+    return response;
+  },
 };

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import LeftNavbar from './navigation/LeftNavbar';
 // COMMENTED OUT: Old entity selection approach
@@ -115,6 +115,21 @@ export default function PRCommandCenter() {
 
   // For queries: use cluster IDs if in cluster mode, otherwise use primary entity ID
   const entityIdsForQueries = clusterMode ? clusterEntityIds : (primaryEntity?.id ? [primaryEntity.id] : []);
+
+  // Kick off the backend's review-aspect backlog catch-up the first time each
+  // movie becomes the primary entity in a session (selecting/switching to
+  // it). Tracked in a ref (not state) so re-selecting the same movie later
+  // in the session is a no-op. Best-effort: failures are logged, never
+  // surfaced to the user.
+  const backfilledMovieIdsRef = useRef(new Set());
+  useEffect(() => {
+    const id = primaryEntity?.id;
+    if (id == null || backfilledMovieIdsRef.current.has(id)) return;
+    backfilledMovieIdsRef.current.add(id);
+    entityService.triggerReviewAspectBackfill(id).catch((error) => {
+      console.error(`Failed to trigger review-aspect backfill for entity ${id}:`, error);
+    });
+  }, [primaryEntity?.id]);
 
   // Fetch all movie entities (admins may scope to another user via viewAsUserId/ownerId).
   const { data: movieEntities = [], isLoading: moviesLoading } = useQuery({

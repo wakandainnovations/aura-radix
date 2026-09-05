@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import NewUISidebar from './newui/NewUISidebar';
 import CommandCenterSection from './newui/commandcenter/CommandCenterSection';
@@ -91,6 +91,22 @@ export default function NewCommandCenter() {
   useEffect(() => {
     setAiChatMessages([]);
     setAiChatConversationId(null);
+  }, [activeMovie?.id]);
+
+  // Kick off the backend's review-aspect backlog catch-up the first time each
+  // movie becomes active in a session — on login (activeMovie defaulting to
+  // movies[0]) and on every explicit "Switch Movie" pick. Tracked in a ref
+  // (not state) so re-selecting the same movie later in the session is a
+  // no-op and doesn't trigger a re-render. Best-effort: failures are logged,
+  // never surfaced to the user.
+  const backfilledMovieIdsRef = useRef(new Set());
+  useEffect(() => {
+    const id = activeMovie?.id;
+    if (id == null || backfilledMovieIdsRef.current.has(id)) return;
+    backfilledMovieIdsRef.current.add(id);
+    entityService.triggerReviewAspectBackfill(id).catch((error) => {
+      console.error(`Failed to trigger review-aspect backfill for entity ${id}:`, error);
+    });
   }, [activeMovie?.id]);
 
   const data = dummyMovieOverview;
