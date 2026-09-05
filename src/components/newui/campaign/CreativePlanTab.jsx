@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import StatCard from '../shared/StatCard';
-import { Panel, PanelLink, DropdownPill } from '../shared/Panel';
+import { Panel, DropdownPill } from '../shared/Panel';
 import LegendDonut from '../shared/LegendDonut';
 import AIInsightBar from '../shared/AIInsightBar';
 import TabRow from '../shared/TabRow';
@@ -40,12 +40,10 @@ function CreativePlanOverview() {
               ))}
             </tbody>
           </table>
-          <PanelLink>View all assets performance</PanelLink>
         </Panel>
 
         <Panel title="ENGAGEMENT BY PLATFORM" info description="Where your creative assets drive the most engagement.">
           <LegendDonut data={d.byPlatform} centerValue="6.4M" centerLabel="Total Engagement" size={140} />
-          <PanelLink>View platform breakdown</PanelLink>
         </Panel>
 
         <Panel title="TOP PERFORMING ASSETS" info description="Based on engagement rate." control={<DropdownPill>Last 30 days</DropdownPill>}>
@@ -61,7 +59,6 @@ function CreativePlanOverview() {
               </div>
             ))}
           </div>
-          <PanelLink>View all top assets</PanelLink>
         </Panel>
       </div>
 
@@ -80,7 +77,6 @@ function CreativePlanOverview() {
               </div>
             ))}
           </div>
-          <PanelLink>View full pipeline</PanelLink>
         </Panel>
 
         <Panel title="CREATIVE TESTING INSIGHTS" info description="A/B test performance across creative variations.">
@@ -108,7 +104,6 @@ function CreativePlanOverview() {
               </div>
             ))}
           </div>
-          <PanelLink>View all test results</PanelLink>
         </Panel>
 
         <Panel title="ASSET APPROVALS" info description="Review and approve creative assets.">
@@ -126,7 +121,6 @@ function CreativePlanOverview() {
               </div>
             ))}
           </div>
-          <PanelLink>View all approvals</PanelLink>
         </Panel>
       </div>
 

@@ -1,5 +1,5 @@
 import { Heart, AlertTriangle } from 'lucide-react';
-import { Panel, PanelLink } from '../shared/Panel';
+import { Panel } from '../shared/Panel';
 import IndiaStatesMap from '../shared/IndiaStatesMap';
 
 function Chip({ label, tone }) {
@@ -12,7 +12,7 @@ function Chip({ label, tone }) {
 
 export default function AudiencePulsePanel({ pulse, isLoading = false }) {
   return (
-    <Panel title="AUDIENCE PULSE" className="min-w-0" control={<PanelLink className="mt-0">View details</PanelLink>}>
+    <Panel title="AUDIENCE PULSE" className="min-w-0">
       {isLoading ? (
         <div className="mt-2 flex-1 space-y-2.5 animate-pulse" role="status" aria-label="Loading audience pulse">
           <div className="h-3.5 bg-white/10 rounded w-2/3" />

@@ -1,5 +1,5 @@
 import StatCard from '../shared/StatCard';
-import { Panel, PanelLink, DropdownPill } from '../shared/Panel';
+import { Panel, DropdownPill } from '../shared/Panel';
 import LegendDonut from '../shared/LegendDonut';
 import AIInsightBar from '../shared/AIInsightBar';
 import { calendarData } from './campaignData';
@@ -76,7 +76,6 @@ export default function CalendarTab() {
           );
         })}
         <div className="text-[11px] text-white/30 mt-2">Color shows primary objective</div>
-        <PanelLink>View full calendar</PanelLink>
       </Panel>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -93,12 +92,10 @@ export default function CalendarTab() {
               </div>
             ))}
           </div>
-          <PanelLink>View all milestones</PanelLink>
         </Panel>
 
         <Panel title="CAMPAIGN DISTRIBUTION (30 DAYS)" info description="By channel spend.">
           <LegendDonut data={d.distribution} centerValue="₹1.9 Cr" centerLabel="Total Spend" size={130} />
-          <PanelLink>View full distribution plan</PanelLink>
         </Panel>
       </div>
 

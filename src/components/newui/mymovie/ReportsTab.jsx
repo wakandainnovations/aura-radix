@@ -1,6 +1,6 @@
 import { FileText, Sparkles, Download, MoreVertical, Users, Megaphone, TrendingUp, MessageSquare, AlertTriangle, Plus } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Panel, PanelLink, DropdownPill } from '../shared/Panel';
+import { Panel, DropdownPill } from '../shared/Panel';
 import StatCard from '../shared/StatCard';
 import AIInsightBar from '../shared/AIInsightBar';
 import { CARD } from '../theme';
@@ -52,7 +52,7 @@ export default function ReportsTab() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4">
-        <Panel title="FEATURED REPORTS" control={<PanelLink>View all</PanelLink>}>
+        <Panel title="FEATURED REPORTS">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {d.featured.map((r) => {
               const Icon = FEATURED_ICONS[r.iconKey];
@@ -76,7 +76,7 @@ export default function ReportsTab() {
           </div>
         </Panel>
 
-        <Panel title="RECENTLY GENERATED" control={<PanelLink>View all</PanelLink>}>
+        <Panel title="RECENTLY GENERATED">
           <div className="space-y-3 flex-1">
             {d.recent.map((r) => (
               <div key={r.title} className="flex items-center justify-between gap-3">
@@ -97,7 +97,7 @@ export default function ReportsTab() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-4">
-        <Panel title="KEY INSIGHTS FROM RECENT REPORTS" control={<PanelLink>View all insights</PanelLink>}>
+        <Panel title="KEY INSIGHTS FROM RECENT REPORTS">
           <div className="space-y-3.5">
             {d.keyInsights.map((insight, i) => {
               const Icon = INSIGHT_ICONS[i % INSIGHT_ICONS.length];

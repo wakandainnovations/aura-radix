@@ -45,7 +45,6 @@ export default function CampaignsTab() {
               ))}
             </tbody>
           </table>
-          <PanelLink>View all campaigns</PanelLink>
         </Panel>
 
         <Panel title="CAMPAIGN PERFORMANCE OVER TIME" info description="Spend and engagement volume trends.">
@@ -57,14 +56,12 @@ export default function CampaignsTab() {
             ]}
             ticks={AXIS_TICKS}
           />
-          <PanelLink>View detailed performance</PanelLink>
         </Panel>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Panel title="SPEND DISTRIBUTION BY PLATFORM" info description="Where competitors are investing the most.">
           <LegendDonut data={d.spendDistribution} centerValue="₹4.8 Cr" centerLabel="Total Spend" size={140} />
-          <PanelLink>View platform insights</PanelLink>
         </Panel>
 
         <Panel title="SHARE OF VOICE" info description="Comparing how much each competitor is being talked about.">
@@ -73,7 +70,6 @@ export default function CampaignsTab() {
               <BarRow key={s.label} label={s.label} pct={s.pct * 2} valueLabel={`${s.pct}% (${s.delta})`} color="#a78bfa" />
             ))}
           </div>
-          <PanelLink>View share of voice analysis</PanelLink>
         </Panel>
       </div>
 

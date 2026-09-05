@@ -1,6 +1,6 @@
 import { Users, Heart, Frown, Eye, Activity } from 'lucide-react';
 import StatCard from '../shared/StatCard';
-import { Panel, PanelLink } from '../shared/Panel';
+import { Panel } from '../shared/Panel';
 import LegendDonut from '../shared/LegendDonut';
 import BarRow from '../shared/BarRow';
 import TrendLine from '../shared/TrendLine';
@@ -35,7 +35,6 @@ export default function OverviewTab() {
 
         <Panel title="AUDIENCE MOOD" info>
           <LegendDonut data={d.mood} centerValue="81%" centerLabel="Positive" size={130} />
-          <PanelLink>View sentiment trends</PanelLink>
         </Panel>
       </div>
 
@@ -77,7 +76,6 @@ export default function OverviewTab() {
               ))}
             </tbody>
           </table>
-          <PanelLink>View all segments</PanelLink>
         </Panel>
       </div>
 
@@ -88,12 +86,10 @@ export default function OverviewTab() {
               <BarRow key={it.label} label={it.label} pct={it.pct} color="#a78bfa" />
             ))}
           </div>
-          <PanelLink>View all interests</PanelLink>
         </Panel>
 
         <Panel title="CONVERSATION VOLUME" info description="Breakdown of conversations across topics.">
           <LegendDonut data={d.conversationVolume} centerValue="3.8M" centerLabel="Total Mentions" size={130} />
-          <PanelLink>View all topics</PanelLink>
         </Panel>
 
         <Panel title="SENTIMENT OVER TIME" info description="How sentiment has changed over time.">
@@ -109,7 +105,6 @@ export default function OverviewTab() {
             domainMax={100}
             height={160}
           />
-          <PanelLink>View detailed analysis</PanelLink>
         </Panel>
       </div>
 
@@ -133,7 +128,6 @@ export default function OverviewTab() {
               ))}
             </tbody>
           </table>
-          <PanelLink>View platform details</PanelLink>
         </Panel>
 
         <Panel title="AUDIENCE VOICE" info description="What your audience is saying right now.">
@@ -148,7 +142,6 @@ export default function OverviewTab() {
               </div>
             ))}
           </div>
-          <PanelLink>View all conversations</PanelLink>
         </Panel>
       </div>
 

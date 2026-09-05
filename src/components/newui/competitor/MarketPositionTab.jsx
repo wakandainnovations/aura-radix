@@ -63,7 +63,6 @@ export default function MarketPositionTab() {
               ))}
             </tbody>
           </table>
-          <PanelLink>View full ranking breakdown</PanelLink>
         </Panel>
 
         <Panel title="COMPETITOR POSITIONING MAP" info description="Performance across 6 key dimensions.">
@@ -76,12 +75,10 @@ export default function MarketPositionTab() {
               </div>
             ))}
           </div>
-          <PanelLink>View positioning insights</PanelLink>
         </Panel>
 
         <Panel title="MARKET SHARE OF ENGAGEMENT" info description="Share of total engagement among selected competitors.">
           <LegendDonut data={d.engagementShare} centerValue="6.4M" centerLabel="Total Engagement" size={140} />
-          <PanelLink>View engagement share</PanelLink>
         </Panel>
       </div>
 
@@ -111,7 +108,6 @@ export default function MarketPositionTab() {
               ))}
             </tbody>
           </table>
-          <PanelLink>View scorecard methodology</PanelLink>
         </Panel>
 
         <Panel title="MOVEMENT OVER TIME" info description="How competitors' overall strength scores have changed." control={<DropdownPill>Last 30 days</DropdownPill>}>
@@ -128,7 +124,6 @@ export default function MarketPositionTab() {
             compact={false}
             domainMax={100}
           />
-          <PanelLink>View detailed timeline</PanelLink>
         </Panel>
       </div>
 

@@ -66,7 +66,6 @@ export default function TeamCoordinationTab() {
               })}
             </tbody>
           </table>
-          <PanelLink>View all tasks</PanelLink>
         </Panel>
 
         <Panel title="APPROVALS PENDING" info>
@@ -92,7 +91,6 @@ export default function TeamCoordinationTab() {
               );
             })}
           </div>
-          <PanelLink>View all approvals</PanelLink>
         </Panel>
 
         <Panel title="TEAM ACTIVITY" info>
@@ -110,7 +108,6 @@ export default function TeamCoordinationTab() {
               </div>
             ))}
           </div>
-          <PanelLink>View all activity</PanelLink>
         </Panel>
       </div>
 
@@ -137,7 +134,6 @@ export default function TeamCoordinationTab() {
               </div>
             ))}
           </div>
-          <PanelLink>View all notes</PanelLink>
         </Panel>
 
         <Panel title="TEAM WORKLOAD" info>
@@ -169,7 +165,6 @@ export default function TeamCoordinationTab() {
               })}
             </tbody>
           </table>
-          <PanelLink>View workload report</PanelLink>
         </Panel>
       </div>
 

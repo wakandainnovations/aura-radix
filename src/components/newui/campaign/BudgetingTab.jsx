@@ -1,5 +1,5 @@
 import StatCard from '../shared/StatCard';
-import { Panel, PanelLink, DropdownPill } from '../shared/Panel';
+import { Panel, DropdownPill } from '../shared/Panel';
 import LegendDonut from '../shared/LegendDonut';
 import TrendLine from '../shared/TrendLine';
 import AIInsightBar from '../shared/AIInsightBar';
@@ -15,7 +15,6 @@ export default function BudgetingTab() {
     <div className="p-6 space-y-4">
       <div className="flex items-center gap-2 flex-wrap justify-end">
         <DropdownPill>Next 30 days</DropdownPill>
-        <DropdownPill>View by: Campaign</DropdownPill>
         <DropdownPill>INR (₹)</DropdownPill>
         <DropdownPill>All Channels</DropdownPill>
       </div>
@@ -64,12 +63,10 @@ export default function BudgetingTab() {
               </tr>
             </tbody>
           </table>
-          <PanelLink>View budget details</PanelLink>
         </Panel>
 
         <Panel title="BUDGET ALLOCATION BY CHANNEL" info description="Distribution of budget across channels.">
           <LegendDonut data={d.byChannel} centerValue="₹4.8 Cr" centerLabel="Total Budget" size={140} />
-          <PanelLink>View channel mix</PanelLink>
         </Panel>
       </div>
 
@@ -82,7 +79,6 @@ export default function BudgetingTab() {
               { key: 'actual', label: 'Actual Spend', color: '#3987e5' },
             ]}
           />
-          <PanelLink>View full pacing analysis</PanelLink>
         </Panel>
 
         <Panel title="BUDGET FORECAST" info description="Projected spend by end of period.">
@@ -96,7 +92,6 @@ export default function BudgetingTab() {
             <div className="flex justify-between"><span className="text-white/50">Most likely</span><span className="text-white/80">{d.forecast.likely}</span></div>
             <div className="flex justify-between"><span className="text-white/50">Worst case</span><span className="text-red-400">{d.forecast.worst}</span></div>
           </div>
-          <PanelLink>View forecast details</PanelLink>
         </Panel>
 
         <Panel title="TOP OVER / UNDER SPEND" info description="Campaigns with the highest variance.">
@@ -118,7 +113,6 @@ export default function BudgetingTab() {
               ))}
             </tbody>
           </table>
-          <PanelLink>View variance report</PanelLink>
         </Panel>
       </div>
 

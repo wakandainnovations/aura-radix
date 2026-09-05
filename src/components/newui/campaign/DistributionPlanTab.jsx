@@ -1,6 +1,6 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from 'recharts';
 import StatCard from '../shared/StatCard';
-import { Panel, PanelLink } from '../shared/Panel';
+import { Panel } from '../shared/Panel';
 import LegendDonut from '../shared/LegendDonut';
 import AIInsightBar from '../shared/AIInsightBar';
 import { thClass, tdClass, trClass } from '../theme';
@@ -63,7 +63,6 @@ export default function DistributionPlanTab() {
 
         <Panel title="DISTRIBUTION OVERVIEW" info>
           <LegendDonut data={d.overview} centerValue="₹4.8 Cr" centerLabel="Total Budget" size={140} />
-          <PanelLink>View full breakdown</PanelLink>
         </Panel>
       </div>
 
@@ -81,7 +80,6 @@ export default function DistributionPlanTab() {
               </div>
             ))}
           </div>
-          <PanelLink>View full timeline</PanelLink>
         </Panel>
 
         <Panel title="BUDGET UTILIZATION" info description="Planned vs Utilized." className="lg:col-span-1">
@@ -96,7 +94,6 @@ export default function DistributionPlanTab() {
               </Bar>
             </BarChart>
           </ResponsiveContainer>
-          <PanelLink>View expenditure details</PanelLink>
         </Panel>
 
         <Panel title="RECOMMENDED ACTIONS" info>
@@ -110,7 +107,6 @@ export default function DistributionPlanTab() {
               </div>
             ))}
           </div>
-          <PanelLink>View all recommendations</PanelLink>
         </Panel>
       </div>
 

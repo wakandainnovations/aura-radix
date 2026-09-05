@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import { Star, Music2, Heart } from 'lucide-react';
-import { Panel, PanelLink } from '../shared/Panel';
+import { Panel } from '../shared/Panel';
 import BarRow from '../shared/BarRow';
 import TrendLine from '../shared/TrendLine';
 import FilterBar from '../shared/FilterBar';
@@ -81,7 +81,6 @@ export default function ThemesTab() {
               ))}
             </tbody>
           </table>
-          <PanelLink>View all themes</PanelLink>
         </Panel>
 
         <Panel title="THEME IMPACT ON INTENT" info description="How themes influence audience intent.">
@@ -90,7 +89,6 @@ export default function ThemesTab() {
               <BarRow key={it.label} label={it.label} pct={it.pct} color={it.color} />
             ))}
           </div>
-          <PanelLink>View intent analysis</PanelLink>
         </Panel>
       </div>
 
@@ -107,7 +105,6 @@ export default function ThemesTab() {
             ticks={AXIS_TICKS}
             height={220}
           />
-          <PanelLink>View detailed trend</PanelLink>
         </Panel>
 
         <Panel title="TOP THEME DRIVERS" info description="What content is driving these themes.">
@@ -139,7 +136,6 @@ export default function ThemesTab() {
               </div>
             ))}
           </div>
-          <PanelLink>View all drivers</PanelLink>
         </Panel>
 
         <Panel title="THEME OPPORTUNITIES" info description="Themes with high potential but lower content supply.">
@@ -163,7 +159,6 @@ export default function ThemesTab() {
               </div>
             ))}
           </div>
-          <PanelLink>View all opportunities</PanelLink>
         </Panel>
       </div>
 

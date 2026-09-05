@@ -1,5 +1,5 @@
 import StatCard from '../shared/StatCard';
-import { Panel, PanelLink, DropdownPill } from '../shared/Panel';
+import { Panel, DropdownPill } from '../shared/Panel';
 import LegendDonut from '../shared/LegendDonut';
 import AIInsightBar from '../shared/AIInsightBar';
 import { thClass, tdClass, trClass } from '../theme';
@@ -34,7 +34,6 @@ export default function OverviewTab() {
               </div>
             ))}
           </div>
-          <PanelLink>View funnel analysis</PanelLink>
         </Panel>
 
         <Panel title="CAMPAIGN TIMELINE" info description="Key campaign milestones and schedule." control={<DropdownPill>Next 60 days</DropdownPill>}>
@@ -50,7 +49,6 @@ export default function OverviewTab() {
               </div>
             ))}
           </div>
-          <PanelLink>View full calendar</PanelLink>
         </Panel>
       </div>
 
@@ -74,12 +72,10 @@ export default function OverviewTab() {
               ))}
             </tbody>
           </table>
-          <PanelLink>View all campaigns</PanelLink>
         </Panel>
 
         <Panel title="BUDGET ALLOCATION" info description="Budget distribution across campaign objectives.">
           <LegendDonut data={d.budgetAllocation} centerValue="₹4.8 Cr" centerLabel="Total Budget" size={140} />
-          <PanelLink>View budget details</PanelLink>
         </Panel>
 
         <Panel title="CHANNEL MIX" info description="Budget allocation by channel.">
@@ -101,7 +97,6 @@ export default function OverviewTab() {
               ))}
             </tbody>
           </table>
-          <PanelLink>View channel mix</PanelLink>
         </Panel>
       </div>
 

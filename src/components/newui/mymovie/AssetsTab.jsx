@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Search, Upload, Image as ImageIcon, LayoutGrid, List as ListIcon } from 'lucide-react';
-import { Panel, PanelLink, DropdownPill } from '../shared/Panel';
+import { Panel, DropdownPill } from '../shared/Panel';
 import LegendDonut from '../shared/LegendDonut';
 import { CARD, PLATFORM_COLOR } from '../theme';
 import { assetsData } from './myMovieTabsData';
@@ -153,12 +153,10 @@ export default function AssetsTab() {
               ))}
             </tbody>
           </table>
-          <PanelLink>View full performance report</PanelLink>
         </Panel>
 
         <Panel title="ASSET STATUS BREAKDOWN" info>
           <LegendDonut data={d.statusBreakdown} size={140} />
-          <PanelLink>View all assets</PanelLink>
         </Panel>
 
         <Panel title="ASSET GAP ANALYSIS" info description="AI identified content gaps that could improve performance.">
@@ -175,7 +173,6 @@ export default function AssetsTab() {
               </div>
             ))}
           </div>
-          <PanelLink>View all recommendations</PanelLink>
         </Panel>
       </div>
     </div>

@@ -69,7 +69,6 @@ export default function OverviewTab() {
               </div>
             ))}
           </div>
-          <PanelLink>View full live monitoring</PanelLink>
         </Panel>
 
         <Panel title="MOVIE HEALTH" info>
@@ -88,10 +87,9 @@ export default function OverviewTab() {
               </div>
             ))}
           </div>
-          <PanelLink>View health breakdown</PanelLink>
         </Panel>
 
-        <Panel title="LIVE ALERTS" info control={<PanelLink>View all alerts</PanelLink>}>
+        <Panel title="LIVE ALERTS" info>
           <div className="space-y-3.5 flex-1">
             {d.liveAlerts.map((a) => {
               const Icon = ALERT_ICONS[a.iconKey];
@@ -113,7 +111,7 @@ export default function OverviewTab() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Panel title="PLATFORM HEALTH" info control={<PanelLink>View platform watch</PanelLink>}>
+        <Panel title="PLATFORM HEALTH" info>
           <div className="space-y-3 flex-1">
             {d.platformHealth.map((p) => (
               <div key={p.label} className="flex items-center gap-3">
@@ -131,7 +129,7 @@ export default function OverviewTab() {
           </div>
         </Panel>
 
-        <Panel title="TOP EMERGING TOPICS" info control={<PanelLink>View all topics</PanelLink>}>
+        <Panel title="TOP EMERGING TOPICS" info>
           <table className="w-full">
             <thead>
               <tr>
@@ -168,7 +166,6 @@ export default function OverviewTab() {
       <div className={`${CARD} p-5`}>
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-white/90 tracking-wide">RECOMMENDED ACTIONS</h3>
-          <PanelLink className="mt-0">View all recommendations</PanelLink>
         </div>
         <div className="flex flex-wrap gap-3">
           {d.actions.map((a, i) => {

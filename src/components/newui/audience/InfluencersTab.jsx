@@ -212,7 +212,6 @@ export default function InfluencersTab({ selectedMovie }) {
               ))}
             </div>
           )}
-          <PanelLink>View full map</PanelLink>
         </Panel>
       </div>
 
@@ -278,7 +277,6 @@ export default function InfluencersTab({ selectedMovie }) {
               onSliceClick={(slice) => (slice.rawCategories?.length ? setTopicModal(slice) : undefined)}
             />
           )}
-          <PanelLink>View topic details</PanelLink>
           <TopicPostsModal
             open={!!topicModal}
             onOpenChange={(next) => !next && setTopicModal(null)}

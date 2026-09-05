@@ -1,5 +1,5 @@
 import { Sparkles, RefreshCw } from 'lucide-react';
-import { Panel, PanelLink } from '../shared/Panel';
+import { Panel } from '../shared/Panel';
 
 const TITLE = (
   <span className="inline-flex items-center gap-1.5">
@@ -25,7 +25,6 @@ export default function AISummaryPanel({ summary, isLoading = false, className =
           <RefreshCw className="w-3 h-3" />
           {summary.updatedLabel}
         </span>
-        <PanelLink className="mt-0">View full summary</PanelLink>
       </div>
     </Panel>
   );

@@ -71,7 +71,6 @@ export default function AudienceOverlapTab() {
             <div className="flex items-center gap-1.5 text-white/50"><span className="w-2 h-2 rounded-full bg-[#f97316]" />Shadows of War 1.4M</div>
             <div className="flex items-center gap-1.5 text-white/50"><span className="w-2 h-2 rounded-full bg-[#f87171]" />Untitled Love Story 900K</div>
           </div>
-          <PanelLink>View overlap details</PanelLink>
         </Panel>
 
         <Panel title="OVERLAP BY COMPETITOR" info description="How much your audience overlaps with each competitor.">
@@ -80,7 +79,6 @@ export default function AudienceOverlapTab() {
               <BarRow key={o.label} label={o.label} pct={o.pct * 2} valueLabel={`${o.pct}% (${o.delta})`} color="#a78bfa" />
             ))}
           </div>
-          <PanelLink>View detailed analysis</PanelLink>
         </Panel>
 
         <Panel title="AUDIENCE OVERLAP TREND" info description="How overlap rate has changed over time.">
@@ -102,12 +100,10 @@ export default function AudienceOverlapTab() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Panel title="AUDIENCE SEGMENT OVERLAP" info description="Which audience segments overlap the most.">
           <OverlapTable rows={d.segmentOverlap} cols={['Audience Segment', 'Veera 2', 'Rudra', 'Shadows']} />
-          <PanelLink>View all segments</PanelLink>
         </Panel>
 
         <Panel title="DEMOGRAPHIC OVERLAP" info description="Compare demographic overlap across key groups." control={<DropdownPill>Higher overlap</DropdownPill>}>
           <OverlapTable rows={d.demographicOverlap} cols={['Demographic', 'Veera 2', 'Rudra', 'Shadows']} />
-          <PanelLink>View all demographics</PanelLink>
         </Panel>
 
         <Panel title="AUDIENCE AT RISK" info description="Audience highly exposed to competitors.">
@@ -129,7 +125,6 @@ export default function AudienceOverlapTab() {
               ))}
             </tbody>
           </table>
-          <PanelLink>View at risk audience</PanelLink>
         </Panel>
       </div>
 

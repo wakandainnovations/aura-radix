@@ -1,4 +1,4 @@
-import { Info, ArrowRight } from 'lucide-react';
+import { Info } from 'lucide-react';
 import { CARD } from './theme';
 
 export default function TopPositiveThemes({ themes }) {
@@ -25,11 +25,6 @@ export default function TopPositiveThemes({ themes }) {
           </div>
         ))}
       </div>
-
-      <button className="mt-4 flex items-center gap-1.5 text-sm text-blue-400 hover:text-blue-300 transition-colors self-start">
-        View all themes
-        <ArrowRight className="w-3.5 h-3.5" />
-      </button>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { Search } from 'lucide-react';
 import StatCard from '../shared/StatCard';
-import { Panel, PanelLink, DropdownPill } from '../shared/Panel';
+import { Panel, DropdownPill } from '../shared/Panel';
 import LegendDonut from '../shared/LegendDonut';
 import TrendLine from '../shared/TrendLine';
 import AIInsightBar from '../shared/AIInsightBar';
@@ -67,14 +67,12 @@ export default function CampaignsTab() {
         <div className="space-y-4">
           <Panel title="CAMPAIGN STATUS BREAKDOWN" info description="Distribution by status.">
             <LegendDonut data={d.statusBreakdown} centerValue="7" centerLabel="Total" size={120} />
-            <PanelLink>View status report</PanelLink>
           </Panel>
 
           <Panel title="TOP PERFORMING CAMPAIGN" info description="By engagement rate.">
             <div className="text-sm text-white/85">{d.topPerforming.name}</div>
             <div className="text-[11px] text-white/35 mb-2">{d.topPerforming.category}</div>
             <div className="text-2xl font-bold text-emerald-400">{d.topPerforming.rate}</div>
-            <PanelLink>View campaign details</PanelLink>
           </Panel>
         </div>
       </div>
@@ -89,7 +87,6 @@ export default function CampaignsTab() {
           ]}
           ticks={AXIS_TICKS}
         />
-        <PanelLink>View performance analytics</PanelLink>
       </Panel>
 
       <AIInsightBar insight={d.aiInsight} actions={d.actions} ctaLabel="View AI Recommendations" />

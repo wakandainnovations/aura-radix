@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { Panel, PanelLink, DropdownPill } from '../shared/Panel';
+import { Panel, DropdownPill } from '../shared/Panel';
 import BarRow from '../shared/BarRow';
 import TrendLine from '../shared/TrendLine';
 import { PLATFORM_COLOR } from '../theme';
@@ -127,7 +127,6 @@ export default function MentionsTab({ selectedMovie }) {
               />
             </>
           )}
-          <PanelLink>View detailed trend</PanelLink>
         </Panel>
 
         <Panel title="MENTION DRIVERS" info description="Which parts of the movie are driving talk, ranked by engagement, share of posts, or posting velocity — and whether that talk is positive.">
@@ -161,7 +160,6 @@ export default function MentionsTab({ selectedMovie }) {
               ))}
             </div>
           )}
-          <PanelLink>View all drivers</PanelLink>
         </Panel>
       </div>
 
@@ -207,7 +205,6 @@ export default function MentionsTab({ selectedMovie }) {
                 ))}
             </div>
           )}
-          <PanelLink>View all mentions</PanelLink>
         </Panel>
       </div>
 

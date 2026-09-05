@@ -109,7 +109,6 @@ export default function PerformanceTab({ data, entityId, isTrendLoading, isPlatf
               })}
             </div>
           )}
-          <PanelLink>View all drivers</PanelLink>
           <DriverPostsModal
             open={!!driverModal}
             onOpenChange={(next) => !next && setDriverModal(null)}
@@ -165,7 +164,6 @@ export default function PerformanceTab({ data, entityId, isTrendLoading, isPlatf
               <IndiaStatesMap regions={d.topRegionsForMap} height={140} />
             </div>
           )}
-          <PanelLink>View all regions</PanelLink>
           <RegionPostsModal
             open={!!regionModal}
             onOpenChange={(next) => !next && setRegionModal(null)}

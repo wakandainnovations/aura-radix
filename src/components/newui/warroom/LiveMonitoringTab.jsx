@@ -55,7 +55,6 @@ export default function LiveMonitoringTab() {
               ))}
             </tbody>
           </table>
-          <PanelLink>View all hashtags</PanelLink>
         </Panel>
 
         <div className="lg:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-4">

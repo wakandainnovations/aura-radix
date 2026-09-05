@@ -1,5 +1,5 @@
 import StatCard from '../shared/StatCard';
-import { Panel, PanelLink } from '../shared/Panel';
+import { Panel } from '../shared/Panel';
 import LegendDonut from '../shared/LegendDonut';
 import BarRow from '../shared/BarRow';
 import FilterBar from '../shared/FilterBar';
@@ -29,7 +29,6 @@ export default function ContentAnalysisTab() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Panel title="ENGAGEMENT BY CONTENT TYPE" info description="Distribution of engagement across content types.">
           <LegendDonut data={d.byType} centerValue="6.4M" centerLabel="Total Engagement" size={140} />
-          <PanelLink>View content breakdown</PanelLink>
         </Panel>
 
         <Panel title="TOP CONTENT BY ENGAGEMENT" info description="Your competitors' top performing content.">
@@ -54,7 +53,6 @@ export default function ContentAnalysisTab() {
               ))}
             </tbody>
           </table>
-          <PanelLink>View all top content</PanelLink>
         </Panel>
 
         <Panel title="ENGAGEMENT BY PLATFORM" info description="Where competitors get the most engagement.">
@@ -76,7 +74,6 @@ export default function ContentAnalysisTab() {
               ))}
             </tbody>
           </table>
-          <PanelLink>View platform breakdown</PanelLink>
         </Panel>
       </div>
 
@@ -100,7 +97,6 @@ export default function ContentAnalysisTab() {
               ))}
             </tbody>
           </table>
-          <PanelLink>View format insights</PanelLink>
         </Panel>
 
         <Panel title="POSTING FREQUENCY" info description="Average posts per day by competitor.">
@@ -124,7 +120,6 @@ export default function ContentAnalysisTab() {
               ))}
             </tbody>
           </table>
-          <PanelLink>View posting patterns</PanelLink>
         </Panel>
 
         <Panel title="CONTENT THEMES BY ENGAGEMENT" info description="Which themes are driving the most engagement.">
@@ -133,7 +128,6 @@ export default function ContentAnalysisTab() {
               <BarRow key={t.label} label={t.label} pct={t.pct * 2.5} valueLabel={`${t.value} (${t.pct}%)`} color="#a78bfa" />
             ))}
           </div>
-          <PanelLink>View theme analysis</PanelLink>
         </Panel>
       </div>
 

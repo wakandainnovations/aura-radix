@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
-import { Panel, PanelLink } from '../shared/Panel';
+import { Panel } from '../shared/Panel';
 import AddCompetitorModal from './AddCompetitorModal';
 import { formatCompact } from '../formatCompact';
 
@@ -67,7 +67,7 @@ export default function CompetitorWatchPanel({ competitors, isLoading = false, e
   const [addOpen, setAddOpen] = useState(false);
 
   return (
-    <Panel title="COMPETITOR WATCH" className="min-w-0" control={<PanelLink className="mt-0">View all</PanelLink>}>
+    <Panel title="COMPETITOR WATCH" className="min-w-0">
       {isLoading ? (
         <div className="mt-2 flex-1 space-y-2.5 animate-pulse" role="status" aria-label="Loading competitor watch">
           <div className="h-3.5 bg-white/10 rounded w-2/3" />

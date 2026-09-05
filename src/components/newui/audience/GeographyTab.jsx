@@ -1,5 +1,5 @@
 import { MapPin, TrendingUp, Globe2 } from 'lucide-react';
-import { Panel, PanelLink } from '../shared/Panel';
+import { Panel } from '../shared/Panel';
 import LegendDonut from '../shared/LegendDonut';
 import TrendLine from '../shared/TrendLine';
 import FilterBar from '../shared/FilterBar';
@@ -52,27 +52,22 @@ export default function GeographyTab() {
         <Panel title="BUZZ BY COUNTRY" info description="Where your movie is getting the most buzz.">
           <GeoPlaceholder markers={d.worldMarkers} height={160} className="mb-3" />
           <DeltaTable rows={d.countries} />
-          <PanelLink>View all countries</PanelLink>
         </Panel>
         <Panel title="BUZZ BY STATE (INDIA)" info description="Breakdown of buzz across Indian states.">
           <GeoPlaceholder markers={d.indiaMarkers} height={160} className="mb-3" />
           <DeltaTable rows={d.states} />
-          <PanelLink>View all states</PanelLink>
         </Panel>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Panel title="TOP CITIES BY BUZZ" info description="Cities driving the highest buzz for your movie.">
           <DeltaTable rows={d.cities} />
-          <PanelLink>View all cities</PanelLink>
         </Panel>
         <Panel title="BUZZ SHARE BY REGION (INDIA)" info description="Share of total buzz by region.">
           <LegendDonut data={d.regionShare} centerValue="6.0M" centerLabel="Total Buzz" size={130} />
-          <PanelLink>View regional trends</PanelLink>
         </Panel>
         <Panel title="GROWTH HOTSPOTS" info description="Fastest growing cities in the last 30 days.">
           <DeltaTable rows={d.hotspots.map((h) => ({ ...h, delta: h.delta }))} />
-          <PanelLink>View all growth hotspots</PanelLink>
         </Panel>
       </div>
 
@@ -91,7 +86,6 @@ export default function GeographyTab() {
             );
           })}
         </div>
-        <PanelLink>View all geographic insights</PanelLink>
       </Panel>
 
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-4">
@@ -120,7 +114,6 @@ export default function GeographyTab() {
               </div>
             ))}
           </div>
-          <PanelLink>View detailed comparison</PanelLink>
         </Panel>
       </div>
     </div>

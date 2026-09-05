@@ -1,5 +1,5 @@
 import { Music2, Rocket, Newspaper, Users, Truck, Star, Sparkles } from 'lucide-react';
-import { Panel, PanelLink, DropdownPill } from '../shared/Panel';
+import { Panel, DropdownPill } from '../shared/Panel';
 import LegendDonut from '../shared/LegendDonut';
 import AIInsightBar from '../shared/AIInsightBar';
 import { CARD } from '../theme';
@@ -109,12 +109,10 @@ export default function TimelineTab() {
               </div>
             ))}
           </div>
-          <PanelLink>View full schedule</PanelLink>
         </Panel>
 
         <Panel title="CAMPAIGN PROGRESS" info>
           <LegendDonut data={d.campaignProgress} centerValue="60%" centerLabel="Completed" size={140} />
-          <PanelLink>View all activities</PanelLink>
         </Panel>
 
         <Panel title="ACTIVITY HEALTH" info description="Track how your activities are performing vs plan.">
@@ -134,7 +132,6 @@ export default function TimelineTab() {
               );
             })}
           </div>
-          <PanelLink>View at risk activities</PanelLink>
         </Panel>
       </div>
 

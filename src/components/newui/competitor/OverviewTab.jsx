@@ -30,7 +30,6 @@ export default function OverviewTab() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Panel title="COMPETITIVE SHARE OF VOICE" info description="Share of conversations across platforms.">
           <LegendDonut data={d.shareOfVoice} centerValue="100%" centerLabel="Total" size={140} />
-          <PanelLink>View share of voice trends</PanelLink>
         </Panel>
 
         <Panel title="COMPETITOR BUZZ OVER TIME" info description="Compare buzz volume trends." className="lg:col-span-1">
@@ -44,10 +43,9 @@ export default function OverviewTab() {
             ]}
             ticks={AXIS_TICKS}
           />
-          <PanelLink>View detailed trends</PanelLink>
         </Panel>
 
-        <Panel title="COMPETITOR CAMPAIGN CALENDAR" info description="Key releases and campaign milestones." control={<PanelLink>View full calendar</PanelLink>}>
+        <Panel title="COMPETITOR CAMPAIGN CALENDAR" info description="Key releases and campaign milestones.">
           <div className="space-y-3 flex-1">
             {d.campaignCalendar.slice(0, 5).map((c) => (
               <div key={c.name} className="flex items-center justify-between text-sm">
@@ -81,7 +79,6 @@ export default function OverviewTab() {
               ))}
             </tbody>
           </table>
-          <PanelLink>View full benchmark report</PanelLink>
         </Panel>
 
         <Panel title="AUDIENCE OVERLAP (VS YOU)" info description="How much audience overlap you have with competitors.">
@@ -90,7 +87,6 @@ export default function OverviewTab() {
               <BarRow key={o.label} label={o.label} pct={o.pct * 2} valueLabel={`${o.pct}%`} color="#a78bfa" />
             ))}
           </div>
-          <PanelLink>View overlap analysis</PanelLink>
         </Panel>
 
         <Panel title="COMPETITIVE INSIGHTS" info description="Key takeaways to stay ahead.">
@@ -102,7 +98,6 @@ export default function OverviewTab() {
               </div>
             ))}
           </div>
-          <PanelLink>View all insights</PanelLink>
         </Panel>
       </div>
 

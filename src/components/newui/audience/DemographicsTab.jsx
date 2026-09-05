@@ -1,5 +1,5 @@
 import { TrendingUp, Users, Globe2 } from 'lucide-react';
-import { Panel, PanelLink } from '../shared/Panel';
+import { Panel } from '../shared/Panel';
 import LegendDonut from '../shared/LegendDonut';
 import BarRow from '../shared/BarRow';
 import FilterBar from '../shared/FilterBar';
@@ -54,7 +54,6 @@ export default function DemographicsTab() {
               );
             })}
           </div>
-          <PanelLink>View all insights</PanelLink>
         </Panel>
       </div>
 
@@ -76,7 +75,6 @@ export default function DemographicsTab() {
               </div>
             ))}
           </div>
-          <PanelLink>View all interests</PanelLink>
         </Panel>
       </div>
 
@@ -99,7 +97,6 @@ export default function DemographicsTab() {
               ))}
             </tbody>
           </table>
-          <PanelLink>View all countries</PanelLink>
         </Panel>
 
         <Panel title="TOP CITIES" info>
@@ -122,7 +119,6 @@ export default function DemographicsTab() {
               ))}
             </tbody>
           </table>
-          <PanelLink>View all cities</PanelLink>
         </Panel>
       </div>
     </div>

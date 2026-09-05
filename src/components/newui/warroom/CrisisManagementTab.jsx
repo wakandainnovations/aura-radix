@@ -1,6 +1,6 @@
 import { AlertTriangle } from 'lucide-react';
 import StatCard from '../shared/StatCard';
-import { Panel, PanelLink, DropdownPill } from '../shared/Panel';
+import { Panel, DropdownPill } from '../shared/Panel';
 import TrendLine from '../shared/TrendLine';
 import { CARD, thClass, tdClass, trClass } from '../theme';
 import { crisisManagementData } from './warRoomData';
@@ -64,7 +64,6 @@ export default function CrisisManagementTab() {
               ))}
             </tbody>
           </table>
-          <PanelLink>View all issues</PanelLink>
         </Panel>
 
         <Panel title="CRISIS TIMELINE" info>
@@ -83,7 +82,6 @@ export default function CrisisManagementTab() {
               </div>
             ))}
           </div>
-          <PanelLink>View full timeline</PanelLink>
         </Panel>
 
         <Panel title="AI RECOMMENDED ACTIONS" info>
@@ -105,7 +103,6 @@ export default function CrisisManagementTab() {
               </div>
             ))}
           </div>
-          <PanelLink>View all actions</PanelLink>
         </Panel>
       </div>
 
@@ -157,7 +154,6 @@ export default function CrisisManagementTab() {
               ))}
             </tbody>
           </table>
-          <PanelLink>View all topics</PanelLink>
         </Panel>
       </div>
 

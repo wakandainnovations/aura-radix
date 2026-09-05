@@ -1,5 +1,5 @@
 import { Youtube, Instagram, Facebook } from 'lucide-react';
-import { Panel, PanelLink } from '../shared/Panel';
+import { Panel } from '../shared/Panel';
 import LegendDonut from '../shared/LegendDonut';
 import TrendLine from '../shared/TrendLine';
 import AIInsightBar from '../shared/AIInsightBar';
@@ -47,7 +47,6 @@ export default function PlatformWatchTab() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Panel title="PLATFORM SHARE OF VOICE" info>
           <LegendDonut data={d.shareOfVoice} centerValue="28.6K" centerLabel="Total Mentions" size={140} />
-          <PanelLink>View full report</PanelLink>
         </Panel>
 
         <Panel title="SENTIMENT BY PLATFORM" info description="Where sentiment is strongest (or weakest).">
