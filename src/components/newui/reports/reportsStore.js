@@ -7,7 +7,12 @@ const storageKey = (username) => `framehouse:reports:${username || 'anonymous'}`
 
 export const REPORT_KIND_LABELS = {
   'investment-advisor': 'Investment Advisor',
+  'movie-intelligence': 'Movie Report',
 };
+
+export function createReportId() {
+  return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
 
 export function loadReports(username) {
   try {
@@ -39,7 +44,7 @@ export function deleteReport(username, id) {
 
 export function createInvestmentReport({ request, result, preparedBy }) {
   return {
-    id: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    id: createReportId(),
     kind: 'investment-advisor',
     title: result.movieName || request.movieName,
     createdAt: new Date().toISOString(),

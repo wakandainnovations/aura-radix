@@ -112,6 +112,26 @@ export const entityService = {
     }
   },
 
+  // The complete marketing intelligence report for an entity — the same
+  // report AI Copilot hands to the LLM as the movie's context.
+  // Path: GET /api/entities/{entityType}/{id}/marketing-report
+  // Query: period (default DAY30), windowDays (1–30, default 7), refresh
+  //   (bypass the daily cache and regenerate live — ~45s, hence the longer
+  //   timeout; without it, releases 30+ days old keep a stale cached copy)
+  // Response: { entitled, requiredTier, data: report | null, preview } —
+  //   below the DIAMOND tier, data is null and preview is masked.
+  getMarketingReport: async (entityType = 'movie', entityId, { period, windowDays, refresh } = {}) => {
+    try {
+      return await apiClient.get(`/entities/${entityType}/${entityId}/marketing-report`, {
+        params: { period, windowDays, refresh },
+        timeout: 180000,
+      });
+    } catch (error) {
+      console.error(`Failed to fetch marketing report for entity ${entityId}:`, error);
+      throw error;
+    }
+  },
+
   // Generate a branded, downloadable marketing-report PDF for an entity.
   // Server-rendered via OpenPDF (no upstream PDF call); same aggregation as the
   // in-app marketing report, laid out as a shareable document.
