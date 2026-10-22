@@ -4,7 +4,6 @@ import OverviewTab from './OverviewTab';
 import DemographicsTab from './DemographicsTab';
 import GeographyTab from './GeographyTab';
 import ThemesTab from './ThemesTab';
-import InfluencersTab from './InfluencersTab';
 import { visibleTabsFor } from '../previewTabs';
 
 const TABS = {
@@ -12,10 +11,9 @@ const TABS = {
   Demographics: DemographicsTab,
   Geography: GeographyTab,
   Themes: ThemesTab,
-  Influencers: InfluencersTab,
 };
 
-export default function AudienceIntelligenceSection({ selectedMovie, fullAccess }) {
+export default function AudienceIntelligenceSection({ fullAccess }) {
   const [activeTab, setActiveTab] = useState('Overview');
   const TabComponent = TABS[activeTab];
   const visibleTabs = visibleTabsFor('audience-intelligence', Object.keys(TABS), fullAccess);
@@ -36,7 +34,7 @@ export default function AudienceIntelligenceSection({ selectedMovie, fullAccess 
         onTabChange={setActiveTab}
         hideDateCompareShare
       />
-      {activeTab === 'Influencers' ? <TabComponent selectedMovie={selectedMovie} /> : <TabComponent />}
+      <TabComponent />
     </>
   );
 }

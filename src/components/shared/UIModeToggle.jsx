@@ -11,12 +11,12 @@ export default function UIModeToggle() {
     <button
       onClick={toggleUIMode}
       className="fixed bottom-5 right-5 z-[60] flex items-center gap-2 px-4 py-2.5 rounded-full bg-card border border-border shadow-2xl text-sm font-medium text-foreground hover:bg-accent transition-colors"
-      title={isNewUI ? 'Switch back to the classic UI' : 'Preview the new UI'}
+      title={isNewUI ? 'Switch to the admin UI' : 'Preview the new UI'}
     >
       {isNewUI ? (
         <>
           <RotateCcw className="w-4 h-4" />
-          Classic UI
+          Admin UI
         </>
       ) : (
         <>

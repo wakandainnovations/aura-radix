@@ -4,7 +4,6 @@ import NewUISidebar from './newui/NewUISidebar';
 import CommandCenterSection from './newui/commandcenter/CommandCenterSection';
 import MyMovieSection from './newui/mymovie/MyMovieSection';
 import AudienceIntelligenceSection from './newui/audience/AudienceIntelligenceSection';
-import MentionsSection from './newui/audience/MentionsSection';
 import CompetitorIntelligenceSection from './newui/competitor/CompetitorIntelligenceSection';
 import CampaignPlannerSection from './newui/campaign/CampaignPlannerSection';
 import WarRoomSection from './newui/warroom/WarRoomSection';
@@ -25,7 +24,6 @@ const SECTIONS = {
   'command-center': CommandCenterSection,
   'my-movie': MyMovieSection,
   'audience-intelligence': AudienceIntelligenceSection,
-  mentions: MentionsSection,
   'competitor-intelligence': CompetitorIntelligenceSection,
   'campaign-planner': CampaignPlannerSection,
   'war-room': WarRoomSection,

@@ -6,15 +6,15 @@
 // Competitor Intelligence and War Room are also hidden here (rather than
 // just having their sub-tabs restricted) because they depend on backend
 // changes that aren't ready yet — full access is currently the only way to
-// reach them, i.e. they're admin-only for now.
+// reach them, i.e. they're admin-only for now. Audience Intelligence joined
+// them when its only real tab (Influencers) moved to My Movie.
 //
 // Sections not listed in DEMO_VISIBLE_SUBTABS (Command Center, AI Producer)
 // show all of their content in demo mode — there's nothing to restrict.
-export const DEMO_HIDDEN_NAV_KEYS = ['campaign-planner', 'competitor-intelligence', 'war-room'];
+export const DEMO_HIDDEN_NAV_KEYS = ['audience-intelligence', 'campaign-planner', 'competitor-intelligence', 'war-room'];
 
 export const DEMO_VISIBLE_SUBTABS = {
-  'my-movie': ['Performance'],
-  'audience-intelligence': ['Influencers'],
+  'my-movie': ['Performance', 'Influencers', 'Social Media Posts'],
 };
 
 // Given every tab a section defines and whether the viewer has full access,
