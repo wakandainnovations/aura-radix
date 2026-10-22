@@ -3,17 +3,17 @@ import SectionHeader from '../shared/SectionHeader';
 import InvestmentAdvisorTab from './InvestmentAdvisorTab';
 
 const TABS = {
-  'Investment Advisor': InvestmentAdvisorTab,
+  'AI Insights': InvestmentAdvisorTab,
 };
 
 export default function AIInsightsSection({ selectedMovie, userName }) {
-  const [activeTab, setActiveTab] = useState('Investment Advisor');
+  const [activeTab, setActiveTab] = useState('AI Insights');
   const TabComponent = TABS[activeTab];
 
   return (
     <>
       <SectionHeader
-        title="AI Insights"
+        title="Investment Advisor"
         subtitle="Model-backed answers to the big pre-production questions."
         hideDateCompareShare
         tabs={Object.keys(TABS)}
