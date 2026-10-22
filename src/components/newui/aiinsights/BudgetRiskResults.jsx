@@ -101,7 +101,7 @@ function withArticle(rating) {
   return `${/^(8|11|18)/.test(String(rating)) ? 'an' : 'a'} ${rating}`;
 }
 
-function BudgetStat({ dot, label, value, caption, children }) {
+function BudgetStat({ dot, label, value, children }) {
   return (
     <div className="min-w-0">
       <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-white/40">
@@ -111,7 +111,6 @@ function BudgetStat({ dot, label, value, caption, children }) {
         <span className="text-xl font-bold text-white">{value}</span>
         {children}
       </div>
-      {caption && <div className="text-[11px] text-white/35">{caption}</div>}
     </div>
   );
 }
@@ -152,13 +151,11 @@ function BudgetRange({ assessments }) {
           dot="bg-emerald-400"
           label="Safe budget"
           value={safe == null ? '—' : formatInr(safe, { capped: middle.maxBudgetCapped })}
-          caption={middle && `Holds up with ${withArticle(middle.rating)}/10 reception`}
         />
         <BudgetStat
           dot="bg-amber-400"
           label="Max opportunity"
           value={ceiling == null ? '—' : formatInr(ceiling, { capped: top.maxBudgetCapped })}
-          caption={top && `Needs ${withArticle(top.rating)}/10 reception`}
         />
         {planned != null && (
           <BudgetStat dot="bg-white" label="Your budget" value={formatInr(planned)}>
