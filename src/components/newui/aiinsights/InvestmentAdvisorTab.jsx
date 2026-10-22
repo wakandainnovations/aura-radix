@@ -9,6 +9,8 @@ import { entityService } from '../../../api/entityService';
 import CreditCombobox from './CreditCombobox';
 import { SelectMenu, MultiSelectMenu } from './Dropdowns';
 import BudgetRiskResults, { ResultsLoadingState } from './BudgetRiskResults';
+import ReportActions from '../reports/ReportActions';
+import { createInvestmentReport, saveReport } from '../reports/reportsStore';
 import {
   LANGUAGES,
   GENRES,
@@ -115,6 +117,8 @@ export default function InvestmentAdvisorTab({ selectedMovie, userName }) {
   }, [movieDetail?.productionCompany]);
 
   const assess = useMutation({ mutationFn: predictionService.assessBudgetRisk });
+  // Each successful assessment is saved to Reports as it lands.
+  const [report, setReport] = useState(null);
 
   const currentRequest = useMemo(() => buildBudgetRiskRequest(form), [form]);
   const isStale = assess.data && submittedRequest && JSON.stringify(currentRequest) !== JSON.stringify(submittedRequest);
@@ -126,7 +130,14 @@ export default function InvestmentAdvisorTab({ selectedMovie, userName }) {
     if (Object.keys(found).length) return;
     saveLastGenres(userName, form.genres);
     setSubmittedRequest(currentRequest);
-    assess.mutate(currentRequest);
+    setReport(null);
+    assess.mutate(currentRequest, {
+      onSuccess: (result) => {
+        const saved = createInvestmentReport({ request: currentRequest, result, preparedBy: userName });
+        saveReport(userName, saved);
+        setReport(saved);
+      },
+    });
   }
 
   function handleReset() {
@@ -134,6 +145,7 @@ export default function InvestmentAdvisorTab({ selectedMovie, userName }) {
     setForm({ ...initialForm(userName), productionCompany: movieDetail?.productionCompany?.trim() ?? '' });
     setErrors({});
     setSubmittedRequest(null);
+    setReport(null);
     assess.reset();
   }
 
@@ -301,7 +313,7 @@ export default function InvestmentAdvisorTab({ selectedMovie, userName }) {
         </div>
       ) : assess.data ? (
         <div className={isStale ? 'opacity-60 transition-opacity' : 'transition-opacity'}>
-          <BudgetRiskResults result={assess.data} />
+          <BudgetRiskResults result={assess.data} actions={report && <ReportActions report={report} />} />
         </div>
       ) : null}
     </div>

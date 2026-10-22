@@ -11,6 +11,7 @@ import {
   Bot,
   ChevronDown,
   LogOut,
+  FileText,
 } from 'lucide-react';
 import { SIDEBAR_BG } from './theme';
 import SwitchMovieMenu from './SwitchMovieMenu';
@@ -25,6 +26,7 @@ const NAV_ITEMS = [
   { key: 'campaign-planner', label: 'Campaign Planner', icon: ClipboardList },
   { key: 'war-room', label: 'War Room', icon: ShieldAlert },
   { key: 'ai-insights', label: 'AI Insights', icon: Sparkles },
+  { key: 'reports', label: 'Reports', icon: FileText },
   { key: 'ai-producer', label: 'AI Copilot', icon: Bot },
 ];
 

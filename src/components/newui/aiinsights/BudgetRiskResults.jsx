@@ -8,7 +8,7 @@ import {
   Target,
 } from 'lucide-react';
 import { CARD } from '../theme';
-import { capitalize, formatInr, formatPercent, scenarioLabel } from './investmentAdvisorUtils';
+import { budgetBands, capitalize, formatInr, formatPercent, niceCeiling, scenarioLabel, summarizeVerdict } from './investmentAdvisorUtils';
 
 const VERDICT_STYLE = {
   OPPORTUNITY: {
@@ -31,36 +31,17 @@ function formatDate(iso) {
   return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-// Plain-English headline for the whole result, so a producer gets the answer
-// before reading any numbers.
-function summarize(assessments, plannedBudget) {
-  const sorted = [...assessments].sort((a, b) => a.rating - b.rating);
-  const wins = sorted.filter((a) => a.verdict === 'OPPORTUNITY');
-  const amount = formatInr(plannedBudget);
-  if (wins.length === sorted.length) {
-    return { tone: 'good', title: `${amount} looks like a strong bet`, body: 'It clears the 2× hit bar in every audience scenario we modelled.' };
-  }
-  if (!wins.length) {
-    return { tone: 'bad', title: `${amount} is a risky spend`, body: 'Even with a blockbuster reception, the model gives it less than an even chance of doubling its budget.' };
-  }
-  return {
-    tone: 'mixed',
-    title: `${amount} works if the film lands`,
-    body: `It's an opportunity from ${withArticle(wins[0].rating)}/10 reception upward, and a risk below that.`,
-  };
-}
-
 const TONE_STYLE = {
   good: { wrap: 'from-emerald-500/[0.14] via-emerald-500/[0.04] border-emerald-500/25', icon: 'bg-emerald-500/20 text-emerald-300', Icon: TrendingUp },
   bad: { wrap: 'from-red-500/[0.14] via-red-500/[0.04] border-red-500/25', icon: 'bg-red-500/20 text-red-300', Icon: AlertTriangle },
   mixed: { wrap: 'from-amber-500/[0.14] via-amber-500/[0.04] border-amber-500/25', icon: 'bg-amber-500/20 text-amber-300', Icon: Target },
 };
 
-function VerdictHero({ result }) {
-  const plannedBudget = result.assessments.find((a) => a.plannedBudget != null)?.plannedBudget ?? null;
+function VerdictHero({ result, actions }) {
   // Only an entered budget has a verdict worth headlining.
-  if (plannedBudget == null) return null;
-  const { tone, title, body } = summarize(result.assessments, plannedBudget);
+  const verdict = summarizeVerdict(result.assessments);
+  if (!verdict) return actions ? <div className="flex justify-end">{actions}</div> : null;
+  const { tone, title, body } = verdict;
   const style = TONE_STYLE[tone];
   return (
     <div className={`rounded-2xl border bg-gradient-to-r to-transparent px-4 py-3.5 flex items-center gap-4 flex-wrap ${style.wrap}`}>
@@ -79,15 +60,9 @@ function VerdictHero({ result }) {
           {String(result.language ?? '').split(',').map((l) => capitalize(l.trim())).join(' · ')}
         </span>
       </div>
+      {actions}
     </div>
   );
-}
-
-// Round the axis up to a friendly crore figure so tick labels read cleanly.
-function niceCeiling(value) {
-  const steps = [1e6, 2.5e6, 5e6, 1e7, 2.5e7, 5e7, 1e8, 2.5e8, 5e8, 1e9, 2.5e9, 5e9, 1e10, 2.5e10, 5e10];
-  const step = steps.find((s) => value / s <= 5) ?? steps[steps.length - 1];
-  return Math.ceil(value / step) * step;
 }
 
 const ZONE_STYLE = {
@@ -95,11 +70,6 @@ const ZONE_STYLE = {
   opportunity: { label: 'Opportunity', pill: 'bg-amber-500/15 text-amber-300 border-amber-500/30' },
   risk: { label: 'Risk', pill: 'bg-red-500/15 text-red-300 border-red-500/30' },
 };
-
-// "an 8/10", "a 6/10" — ratings are read aloud as numbers.
-function withArticle(rating) {
-  return `${/^(8|11|18)/.test(String(rating)) ? 'an' : 'a'} ${rating}`;
-}
 
 function BudgetStat({ dot, label, value, children }) {
   return (
@@ -115,25 +85,14 @@ function BudgetStat({ dot, label, value, children }) {
   );
 }
 
-// One bar for the whole decision. The middle assumed rating's max budget is
-// the safe line (a hit is still more likely than not with an average
-// reception); the top rating's max budget is the ceiling, reachable only if
-// the film is loved. Green up to safe, amber up to the ceiling, red beyond.
+// One bar for the whole decision (see budgetBands): green up to the safe
+// line, amber up to the ceiling, red beyond.
 function BudgetRange({ assessments }) {
-  const sorted = [...assessments].sort((a, b) => a.rating - b.rating);
-  const middle = sorted[Math.floor(sorted.length / 2)];
-  const top = sorted[sorted.length - 1];
-  const safe = middle?.maxBudget ?? null;
-  const ceiling = top?.maxBudget ?? null;
-  const planned = sorted.find((a) => a.plannedBudget != null)?.plannedBudget ?? null;
+  const { sorted, middle, top, safe, ceiling, planned, zone } = budgetBands(assessments);
 
   const domain = niceCeiling(Math.max(safe ?? 0, ceiling ?? 0, planned ?? 0, 1e7) * 1.15);
   const pct = (v) => `${Math.min(100, (v / domain) * 100)}%`;
   const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => f * domain);
-  const zone = planned == null ? null
-    : safe != null && planned <= safe ? 'safe'
-    : ceiling != null && planned <= ceiling ? 'opportunity'
-    : 'risk';
 
   return (
     <div className={`${CARD} p-4`}>
@@ -267,11 +226,12 @@ function BreakoutCard({ breakout }) {
   );
 }
 
-export default function BudgetRiskResults({ result }) {
+// `actions` (e.g. Download PDF / Share) sits at the right of the verdict row.
+export default function BudgetRiskResults({ result, actions }) {
   const assessments = [...(result.assessments ?? [])].sort((a, b) => a.rating - b.rating);
   return (
     <div className="space-y-4">
-      <VerdictHero result={{ ...result, assessments }} />
+      <VerdictHero result={{ ...result, assessments }} actions={actions} />
       <BudgetRange assessments={assessments} />
       <BreakoutCard breakout={result.breakout} />
     </div>

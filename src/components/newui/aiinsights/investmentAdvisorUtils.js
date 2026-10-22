@@ -135,3 +135,53 @@ export function searchNames(names, query, { exclude = [], limit = 40 } = {}) {
   }
   return [...prefix, ...wordStart, ...anywhere].slice(0, limit);
 }
+
+// "an 8/10", "a 6/10" — ratings are read aloud as numbers.
+export function withArticle(rating) {
+  return `${/^(8|11|18)/.test(String(rating)) ? 'an' : 'a'} ${rating}`;
+}
+
+// The budget bands behind the whole decision, shared by the on-screen range
+// bar and the PDF report. The middle assumed rating's max budget is the safe
+// line (a hit is still more likely than not with an average reception); the
+// top rating's max budget is the ceiling, reachable only if the film is loved.
+export function budgetBands(assessments) {
+  const sorted = [...assessments].sort((a, b) => a.rating - b.rating);
+  const middle = sorted[Math.floor(sorted.length / 2)];
+  const top = sorted[sorted.length - 1];
+  const safe = middle?.maxBudget ?? null;
+  const ceiling = top?.maxBudget ?? null;
+  const planned = sorted.find((a) => a.plannedBudget != null)?.plannedBudget ?? null;
+  const zone = planned == null ? null
+    : safe != null && planned <= safe ? 'safe'
+    : ceiling != null && planned <= ceiling ? 'opportunity'
+    : 'risk';
+  return { sorted, middle, top, safe, ceiling, planned, zone };
+}
+
+// Plain-English headline for the whole result, so a producer gets the answer
+// before reading any numbers. Null when no budget was entered.
+export function summarizeVerdict(assessments) {
+  const { sorted, planned } = budgetBands(assessments);
+  if (planned == null) return null;
+  const wins = sorted.filter((a) => a.verdict === 'OPPORTUNITY');
+  const amount = formatInr(planned);
+  if (wins.length === sorted.length) {
+    return { tone: 'good', title: `${amount} looks like a strong bet`, body: 'It clears the 2× hit bar in every audience scenario we modelled.' };
+  }
+  if (!wins.length) {
+    return { tone: 'bad', title: `${amount} is a risky spend`, body: 'Even with a blockbuster reception, the model gives it less than an even chance of doubling its budget.' };
+  }
+  return {
+    tone: 'mixed',
+    title: `${amount} works if the film lands`,
+    body: `It's an opportunity from ${withArticle(wins[0].rating)}/10 reception upward, and a risk below that.`,
+  };
+}
+
+// Round the axis up to a friendly crore figure so tick labels read cleanly.
+export function niceCeiling(value) {
+  const steps = [1e6, 2.5e6, 5e6, 1e7, 2.5e7, 5e7, 1e8, 2.5e8, 5e8, 1e9, 2.5e9, 5e9, 1e10, 2.5e10, 5e10];
+  const step = steps.find((s) => value / s <= 5) ?? steps[steps.length - 1];
+  return Math.ceil(value / step) * step;
+}

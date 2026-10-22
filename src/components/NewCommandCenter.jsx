@@ -10,6 +10,7 @@ import CampaignPlannerSection from './newui/campaign/CampaignPlannerSection';
 import WarRoomSection from './newui/warroom/WarRoomSection';
 import AIInsightsSection from './newui/aiinsights/AIInsightsSection';
 import AIProducerSection from './newui/aiproducer/AIProducerSection';
+import ReportsSection from './newui/reports/ReportsSection';
 import { dummyMovieOverview } from './newui/dummyMovieData';
 import { PAGE_BG } from './newui/theme';
 import { DEMO_HIDDEN_NAV_KEYS } from './newui/previewTabs';
@@ -29,6 +30,7 @@ const SECTIONS = {
   'campaign-planner': CampaignPlannerSection,
   'war-room': WarRoomSection,
   'ai-insights': AIInsightsSection,
+  reports: ReportsSection,
   'ai-producer': AIProducerSection,
 };
 
@@ -141,6 +143,7 @@ export default function NewCommandCenter() {
           movieSwitchNonce={movieSwitchNonce}
           userName={username}
           onOpenWorkspace={() => setActiveSection('my-movie')}
+          onNavigate={setActiveSection}
           fullAccess={fullAccess}
           chatMessages={aiChatMessages}
           onChatMessagesChange={setAiChatMessages}
