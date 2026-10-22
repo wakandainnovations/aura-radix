@@ -263,9 +263,8 @@ function drawScenarioTable(doc, w, assessments) {
     { label: 'Reception', x: M + 2 },
     { label: 'Scenario', x: M + 24 },
     { label: 'Verdict', x: M + 62 },
-    { label: 'Max budget', x: M + 94 },
-    { label: 'Hit chance', x: M + 128 },
-    { label: 'Expected return', x: PAGE_W - M - 2, align: 'right' },
+    { label: 'Max budget', x: M + 98 },
+    { label: 'Hit chance', x: PAGE_W - M - 2, align: 'right' },
   ];
   const rowH = 8;
   w.ensure(rowH * (assessments.length + 1) + 6);
@@ -282,7 +281,6 @@ function drawScenarioTable(doc, w, assessments) {
       VERDICT_LABEL[a.verdict] ?? '-',
       a.maxBudget == null ? 'Risky at any' : `up to ${formatInr(a.maxBudget, { capped: a.maxBudgetCapped })}`,
       formatPercent(a.hitProbability),
-      a.expectedRatio != null ? `${a.expectedRatio.toFixed(2)}×` : '-',
     ];
     cells.forEach((cell, i) => {
       const isVerdict = i === 2 && VERDICT_COLOR[a.verdict];

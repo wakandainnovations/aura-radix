@@ -173,15 +173,9 @@ function BudgetRange({ assessments }) {
                     <verdict.Icon className="w-3 h-3" />{verdict.label}
                   </span>
                 )}
-                <div className="ml-auto flex items-center gap-4 text-right">
-                  <div>
-                    <div className="text-[10px] text-white/35">Hit chance</div>
-                    <div className="text-sm font-semibold text-white">{formatPercent(a.hitProbability)}</div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] text-white/35">Return</div>
-                    <div className="text-sm font-semibold text-white">{a.expectedRatio != null ? `${a.expectedRatio.toFixed(2)}×` : '—'}</div>
-                  </div>
+                <div className="ml-auto text-right">
+                  <div className="text-[10px] text-white/35">Hit chance</div>
+                  <div className="text-sm font-semibold text-white">{formatPercent(a.hitProbability)}</div>
                 </div>
               </div>
             );
