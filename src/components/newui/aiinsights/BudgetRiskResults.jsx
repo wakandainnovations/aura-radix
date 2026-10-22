@@ -1,0 +1,301 @@
+import {
+  TrendingUp,
+  AlertTriangle,
+  Rocket,
+  Star,
+  Calendar,
+  Languages,
+  Target,
+} from 'lucide-react';
+import { CARD } from '../theme';
+import { capitalize, formatInr, formatPercent, scenarioLabel } from './investmentAdvisorUtils';
+
+const VERDICT_STYLE = {
+  OPPORTUNITY: {
+    pill: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+    ring: '#34d399',
+    label: 'Opportunity',
+    Icon: TrendingUp,
+  },
+  RISK: {
+    pill: 'bg-red-500/15 text-red-300 border-red-500/30',
+    ring: '#f87171',
+    label: 'Risk',
+    Icon: AlertTriangle,
+  },
+};
+
+function formatDate(iso) {
+  if (!iso) return '';
+  const d = new Date(`${iso}T00:00:00`);
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+// Plain-English headline for the whole result, so a producer gets the answer
+// before reading any numbers.
+function summarize(assessments, plannedBudget) {
+  const sorted = [...assessments].sort((a, b) => a.rating - b.rating);
+  const wins = sorted.filter((a) => a.verdict === 'OPPORTUNITY');
+  const amount = formatInr(plannedBudget);
+  if (wins.length === sorted.length) {
+    return { tone: 'good', title: `${amount} looks like a strong bet`, body: 'It clears the 2× hit bar in every audience scenario we modelled.' };
+  }
+  if (!wins.length) {
+    return { tone: 'bad', title: `${amount} is a risky spend`, body: 'Even with a blockbuster reception, the model gives it less than an even chance of doubling its budget.' };
+  }
+  return {
+    tone: 'mixed',
+    title: `${amount} works if the film lands`,
+    body: `It's an opportunity from ${withArticle(wins[0].rating)}/10 reception upward, and a risk below that.`,
+  };
+}
+
+const TONE_STYLE = {
+  good: { wrap: 'from-emerald-500/[0.14] via-emerald-500/[0.04] border-emerald-500/25', icon: 'bg-emerald-500/20 text-emerald-300', Icon: TrendingUp },
+  bad: { wrap: 'from-red-500/[0.14] via-red-500/[0.04] border-red-500/25', icon: 'bg-red-500/20 text-red-300', Icon: AlertTriangle },
+  mixed: { wrap: 'from-amber-500/[0.14] via-amber-500/[0.04] border-amber-500/25', icon: 'bg-amber-500/20 text-amber-300', Icon: Target },
+};
+
+function VerdictHero({ result }) {
+  const plannedBudget = result.assessments.find((a) => a.plannedBudget != null)?.plannedBudget ?? null;
+  // Only an entered budget has a verdict worth headlining.
+  if (plannedBudget == null) return null;
+  const { tone, title, body } = summarize(result.assessments, plannedBudget);
+  const style = TONE_STYLE[tone];
+  return (
+    <div className={`rounded-2xl border bg-gradient-to-r to-transparent px-4 py-3.5 flex items-center gap-4 flex-wrap ${style.wrap}`}>
+      <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${style.icon}`}>
+        <style.Icon className="w-4.5 h-4.5" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <h2 className="text-base font-bold text-white leading-snug">{title}</h2>
+        <p className="text-xs text-white/55 mt-0.5">{body}</p>
+      </div>
+      <div className="flex items-center gap-x-4 gap-y-1 flex-wrap text-xs text-white/45">
+        <span className="text-white/80 font-medium">{result.movieName}</span>
+        <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" />{formatDate(result.releaseDate)}</span>
+        <span className="flex items-center gap-1.5">
+          <Languages className="w-3.5 h-3.5" />
+          {String(result.language ?? '').split(',').map((l) => capitalize(l.trim())).join(' · ')}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// Round the axis up to a friendly crore figure so tick labels read cleanly.
+function niceCeiling(value) {
+  const steps = [1e6, 2.5e6, 5e6, 1e7, 2.5e7, 5e7, 1e8, 2.5e8, 5e8, 1e9, 2.5e9, 5e9, 1e10, 2.5e10, 5e10];
+  const step = steps.find((s) => value / s <= 5) ?? steps[steps.length - 1];
+  return Math.ceil(value / step) * step;
+}
+
+const ZONE_STYLE = {
+  safe: { label: 'Safe', pill: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' },
+  opportunity: { label: 'Opportunity', pill: 'bg-amber-500/15 text-amber-300 border-amber-500/30' },
+  risk: { label: 'Risk', pill: 'bg-red-500/15 text-red-300 border-red-500/30' },
+};
+
+// "an 8/10", "a 6/10" — ratings are read aloud as numbers.
+function withArticle(rating) {
+  return `${/^(8|11|18)/.test(String(rating)) ? 'an' : 'a'} ${rating}`;
+}
+
+function BudgetStat({ dot, label, value, caption, children }) {
+  return (
+    <div className="min-w-0">
+      <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-white/40">
+        <span className={`w-2 h-2 rounded-sm ${dot}`} />{label}
+      </div>
+      <div className="flex items-center gap-2 mt-0.5">
+        <span className="text-xl font-bold text-white">{value}</span>
+        {children}
+      </div>
+      {caption && <div className="text-[11px] text-white/35">{caption}</div>}
+    </div>
+  );
+}
+
+// One bar for the whole decision. The middle assumed rating's max budget is
+// the safe line (a hit is still more likely than not with an average
+// reception); the top rating's max budget is the ceiling, reachable only if
+// the film is loved. Green up to safe, amber up to the ceiling, red beyond.
+function BudgetRange({ assessments }) {
+  const sorted = [...assessments].sort((a, b) => a.rating - b.rating);
+  const middle = sorted[Math.floor(sorted.length / 2)];
+  const top = sorted[sorted.length - 1];
+  const safe = middle?.maxBudget ?? null;
+  const ceiling = top?.maxBudget ?? null;
+  const planned = sorted.find((a) => a.plannedBudget != null)?.plannedBudget ?? null;
+
+  const domain = niceCeiling(Math.max(safe ?? 0, ceiling ?? 0, planned ?? 0, 1e7) * 1.15);
+  const pct = (v) => `${Math.min(100, (v / domain) * 100)}%`;
+  const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => f * domain);
+  const zone = planned == null ? null
+    : safe != null && planned <= safe ? 'safe'
+    : ceiling != null && planned <= ceiling ? 'opportunity'
+    : 'risk';
+
+  return (
+    <div className={`${CARD} p-4`}>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <h3 className="text-sm font-semibold text-white/90 tracking-wide">Budget range</h3>
+        <div className="flex items-center gap-3 text-[11px] text-white/45">
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-emerald-400/80" />Safe</span>
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-amber-400/75" />Opportunity</span>
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-red-400/40" />Risk</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-3">
+        <BudgetStat
+          dot="bg-emerald-400"
+          label="Safe budget"
+          value={safe == null ? '—' : formatInr(safe, { capped: middle.maxBudgetCapped })}
+          caption={middle && `Holds up with ${withArticle(middle.rating)}/10 reception`}
+        />
+        <BudgetStat
+          dot="bg-amber-400"
+          label="Max opportunity"
+          value={ceiling == null ? '—' : formatInr(ceiling, { capped: top.maxBudgetCapped })}
+          caption={top && `Needs ${withArticle(top.rating)}/10 reception`}
+        />
+        {planned != null && (
+          <BudgetStat dot="bg-white" label="Your budget" value={formatInr(planned)}>
+            <span className={`px-1.5 py-0.5 rounded border text-[10px] font-bold uppercase ${ZONE_STYLE[zone].pill}`}>{ZONE_STYLE[zone].label}</span>
+          </BudgetStat>
+        )}
+      </div>
+
+      <div className={`relative ${planned != null ? 'mt-7' : 'mt-4'}`}>
+        <div className="relative h-8 rounded-lg overflow-hidden bg-red-400/[0.16]">
+          {ceiling != null && (
+            <div className="absolute inset-y-0 left-0 bg-amber-400/70 transition-[width] duration-700" style={{ width: pct(ceiling) }} />
+          )}
+          {safe != null && (
+            <div className="absolute inset-y-0 left-0 bg-emerald-400/80 transition-[width] duration-700" style={{ width: pct(safe) }} />
+          )}
+          {ceiling == null && (
+            <div className="absolute inset-0 flex items-center pl-3 text-xs font-medium text-red-200/80">Risky at any budget</div>
+          )}
+        </div>
+        {planned != null && (
+          <div className="pointer-events-none absolute -top-1 -bottom-1 w-0 border-l-2 border-dashed border-white/90" style={{ left: pct(planned) }}>
+            <span className="absolute -top-5 -translate-x-1/2 whitespace-nowrap rounded bg-white px-1.5 py-px text-[10px] font-bold text-[#05070d]">
+              {formatInr(planned)}
+            </span>
+          </div>
+        )}
+      </div>
+
+      <div className="relative h-4 mt-1.5">
+        {ticks.map((t, i) => (
+          <span
+            key={t}
+            className={`absolute whitespace-nowrap text-[10px] text-white/30 ${i === 0 ? '' : i === ticks.length - 1 ? '-translate-x-full' : '-translate-x-1/2'}`}
+            style={{ left: pct(t) }}
+          >
+            {t === 0 ? '₹0' : formatInr(t)}
+          </span>
+        ))}
+      </div>
+
+      {sorted.some((a) => a.verdict) && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-3 pt-3 border-t border-white/[0.06]">
+          {[...sorted].reverse().map((a) => {
+            const verdict = VERDICT_STYLE[a.verdict];
+            return (
+              <div key={a.rating} className="flex items-center gap-3 rounded-lg bg-white/[0.025] border border-white/[0.05] px-3 py-2">
+                <div className="shrink-0">
+                  <div className="flex items-center gap-1 text-sm font-semibold text-white/85">
+                    <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />{a.rating}/10
+                  </div>
+                  <div className="text-[10px] text-white/35">{scenarioLabel(a.rating)}</div>
+                </div>
+                {verdict && (
+                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-bold uppercase ${verdict.pill}`}>
+                    <verdict.Icon className="w-3 h-3" />{verdict.label}
+                  </span>
+                )}
+                <div className="ml-auto flex items-center gap-4 text-right">
+                  <div>
+                    <div className="text-[10px] text-white/35">Hit chance</div>
+                    <div className="text-sm font-semibold text-white">{formatPercent(a.hitProbability)}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-white/35">Return</div>
+                    <div className="text-sm font-semibold text-white">{a.expectedRatio != null ? `${a.expectedRatio.toFixed(2)}×` : '—'}</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BreakoutCard({ breakout }) {
+  if (!breakout?.assessments?.length) return null;
+  return (
+    <div className="rounded-2xl border border-violet-500/25 bg-gradient-to-r from-violet-500/[0.12] via-fuchsia-500/[0.04] to-transparent px-4 py-3 flex items-center gap-4 flex-wrap">
+      <div className="w-8 h-8 rounded-lg bg-violet-500/20 text-violet-300 flex items-center justify-center shrink-0">
+        <Rocket className="w-4 h-4" />
+      </div>
+      <div className="min-w-0 flex-1 basis-80">
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-white/90">Breakout upside</h3>
+          <span className="text-[10px] font-bold tracking-wide px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-300">BEST CASE</span>
+        </div>
+        <p className="text-[11px] text-white/45 mt-0.5 leading-relaxed">{breakout.note}</p>
+      </div>
+      <div className="flex gap-2 flex-wrap">
+        {[...breakout.assessments].sort((a, b) => a.rating - b.rating).map((a) => {
+          const verdict = VERDICT_STYLE[a.verdict];
+          return (
+            <div key={a.rating} className="rounded-lg bg-white/[0.03] border border-white/[0.06] px-3 py-1.5 min-w-[120px]">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] text-white/55">{a.rating}/10</span>
+                {verdict && <span className={`text-[9px] font-bold uppercase px-1 py-px rounded border ${verdict.pill}`}>{verdict.label}</span>}
+              </div>
+              <div className="text-sm font-semibold text-white">
+                {a.maxBudget == null ? <span className="text-white/40 text-xs">Risky at any</span> : <>≤ {formatInr(a.maxBudget, { capped: a.maxBudgetCapped })}</>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+export default function BudgetRiskResults({ result }) {
+  const assessments = [...(result.assessments ?? [])].sort((a, b) => a.rating - b.rating);
+  return (
+    <div className="space-y-4">
+      <VerdictHero result={{ ...result, assessments }} />
+      <BudgetRange assessments={assessments} />
+      <BreakoutCard breakout={result.breakout} />
+    </div>
+  );
+}
+
+export function ResultsLoadingState() {
+  return (
+    <div className="space-y-4" aria-busy="true">
+      <div className={`${CARD} p-4`}>
+        <div className="flex items-center gap-3 text-sm text-white/60">
+          <span className="relative flex w-2.5 h-2.5">
+            <span className="absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75 animate-ping" />
+            <span className="relative inline-flex w-2.5 h-2.5 rounded-full bg-blue-500" />
+          </span>
+          Scoring your film across audience scenarios…
+        </div>
+        <div className="mt-4 h-6 w-2/3 rounded bg-white/[0.06] animate-pulse" />
+        <div className="mt-2 h-4 w-1/2 rounded bg-white/[0.04] animate-pulse" />
+      </div>
+      <div className={`${CARD} h-56 animate-pulse`} />
+    </div>
+  );
+}

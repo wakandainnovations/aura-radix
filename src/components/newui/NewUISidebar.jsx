@@ -7,6 +7,7 @@ import {
   Target,
   ClipboardList,
   ShieldAlert,
+  Sparkles,
   Bot,
   ChevronDown,
   LogOut,
@@ -23,6 +24,7 @@ const NAV_ITEMS = [
   { key: 'competitor-intelligence', label: 'Competitor Intelligence', icon: Target },
   { key: 'campaign-planner', label: 'Campaign Planner', icon: ClipboardList },
   { key: 'war-room', label: 'War Room', icon: ShieldAlert },
+  { key: 'ai-insights', label: 'AI Insights', icon: Sparkles },
   { key: 'ai-producer', label: 'AI Copilot', icon: Bot },
 ];
 

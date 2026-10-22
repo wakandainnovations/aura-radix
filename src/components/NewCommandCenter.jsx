@@ -8,6 +8,7 @@ import MentionsSection from './newui/audience/MentionsSection';
 import CompetitorIntelligenceSection from './newui/competitor/CompetitorIntelligenceSection';
 import CampaignPlannerSection from './newui/campaign/CampaignPlannerSection';
 import WarRoomSection from './newui/warroom/WarRoomSection';
+import AIInsightsSection from './newui/aiinsights/AIInsightsSection';
 import AIProducerSection from './newui/aiproducer/AIProducerSection';
 import { dummyMovieOverview } from './newui/dummyMovieData';
 import { PAGE_BG } from './newui/theme';
@@ -27,6 +28,7 @@ const SECTIONS = {
   'competitor-intelligence': CompetitorIntelligenceSection,
   'campaign-planner': CampaignPlannerSection,
   'war-room': WarRoomSection,
+  'ai-insights': AIInsightsSection,
   'ai-producer': AIProducerSection,
 };
 
