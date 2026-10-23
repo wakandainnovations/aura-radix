@@ -10,7 +10,7 @@ const STATUS_TEXT = {
   error: "Couldn't build the PDF. Try again.",
 };
 
-// Download PDF + Share on WhatsApp for one saved report. Used under the
+// Download PDF + Share (via WhatsApp) for one saved report. Used under the
 // Investment Advisor results and on every card in the Reports section.
 export default function ReportActions({ report, compact = false }) {
   const [busy, setBusy] = useState(null);
@@ -53,7 +53,7 @@ export default function ReportActions({ report, compact = false }) {
           className={`${BUTTON} bg-emerald-600/90 hover:bg-emerald-500 text-white`}
         >
           {busy === 'share' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MessageCircle className="w-3.5 h-3.5" />}
-          {compact ? 'WhatsApp' : 'Share on WhatsApp'}
+          Share
         </button>
       </div>
       {status && (

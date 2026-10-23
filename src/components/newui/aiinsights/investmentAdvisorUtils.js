@@ -183,10 +183,10 @@ export function summarizeVerdict(assessments) {
   const wins = sorted.filter((a) => a.verdict === 'OPPORTUNITY');
   const amount = formatInr(planned);
   if (wins.length === sorted.length) {
-    return { tone: 'good', title: `${amount} looks like a strong bet`, body: 'It clears the 2× hit bar in every audience scenario we modelled.' };
+    return { tone: 'good', title: `${amount} looks like a strong bet`, body: 'It holds up across every audience reception.' };
   }
   if (!wins.length) {
-    return { tone: 'bad', title: `${amount} is a risky spend`, body: 'Even with a blockbuster reception, the model gives it less than an even chance of doubling its budget.' };
+    return { tone: 'bad', title: `${amount} is a risky spend`, body: "Even a blockbuster reception isn't likely to make it pay off." };
   }
   return {
     tone: 'mixed',
