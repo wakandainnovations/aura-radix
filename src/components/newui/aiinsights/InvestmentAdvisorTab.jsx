@@ -241,7 +241,7 @@ export default function InvestmentAdvisorTab({ selectedMovie, userName }) {
               icon={User}
             />
           </Field>
-          <Field label="Co-stars" aside={`${form.supportingActors.length}/${MAX_SUPPORTING_ACTORS} · billing order`} className="col-span-2 xl:col-span-5">
+          <Field label="Co-stars" aside={`${form.supportingActors.length}/${MAX_SUPPORTING_ACTORS}`} className="col-span-2 xl:col-span-5">
             <CreditCombobox
               multiple
               max={MAX_SUPPORTING_ACTORS}

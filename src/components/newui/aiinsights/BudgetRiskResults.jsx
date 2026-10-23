@@ -8,7 +8,7 @@ import {
   Target,
 } from 'lucide-react';
 import { CARD } from '../theme';
-import { budgetBands, capitalize, formatInr, formatPercent, niceCeiling, scenarioLabel, summarizeVerdict } from './investmentAdvisorUtils';
+import { budgetBands, capitalize, formatInr, niceCeiling, scenarioLabel, summarizeVerdict } from './investmentAdvisorUtils';
 
 const VERDICT_STYLE = {
   OPPORTUNITY: {
@@ -169,14 +169,10 @@ function BudgetRange({ assessments }) {
                   <div className="text-[10px] text-white/35">{scenarioLabel(a.rating)}</div>
                 </div>
                 {verdict && (
-                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-bold uppercase ${verdict.pill}`}>
+                  <span className={`ml-auto inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-bold uppercase ${verdict.pill}`}>
                     <verdict.Icon className="w-3 h-3" />{verdict.label}
                   </span>
                 )}
-                <div className="ml-auto text-right">
-                  <div className="text-[10px] text-white/35">Hit chance</div>
-                  <div className="text-sm font-semibold text-white">{formatPercent(a.hitProbability)}</div>
-                </div>
               </div>
             );
           })}
