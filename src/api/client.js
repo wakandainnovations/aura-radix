@@ -22,6 +22,36 @@ const isPublicEndpoint = (url) => {
 };
 
 /**
+ * Whether a JWT's exp claim is in the past. The backend answers an expired
+ * token with 403 rather than 401, so this is how we tell an expired session
+ * apart from a genuine permission error. Unreadable tokens count as not
+ * expired, leaving the 403 to be reported as-is.
+ */
+export const isTokenExpired = (token, now = Date.now()) => {
+  try {
+    const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const { exp } = JSON.parse(atob(payload));
+    return typeof exp === 'number' && exp * 1000 <= now;
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Clear the stored session and send the user back to login.
+ */
+const expireSession = (status, errorData) => {
+  localStorage.removeItem('jwtToken');
+  window.location.href = '/login';
+  return Promise.reject({
+    status,
+    message: 'Session expired. Please login again.',
+    errors: errorData?.errors,
+    data: errorData,
+  });
+};
+
+/**
  * Create authenticated API client with JWT token
  * Used for all protected API routes
  */
@@ -154,18 +184,16 @@ apiClient.interceptors.response.use(
       }
 
       // Genuine expired/invalid session on a protected endpoint.
-      localStorage.removeItem('jwtToken');
-      window.location.href = '/login';
-      return Promise.reject({
-        status,
-        message: 'Session expired. Please login again.',
-        errors: errorData?.errors,
-        data: errorData,
-      });
+      return expireSession(status, errorData);
     }
 
-    // 403 - Forbidden (user lacks permissions)
+    // 403 - Forbidden (user lacks permissions, or an expired token: the
+    // backend reports those as 403 too, so check the stored token's expiry)
     if (status === 403) {
+      const token = localStorage.getItem('jwtToken');
+      if (token && isTokenExpired(token)) {
+        return expireSession(status, errorData);
+      }
       return Promise.reject({
         status,
         message: errorData?.message || 'You do not have permission to access this resource',
