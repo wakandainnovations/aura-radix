@@ -29,10 +29,22 @@ export const predictionService = {
 // sources. Names are matched exactly by AuraPredictor, so picking from these
 // beats free typing — but a new name is still allowed.
 // Path: GET /api/movie-credits/{actors|directors|music-directors|production-companies}
-// Response: string[]
+// Response: production-companies is string[]; the people endpoints return
+// {name, highestRecentRatingRange}[] (the person's highest rating range among
+// their last 3 films). Both shapes are normalized to
+// {name, highestRecentRatingRange}[], with a null range for plain names.
+export const toCredits = (list) =>
+  (Array.isArray(list) ? list : [])
+    .map((item) =>
+      typeof item === 'string'
+        ? { name: item, highestRecentRatingRange: null }
+        : { name: item?.name, highestRecentRatingRange: Number.isFinite(item?.highestRecentRatingRange) ? item.highestRecentRatingRange : null },
+    )
+    .filter((credit) => typeof credit.name === 'string' && credit.name);
+
 export const movieCreditsService = {
-  getActors: () => apiClient.get('/movie-credits/actors'),
-  getDirectors: () => apiClient.get('/movie-credits/directors'),
-  getMusicDirectors: () => apiClient.get('/movie-credits/music-directors'),
-  getProductionCompanies: () => apiClient.get('/movie-credits/production-companies'),
+  getActors: () => apiClient.get('/movie-credits/actors').then(toCredits),
+  getDirectors: () => apiClient.get('/movie-credits/directors').then(toCredits),
+  getMusicDirectors: () => apiClient.get('/movie-credits/music-directors').then(toCredits),
+  getProductionCompanies: () => apiClient.get('/movie-credits/production-companies').then(toCredits),
 };

@@ -15,6 +15,22 @@ export const CBFC_RATINGS = ['U', 'UA', 'A'];
 export const MARKETING_BUDGETS = ['low', 'medium', 'high'];
 export const MAX_SUPPORTING_ACTORS = 4;
 export const DEFAULT_GENRES = ['Drama'];
+export const DEFAULT_MARKETING_BUDGET = 'medium';
+
+// A cast/crew this proven gets a high marketing budget by default. Hindi-only
+// films play to a bigger market, so their bar is ten times higher.
+export const HIGH_MARKETING_RATING_RANGE = { hindiOnly: 100000, other: 10000 };
+
+// Marketing budget implied by the languages and the highest
+// highestRecentRatingRange among the people named on the form. Unknown
+// ranges (new names, a failed credits load) are ignored.
+export function suggestMarketingBudget(languages, ratingRanges) {
+  if (!languages.length) return DEFAULT_MARKETING_BUDGET;
+  const top = Math.max(0, ...ratingRanges.filter(Number.isFinite));
+  const hindiOnly = languages.length === 1 && languages[0] === 'hindi';
+  const threshold = hindiOnly ? HIGH_MARKETING_RATING_RANGE.hindiOnly : HIGH_MARKETING_RATING_RANGE.other;
+  return top >= threshold ? 'high' : DEFAULT_MARKETING_BUDGET;
+}
 
 // Labels for AuraPredictor's default assumed ratings (4/6/8, or 5/7/9 for a
 // star lead — see BudgetRiskService). Anything else falls back to "Rated N".

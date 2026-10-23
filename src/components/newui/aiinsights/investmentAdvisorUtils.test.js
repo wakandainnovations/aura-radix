@@ -7,6 +7,7 @@ import {
   loadLastGenres,
   saveLastGenres,
   searchNames,
+  suggestMarketingBudget,
 } from './investmentAdvisorUtils';
 
 const baseForm = {
@@ -102,5 +103,27 @@ describe('searchNames', () => {
 
   it('excludes already-picked names case-insensitively', () => {
     expect(searchNames(names, 'arjun', { exclude: ['allu arjun'] })).not.toContain('Allu Arjun');
+  });
+});
+
+describe('suggestMarketingBudget', () => {
+  it('goes high at a 10000 range for any selection that includes a non-Hindi language', () => {
+    expect(suggestMarketingBudget(['tamil'], [10000])).toBe('high');
+    expect(suggestMarketingBudget(['hindi', 'telugu'], [10000])).toBe('high');
+    expect(suggestMarketingBudget(['tamil'], [1000])).toBe('medium');
+  });
+
+  it('needs a 100000 range when Hindi is the only language', () => {
+    expect(suggestMarketingBudget(['hindi'], [10000])).toBe('medium');
+    expect(suggestMarketingBudget(['hindi'], [100000])).toBe('high');
+  });
+
+  it('uses the highest known range and ignores unknown ones', () => {
+    expect(suggestMarketingBudget(['tamil'], [null, 100, 10000])).toBe('high');
+    expect(suggestMarketingBudget(['tamil'], [null, null])).toBe('medium');
+  });
+
+  it('stays at the default until a language is chosen', () => {
+    expect(suggestMarketingBudget([], [100000])).toBe('medium');
   });
 });

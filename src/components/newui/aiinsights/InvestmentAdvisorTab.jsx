@@ -14,6 +14,9 @@ import { createInvestmentReport, saveReport } from '../reports/reportsStore';
 import {
   LANGUAGES,
   GENRES,
+  DEFAULT_GENRES,
+  DEFAULT_MARKETING_BUDGET,
+  suggestMarketingBudget,
   CBFC_RATINGS,
   MARKETING_BUDGETS,
   MAX_SUPPORTING_ACTORS,
@@ -42,9 +45,20 @@ const MARKETING_OPTIONS = MARKETING_BUDGETS.map((m) => ({
 
 // Name lists change only when the movie DB is reloaded, so fetch once per
 // session. No retries: if the endpoint is missing, fall back to typing at once.
+// Returns the names for autocomplete plus a lowercased name -> rating range map.
 function useCredits(key, fetcher) {
-  return useQuery({ queryKey: ['movie-credits', key], queryFn: fetcher, staleTime: Infinity, gcTime: Infinity, retry: false });
+  const { data, isLoading, isError } = useQuery({ queryKey: ['movie-credits', key], queryFn: fetcher, staleTime: Infinity, gcTime: Infinity, retry: false });
+  const { names, ratings } = useMemo(() => {
+    const list = data ?? [];
+    return {
+      names: list.map((c) => c.name),
+      ratings: new Map(list.map((c) => [c.name.toLowerCase(), c.highestRecentRatingRange])),
+    };
+  }, [data]);
+  return { names, ratings, isLoading, isError };
 }
+
+const ratingOf = (ratings, name) => ratings.get(name.trim().toLowerCase()) ?? null;
 
 function initialForm(userName) {
   return {
@@ -55,7 +69,7 @@ function initialForm(userName) {
     cbfcRating: 'UA',
     isRemake: false,
     budgetCrores: '',
-    marketingBudget: 'medium',
+    marketingBudget: DEFAULT_MARKETING_BUDGET,
     productionCompany: '',
     leadActor: '',
     supportingActors: [],
@@ -101,6 +115,23 @@ export default function InvestmentAdvisorTab({ selectedMovie, userName }) {
   const musicDirectors = useCredits('music-directors', movieCreditsService.getMusicDirectors);
   const companies = useCredits('production-companies', movieCreditsService.getProductionCompanies);
 
+  // Marketing budget follows the cast/crew's rating ranges until the user
+  // picks one themselves.
+  const [marketingAuto, setMarketingAuto] = useState(true);
+  const suggestedMarketing = useMemo(
+    () =>
+      suggestMarketingBudget(form.languages, [
+        ...[form.leadActor, ...form.supportingActors].map((n) => ratingOf(actors.ratings, n)),
+        ratingOf(directors.ratings, form.director),
+        ratingOf(musicDirectors.ratings, form.musicDirector),
+      ]),
+    [form.languages, form.leadActor, form.supportingActors, form.director, form.musicDirector, actors.ratings, directors.ratings, musicDirectors.ratings],
+  );
+  useEffect(() => {
+    if (!marketingAuto) return;
+    setForm((f) => (f.marketingBudget === suggestedMarketing ? f : { ...f, marketingBudget: suggestedMarketing }));
+  }, [marketingAuto, suggestedMarketing]);
+
   // There's no user-profile endpoint, so the user's own movie entity is the
   // closest thing to "their" production company. Prefill once, and never
   // overwrite something the user typed or cleared.
@@ -142,7 +173,9 @@ export default function InvestmentAdvisorTab({ selectedMovie, userName }) {
 
   function handleReset() {
     productionTouched.current = false;
-    setForm({ ...initialForm(userName), productionCompany: movieDetail?.productionCompany?.trim() ?? '' });
+    setMarketingAuto(true);
+    // Start over means the default genre, not the last-used choice that seeds a fresh visit.
+    setForm({ ...initialForm(userName), genres: DEFAULT_GENRES, productionCompany: movieDetail?.productionCompany?.trim() ?? '' });
     setErrors({});
     setSubmittedRequest(null);
     setReport(null);
@@ -199,7 +232,7 @@ export default function InvestmentAdvisorTab({ selectedMovie, userName }) {
 
           <Field label="Lead actor" className="xl:col-span-3">
             <CreditCombobox
-              names={actors.data}
+              names={actors.names}
               isLoading={actors.isLoading}
               isError={actors.isError}
               value={form.leadActor}
@@ -208,11 +241,11 @@ export default function InvestmentAdvisorTab({ selectedMovie, userName }) {
               icon={User}
             />
           </Field>
-          <Field label="Supporting actors" aside={`${form.supportingActors.length}/${MAX_SUPPORTING_ACTORS} · billing order`} className="col-span-2 xl:col-span-5">
+          <Field label="Co-stars" aside={`${form.supportingActors.length}/${MAX_SUPPORTING_ACTORS} · billing order`} className="col-span-2 xl:col-span-5">
             <CreditCombobox
               multiple
               max={MAX_SUPPORTING_ACTORS}
-              names={actors.data}
+              names={actors.names}
               isLoading={actors.isLoading}
               isError={actors.isError}
               value={form.supportingActors}
@@ -222,15 +255,15 @@ export default function InvestmentAdvisorTab({ selectedMovie, userName }) {
             />
           </Field>
           <Field label="Director" className="xl:col-span-2">
-            <CreditCombobox names={directors.data} isLoading={directors.isLoading} isError={directors.isError} value={form.director} onChange={set('director')} placeholder="Search or type" icon={Clapperboard} />
+            <CreditCombobox names={directors.names} isLoading={directors.isLoading} isError={directors.isError} value={form.director} onChange={set('director')} placeholder="Search or type" icon={Clapperboard} />
           </Field>
           <Field label="Music director" className="xl:col-span-2">
-            <CreditCombobox names={musicDirectors.data} isLoading={musicDirectors.isLoading} isError={musicDirectors.isError} value={form.musicDirector} onChange={set('musicDirector')} placeholder="Search or type" icon={Music} />
+            <CreditCombobox names={musicDirectors.names} isLoading={musicDirectors.isLoading} isError={musicDirectors.isError} value={form.musicDirector} onChange={set('musicDirector')} placeholder="Search or type" icon={Music} />
           </Field>
 
           <Field label="Production company" className="col-span-2 xl:col-span-3">
             <CreditCombobox
-              names={companies.data}
+              names={companies.names}
               isLoading={companies.isLoading}
               isError={companies.isError}
               value={form.productionCompany}
@@ -260,8 +293,20 @@ export default function InvestmentAdvisorTab({ selectedMovie, userName }) {
               <span className="pr-3 text-xs text-white/40">Cr</span>
             </div>
           </Field>
-          <Field label="Marketing budget" className="xl:col-span-2">
-            <SelectMenu ariaLabel="Marketing budget" value={form.marketingBudget} onChange={set('marketingBudget')} options={MARKETING_OPTIONS} />
+          <Field
+            label="Marketing budget"
+            aside={marketingAuto && suggestedMarketing === 'high' ? 'Auto' : undefined}
+            className="xl:col-span-2"
+          >
+            <SelectMenu
+              ariaLabel="Marketing budget"
+              value={form.marketingBudget}
+              onChange={(v) => {
+                setMarketingAuto(false);
+                set('marketingBudget')(v);
+              }}
+              options={MARKETING_OPTIONS}
+            />
           </Field>
           <Field label="Remake" className="xl:col-span-1">
             <label className="h-9 flex items-center gap-2 cursor-pointer">

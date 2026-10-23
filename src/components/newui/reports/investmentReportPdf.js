@@ -225,7 +225,7 @@ function drawAssumptions(doc, w, request) {
     ['Marketing budget', capitalize(request.marketingBudget)],
     ['Production company', request.productionCompany],
     ['Lead actor', request.leadActor],
-    ['Supporting actors', request.supportingActors?.join(', ')],
+    ['Co-stars', request.supportingActors?.join(', ')],
     ['Director', request.director],
     ['Music director', request.musicDirector],
   ].filter(([, v]) => v);
