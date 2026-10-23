@@ -92,10 +92,6 @@ export function drawHeader(doc, w, { label, createdAt }) {
   doc.rect(0, 0, PAGE_W, 26, 'F');
   w.font(15, 'bold', [255, 255, 255]);
   w.text('FRAMEHOUSE', M, 13);
-  w.font(6.5, 'normal', [140, 146, 160]);
-  doc.setCharSpace(0.6);
-  w.text('AI OPERATING SYSTEM', M, 18.5);
-  doc.setCharSpace(0);
   w.font(9, 'bold', C.blue);
   w.text(label, PAGE_W - M, 13, { align: 'right' });
   w.font(7.5, 'normal', [140, 146, 160]);

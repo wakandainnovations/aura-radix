@@ -53,7 +53,6 @@ export default function LoginPage({ onLoginSuccess }) {
             <Radar className="w-7 h-7 text-primary-foreground" strokeWidth={2.25} />
           </div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight">FRAMEHOUSE</h1>
-          <p className="text-sm text-muted-foreground mt-1">An AI Operating System for Movies</p>
         </div>
 
         {/* Card */}

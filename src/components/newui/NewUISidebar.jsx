@@ -49,7 +49,6 @@ export default function NewUISidebar({
     <div className={`w-64 shrink-0 h-full flex flex-col ${SIDEBAR_BG}`}>
       <div className="px-5 pt-6 pb-5">
         <div className="text-white font-extrabold tracking-wide text-lg leading-none">FRAMEHOUSE</div>
-        <div className="text-[10px] tracking-[0.2em] text-white/40 mt-1.5">AI OPERATING SYSTEM</div>
       </div>
 
       <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
