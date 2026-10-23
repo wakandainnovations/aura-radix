@@ -6,6 +6,10 @@ import {
   Calendar,
   Languages,
   Target,
+  Lightbulb,
+  User,
+  Music,
+  Check,
 } from 'lucide-react';
 import { CARD } from '../theme';
 import { budgetBands, capitalize, formatInr, niceCeiling, scenarioLabel, summarizeVerdict } from './investmentAdvisorUtils';
@@ -216,14 +220,89 @@ function BreakoutCard({ breakout }) {
   );
 }
 
+const ALTERNATIVE_ROLES = [
+  { key: 'leadActors', role: 'leadActor', title: 'Lead actor', Icon: User },
+  { key: 'musicDirectors', role: 'musicDirector', title: 'Music director', Icon: Music },
+];
+
+function scopeText(scope) {
+  return !scope || scope === 'pan-india' ? 'across Indian films' : `in ${capitalize(scope)} films`;
+}
+
+// Lead actors / music directors who'd make the film likelier to be a hit,
+// best first, each backed by their best film at a similar budget. Only sent
+// when a budget was entered. `onUse(role, name)` swaps one into the form.
+function AlternativesCard({ alternatives, current = {}, onUse }) {
+  const groups = ALTERNATIVE_ROLES.map((g) => ({ ...g, people: alternatives?.[g.key] ?? [] })).filter((g) => g.people.length);
+  if (!groups.length) return null;
+  return (
+    <div className={`${CARD} p-4`}>
+      <div className="flex items-start gap-3">
+        <div className="w-8 h-8 rounded-lg bg-sky-500/15 text-sky-300 flex items-center justify-center shrink-0">
+          <Lightbulb className="w-4 h-4" />
+        </div>
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-white/90">Recommended alternatives</h3>
+          <p className="text-[11px] text-white/45 mt-0.5">
+            Talent who would give this film a better shot, each with a hit at a similar budget {scopeText(alternatives.languageScope)}.
+          </p>
+        </div>
+      </div>
+      <div className={`grid grid-cols-1 ${groups.length > 1 ? 'lg:grid-cols-2' : ''} gap-4 mt-3`}>
+        {groups.map(({ key, role, title, Icon, people }) => (
+          <div key={key}>
+            <div className="flex items-center gap-1.5 text-[11px] font-medium text-white/50 uppercase tracking-wide mb-1.5">
+              <Icon className="w-3.5 h-3.5" />{title}
+            </div>
+            <ul className="space-y-1.5">
+              {people.map((p, i) => {
+                const film = p.similarBudgetFilm;
+                const inUse = (current[role] ?? '').trim().toLowerCase() === p.name.toLowerCase();
+                return (
+                  <li key={p.name} className="flex items-center gap-3 rounded-lg bg-white/[0.025] border border-white/[0.05] px-3 py-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-white/90 truncate">{p.name}</span>
+                        {i === 0 && <span className="text-[9px] font-bold uppercase px-1 py-px rounded border bg-sky-500/15 text-sky-300 border-sky-500/30">Top pick</span>}
+                      </div>
+                      {film && (
+                        <div className="text-[11px] text-white/45 truncate">
+                          {film.movieName}{film.releaseDate ? ` (${film.releaseDate.slice(0, 4)})` : ''} · {formatInr(film.budget)} budget → {formatInr(film.revenue)} gross
+                        </div>
+                      )}
+                    </div>
+                    {onUse && (
+                      <button
+                        type="button"
+                        onClick={() => onUse(role, p.name)}
+                        disabled={inUse}
+                        className="shrink-0 h-7 flex items-center gap-1 px-2.5 rounded-md text-[11px] font-semibold border border-white/10 bg-white/[0.04] text-white/70 hover:bg-white/[0.1] hover:text-white disabled:opacity-60 disabled:hover:bg-white/[0.04] transition-colors"
+                      >
+                        {inUse ? <><Check className="w-3 h-3" />In use</> : 'Use'}
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // `actions` (e.g. Download PDF / Share) sits at the right of the verdict row.
-export default function BudgetRiskResults({ result, actions }) {
+// `current` holds the form's lead actor / music director so a recommendation
+// already swapped in shows as in use.
+export default function BudgetRiskResults({ result, actions, current, onUseAlternative }) {
   const assessments = [...(result.assessments ?? [])].sort((a, b) => a.rating - b.rating);
   return (
     <div className="space-y-4">
       <VerdictHero result={{ ...result, assessments }} actions={actions} />
       <BudgetRange assessments={assessments} />
       <BreakoutCard breakout={result.breakout} />
+      <AlternativesCard alternatives={result.alternatives} current={current} onUse={onUseAlternative} />
     </div>
   );
 }

@@ -358,7 +358,12 @@ export default function InvestmentAdvisorTab({ selectedMovie, userName }) {
         </div>
       ) : assess.data ? (
         <div className={isStale ? 'opacity-60 transition-opacity' : 'transition-opacity'}>
-          <BudgetRiskResults result={assess.data} actions={report && <ReportActions report={report} />} />
+          <BudgetRiskResults
+            result={assess.data}
+            actions={report && <ReportActions report={report} />}
+            current={{ leadActor: form.leadActor, musicDirector: form.musicDirector }}
+            onUseAlternative={(role, name) => (role === 'leadActor' ? setLeadActor(name) : set('musicDirector')(name))}
+          />
         </div>
       ) : null}
     </div>

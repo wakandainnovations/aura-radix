@@ -14,7 +14,12 @@ export const predictionService = {
   //   assessments: [{ rating, maxBudget, maxBudgetCapped, safeBudget,
   //   safeBudgetCapped, plannedBudget, expectedRatio, hitProbability, verdict,
   //   verdictConfidence }], breakout: { ratingRange, note, assessments } | null,
-  //   notes: string[], currency, usdToInrRate, exchangeRateDate }
+  //   notes: string[], alternatives?: { averageHitProbability, languageScope
+  //   (a language or "pan-india"), leadActors, musicDirectors } (only with a
+  //   budget; each list best first, max 5: [{ name, averageHitProbability,
+  //   hitProbabilityGain, ratingRange, hitRatio, similarBudgetFilm: { movieName,
+  //   releaseDate, language, budget, revenue (INR) }, assessments }]),
+  //   currency, usdToInrRate, exchangeRateDate }
   assessBudgetRisk: async (request) => {
     try {
       return await apiClient.post('/predictions/budget-risk', request);
