@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Film, Loader2, Plus, Trash2, Pencil, Check, X, Ban, RotateCcw } from 'lucide-react';
+import { Film, Loader2, Plus, Trash2, Pencil, Check, X, Ban, RotateCcw, Upload } from 'lucide-react';
 import { adminTrackedReleaseService } from '../../api/adminTrackedReleaseService';
+import { adminLicenseService } from '../../api/adminLicenseService';
 
 const SCOPES = [
   { id: 'current', label: 'Upcoming & tracking' },
@@ -77,6 +78,7 @@ export default function TrackedReleasesAdminView() {
   const [sortBy, setSortBy] = useState('release');
   const [editingKeywords, setEditingKeywords] = useState(null); // { id, text }
   const [excluding, setExcluding] = useState(null); // { id, reason }
+  const [publishing, setPublishing] = useState(null); // { id, ownerId }
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ title: '', releaseDate: '', language: '', keywords: '' });
 
@@ -102,6 +104,19 @@ export default function TrackedReleasesAdminView() {
     onSuccess: () => {
       setForm({ title: '', releaseDate: '', language: '', keywords: '' });
       setShowAdd(false);
+      invalidate();
+    },
+  });
+
+  const { data: users = [] } = useQuery({
+    queryKey: ['admin', 'users'],
+    queryFn: adminLicenseService.listUsers,
+  });
+
+  const publishMutation = useMutation({
+    mutationFn: ({ id, ownerId }) => adminTrackedReleaseService.addToPlatform(id, ownerId),
+    onSuccess: () => {
+      setPublishing(null);
       invalidate();
     },
   });
@@ -141,7 +156,8 @@ export default function TrackedReleasesAdminView() {
     createMutation.mutate(body);
   };
 
-  const mutationError = updateMutation.error || createMutation.error || deleteMutation.error;
+  const mutationError =
+    updateMutation.error || createMutation.error || deleteMutation.error || publishMutation.error;
 
   return (
     <div className="h-full overflow-y-auto bg-background">
@@ -305,6 +321,11 @@ export default function TrackedReleasesAdminView() {
                               .filter(Boolean)
                               .join(' · ')}
                           </div>
+                          {r.platformEntities?.length > 0 && (
+                            <div className="text-xs text-emerald-400 mt-1">
+                              On platform: {r.platformEntities.map((p) => p.ownerUsername || 'unowned').join(', ')}
+                            </div>
+                          )}
                           {r.excluded && r.excludedReason && (
                             <div className="text-xs text-red-400 mt-1">Excluded: {r.excludedReason}</div>
                           )}
@@ -383,7 +404,41 @@ export default function TrackedReleasesAdminView() {
                       ))}
                     </td>
                     <td className="px-4 py-3 text-right whitespace-nowrap">
-                      {excluding?.id === r.id ? (
+                      {publishing?.id === r.id ? (
+                        <div className="flex items-center justify-end gap-1">
+                          <select
+                            aria-label={`Owner for ${r.entityName}`}
+                            value={publishing.ownerId ?? ''}
+                            onChange={(e) =>
+                              setPublishing({ id: r.id, ownerId: e.target.value ? Number(e.target.value) : null })
+                            }
+                            className="h-8 px-2 bg-background border border-border rounded text-xs text-foreground"
+                          >
+                            <option value="">Me</option>
+                            {users.map((u) => (
+                              <option key={u.id} value={u.id}>
+                                {u.username}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            disabled={publishMutation.isPending}
+                            onClick={() => publishMutation.mutate({ id: r.id, ownerId: publishing.ownerId })}
+                            className="px-2 py-1 rounded text-xs font-medium bg-primary/15 text-primary hover:bg-primary/25 disabled:opacity-50"
+                          >
+                            Add
+                          </button>
+                          <button
+                            type="button"
+                            title="Cancel"
+                            onClick={() => setPublishing(null)}
+                            className="p-1 text-muted-foreground hover:text-foreground"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : excluding?.id === r.id ? (
                         <div className="flex items-center justify-end gap-1">
                           <input
                             aria-label={`Reason for excluding ${r.entityName}`}
@@ -416,6 +471,14 @@ export default function TrackedReleasesAdminView() {
                         </div>
                       ) : (
                         <div className="flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            title="Make this a user-facing movie (searchable in Switch movie)"
+                            onClick={() => setPublishing({ id: r.id, ownerId: null })}
+                            className="px-2 py-1 rounded text-xs font-medium bg-primary/15 text-primary hover:bg-primary/25 flex items-center gap-1"
+                          >
+                            <Upload className="w-3.5 h-3.5" /> Add to platform
+                          </button>
                           {r.excluded ? (
                             <button
                               type="button"

@@ -12,6 +12,8 @@ import apiClient from './client';
  *        trackFrom, trackUntil, keywords[], source: 'TMDB'|'MANUAL', popularity,
  *        posterUrl, excluded, excludedReason, excludedAt,
  *        status: 'UPCOMING'|'TRACKING'|'ENDED'|'EXCLUDED',
+ *        relevancePct, relevanceSample, relevanceChecked, relevanceOverride,
+ *        platformEntities: [{ entityId, ownerId, ownerUsername }],
  *        collected: { x, instagram, reddit, youtubeComments, youtubeVideos }, collectedTotal }
  */
 export const adminTrackedReleaseService = {
@@ -23,6 +25,11 @@ export const adminTrackedReleaseService = {
 
   // Partial: { keywords?: string[], excluded?: boolean, excludedReason?: string, releaseDate? (MANUAL only) }
   update: async (id, patch) => apiClient.patch(`/admin/tracked-releases/${id}`, patch),
+
+  // Make it a user-facing movie (managed entity) owned by ownerId (omit = me). Same name, so it
+  // shows the posts already collected; fails if that user already has it or is at their license cap.
+  addToPlatform: async (id, ownerId) =>
+    apiClient.post(`/admin/tracked-releases/${id}/add-to-platform`, ownerId ? { ownerId } : {}),
 
   // MANUAL rows only (TMDB rows are excluded instead).
   remove: async (id) => apiClient.delete(`/admin/tracked-releases/${id}`),

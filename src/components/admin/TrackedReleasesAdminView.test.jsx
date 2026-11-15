@@ -3,8 +3,13 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import TrackedReleasesAdminView from './TrackedReleasesAdminView';
 
+vi.mock('../../api/adminLicenseService', () => ({
+  adminLicenseService: { listUsers: vi.fn(() => Promise.resolve([{ id: 42, username: 'producer1' }])) },
+}));
+
 vi.mock('../../api/adminTrackedReleaseService', () => ({
   adminTrackedReleaseService: {
+    addToPlatform: vi.fn(),
     list: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
@@ -107,5 +112,22 @@ describe('TrackedReleasesAdminView', () => {
     expect(screen.getByText('92%')).toBeInTheDocument();
     expect(screen.getByText('of 80 posts')).toBeInTheDocument();
     expect(screen.getByText('Not scored yet')).toBeInTheDocument();
+  });
+
+  it('adds a tracked release to the platform for a chosen user', async () => {
+    api.addToPlatform.mockResolvedValue({});
+    renderView();
+    await screen.findByText('Mr Lucky');
+    fireEvent.click(screen.getAllByRole('button', { name: /Add to platform/ })[0]);
+    await screen.findByRole('option', { name: 'producer1' });
+    fireEvent.change(screen.getByLabelText('Owner for Mr Lucky'), { target: { value: '42' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+    await waitFor(() => expect(api.addToPlatform).toHaveBeenCalledWith(1, 42));
+  });
+
+  it('shows who already has the movie on the platform', async () => {
+    api.list.mockResolvedValue([row({ platformEntities: [{ entityId: 9, ownerId: 42, ownerUsername: 'producer1' }] })]);
+    renderView();
+    expect(await screen.findByText('On platform: producer1')).toBeInTheDocument();
   });
 });
