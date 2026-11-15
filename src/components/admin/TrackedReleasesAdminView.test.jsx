@@ -28,6 +28,10 @@ const row = (overrides) => ({
   status: 'TRACKING',
   collected: { x: 10, instagram: 5, reddit: 0, youtubeComments: 0, youtubeVideos: 0 },
   collectedTotal: 15,
+  relevancePct: 92.4,
+  relevanceSample: 80,
+  relevanceChecked: true,
+  relevanceOverride: false,
   ...overrides,
 });
 
@@ -47,7 +51,8 @@ describe('TrackedReleasesAdminView', () => {
     vi.clearAllMocks();
     api.list.mockResolvedValue([
       row({}),
-      row({ id: 2, entityName: 'Appu Garage', source: 'MANUAL', status: 'UPCOMING', collectedTotal: 0, collected: {} }),
+      row({ id: 2, entityName: 'Appu Garage', source: 'MANUAL', status: 'UPCOMING', collectedTotal: 0, collected: {},
+        relevancePct: null, relevanceSample: null, relevanceChecked: false }),
     ]);
     api.update.mockResolvedValue({});
   });
@@ -94,5 +99,13 @@ describe('TrackedReleasesAdminView', () => {
     await screen.findByText('Mr Lucky');
     fireEvent.click(screen.getByRole('tab', { name: 'Excluded' }));
     await waitFor(() => expect(api.list).toHaveBeenCalledWith('excluded'));
+  });
+
+  it('shows relevance score, or that a movie has not been scored yet', async () => {
+    renderView();
+    await screen.findByText('Mr Lucky');
+    expect(screen.getByText('92%')).toBeInTheDocument();
+    expect(screen.getByText('of 80 posts')).toBeInTheDocument();
+    expect(screen.getByText('Not scored yet')).toBeInTheDocument();
   });
 });

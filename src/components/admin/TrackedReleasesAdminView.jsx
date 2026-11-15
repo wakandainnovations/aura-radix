@@ -25,6 +25,30 @@ const PLATFORMS = [
   { key: 'youtubeVideos', label: 'YT videos' },
 ];
 
+// Mirrors the collector's relevance.min.pct: below this (on enough posts) a movie is auto-excluded.
+const RELEVANCE_FAIL_PCT = 15;
+const RELEVANCE_WARN_PCT = 60;
+
+function RelevanceCell({ r }) {
+  if (r.relevancePct == null) {
+    return <span className="text-xs text-muted-foreground">Not scored yet</span>;
+  }
+  const pct = r.relevancePct;
+  const tone =
+    pct < RELEVANCE_FAIL_PCT ? 'text-red-400' : pct < RELEVANCE_WARN_PCT ? 'text-amber-400' : 'text-emerald-400';
+  return (
+    <div className="text-xs whitespace-nowrap" title="Share of collected X posts / YouTube titles that look movie-related">
+      <div className={`font-semibold text-sm ${tone}`}>{Math.round(pct)}%</div>
+      <div className="text-muted-foreground">of {r.relevanceSample ?? 0} posts</div>
+      {r.relevanceOverride ? (
+        <div className="text-muted-foreground">kept by admin</div>
+      ) : !r.relevanceChecked && !r.excluded ? (
+        <div className="text-muted-foreground">IG/Reddit waiting</div>
+      ) : null}
+    </div>
+  );
+}
+
 const inputClass =
   'px-3 py-2 h-10 bg-background border border-border rounded-lg text-sm text-foreground';
 
@@ -40,7 +64,9 @@ const splitKeywords = (text) =>
 /**
  * Admin console: the movies the social-media collector scans. Every India-origin
  * release on TMDB is added automatically and scanned from 7 days before to 7 days
- * after release. Exclude a movie to stop spending collection budget on it (takes
+ * after release. Relevance = share of its collected posts that are actually about
+ * the movie; the collector auto-excludes clear junk (generic titles). Restoring a
+ * movie exempts it from that. Exclude a movie to stop spending collection budget on it (takes
  * effect before the collector's next poll); its collected counts show what it has
  * cost so far.
  */
@@ -95,6 +121,7 @@ export default function TrackedReleasesAdminView() {
     const sorted = [...filtered];
     if (sortBy === 'collected') sorted.sort((a, b) => (b.collectedTotal ?? 0) - (a.collectedTotal ?? 0));
     else if (sortBy === 'popularity') sorted.sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0));
+    else if (sortBy === 'relevance') sorted.sort((a, b) => (a.relevancePct ?? 101) - (b.relevancePct ?? 101));
     return sorted;
   }, [releases, language, sortBy]);
 
@@ -227,6 +254,7 @@ export default function TrackedReleasesAdminView() {
             <option value="release">Sort: release date</option>
             <option value="collected">Sort: most collected</option>
             <option value="popularity">Sort: TMDB popularity</option>
+            <option value="relevance">Sort: lowest relevance</option>
           </select>
           <span className="text-sm text-muted-foreground ml-auto">
             {rows.length} movies · {summary.tracking} tracking · {summary.upcoming} upcoming ·{' '}
@@ -254,6 +282,7 @@ export default function TrackedReleasesAdminView() {
                   <th className="px-4 py-3 font-semibold">Window</th>
                   <th className="px-4 py-3 font-semibold">Status</th>
                   <th className="px-4 py-3 font-semibold">Keywords</th>
+                  <th className="px-4 py-3 font-semibold">Relevance</th>
                   <th className="px-4 py-3 font-semibold">Collected</th>
                   <th className="px-4 py-3 font-semibold text-right">Actions</th>
                 </tr>
@@ -340,6 +369,9 @@ export default function TrackedReleasesAdminView() {
                         </div>
                       )}
                     </td>
+                    <td className="px-4 py-3">
+                      <RelevanceCell r={r} />
+                    </td>
                     <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
                       <div className="font-semibold text-foreground text-sm">
                         {(r.collectedTotal ?? 0).toLocaleString()}
@@ -420,7 +452,7 @@ export default function TrackedReleasesAdminView() {
                 ))}
                 {rows.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                    <td colSpan={8} className="px-4 py-10 text-center text-sm text-muted-foreground">
                       No releases in this view.
                     </td>
                   </tr>
