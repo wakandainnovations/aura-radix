@@ -198,6 +198,20 @@ export default function LeftNavbar({ activeTab, onTabChange, isAdmin = false }) 
           );
         })}
       </nav>
+
+      {/* Required by TMDB's terms: movie posters (and release data) come from TMDB. */}
+      <div className="px-4 py-3 border-t border-border text-[10px] leading-snug text-muted-foreground">
+        Movie posters and release data from{' '}
+        <a
+          href="https://www.themoviedb.org"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-foreground"
+        >
+          TMDB
+        </a>
+        . This product uses the TMDB API but is not endorsed or certified by TMDB.
+      </div>
     </div>
   );
 }
