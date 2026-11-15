@@ -39,6 +39,7 @@ import LicenseView from './licensing/LicenseView';
 import LicenseAdminView from './admin/LicenseAdminView';
 import OfferKeyAdminView from './admin/OfferKeyAdminView';
 import PriceAdminView from './admin/PriceAdminView';
+import TrackedReleasesAdminView from './admin/TrackedReleasesAdminView';
 import AdminUserSelector from './admin/AdminUserSelector';
 import { FEATURE_KEYS } from '../lib/licensing';
 
@@ -584,7 +585,7 @@ export default function PRCommandCenter() {
         )}
 
         {/* Welcome Screen - Show when no entity is selected yet (except standalone views) */}
-        {isAuthenticated && hasLoadedEntities && selectedEntities.length === 0 && !isLoadingEntities && !['entity-management', 'spreader-analysis', 'user-intelligence', 'content-analysis', 'genre-intelligence', 'marketing-aggregation', 'reply-templates', 'alert-rules', 'crisis-playbooks', 'abuse-reports', 'workspace-export', 'license', 'admin-licenses', 'admin-offer-keys', 'admin-prices'].includes(activeView) && (
+        {isAuthenticated && hasLoadedEntities && selectedEntities.length === 0 && !isLoadingEntities && !['entity-management', 'spreader-analysis', 'user-intelligence', 'content-analysis', 'genre-intelligence', 'marketing-aggregation', 'reply-templates', 'alert-rules', 'crisis-playbooks', 'abuse-reports', 'workspace-export', 'license', 'admin-licenses', 'admin-offer-keys', 'admin-prices', 'admin-tracked-releases'].includes(activeView) && (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <h2 className="text-5xl font-bold text-foreground mb-4">Welcome to Project Aura</h2>
@@ -599,6 +600,7 @@ export default function PRCommandCenter() {
         {isAuthenticated && isAdmin && activeView === 'admin-licenses' && <LicenseAdminView />}
         {isAuthenticated && isAdmin && activeView === 'admin-offer-keys' && <OfferKeyAdminView />}
         {isAuthenticated && isAdmin && activeView === 'admin-prices' && <PriceAdminView />}
+        {isAuthenticated && isAdmin && activeView === 'admin-tracked-releases' && <TrackedReleasesAdminView />}
         {isAuthenticated && activeView === 'spreader-analysis' && (
           <GatedFeature featureKey={FEATURE_KEYS.AUDIENCE_CONTENT} featureName="Spreader Analysis">
             <SpreaderAnalysisView selectedEntity={primaryEntity} />

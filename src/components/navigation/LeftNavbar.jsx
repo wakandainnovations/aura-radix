@@ -99,6 +99,7 @@ export default function LeftNavbar({ activeTab, onTabChange, isAdmin = false }) 
         { id: 'admin-licenses', label: 'Licenses' },
         { id: 'admin-offer-keys', label: 'Offer Keys' },
         { id: 'admin-prices', label: 'Tier Prices' },
+        { id: 'admin-tracked-releases', label: 'Tracked Releases' },
       ]
     },
     {
