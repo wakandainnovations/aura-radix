@@ -82,6 +82,7 @@ export default function PerformanceTab({ data, entityId, isTrendLoading, isPlatf
             <PanelSkeleton />
           ) : (
             <div className="space-y-4 flex-1">
+              {d.topDrivers.length === 0 && <p className="text-sm text-white/35">No driver data yet</p>}
               {d.topDrivers.map((driver) => {
                 const Icon = DRIVER_ICONS[driver.iconKey] ?? MessagesSquare;
                 const Row = driver.category ? 'button' : 'div';
@@ -150,6 +151,7 @@ export default function PerformanceTab({ data, entityId, isTrendLoading, isPlatf
           ) : (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2.5">
+                {d.topRegions.length === 0 && <p className="text-sm text-white/35">No regional data yet</p>}
                 {d.topRegions.map((r) => (
                   <BarRow
                     key={r.label}

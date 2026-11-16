@@ -308,7 +308,11 @@ export default function useMoviePerformanceData(selectedMovie) {
             // backend rows, so the dummy fallback below stays non-clickable.
             region: r.region,
           }))
-        : base.topRegions;
+        : // Once the endpoint has answered for a real movie, an empty answer means "no data yet",
+          // not "show the sample data" - the sample regions looked like real results.
+          audiencePulseRaw
+          ? []
+          : base.topRegions;
 
     // IndiaStatesMap (the same real-map component Command Center's Audience
     // Pulse panel already plots getAudiencePulse regions on) wants
@@ -333,7 +337,9 @@ export default function useMoviePerformanceData(selectedMovie) {
             // fallback's placeholder iconKeys ('song', 'trailer', ...).
             category: intent.contentIntent,
           }))
-        : base.topDrivers;
+        : contentIntentRaw
+          ? []
+          : base.topDrivers;
 
     return {
       ...base,

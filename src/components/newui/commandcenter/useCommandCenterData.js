@@ -12,6 +12,14 @@ import { useLicense } from '../../../hooks/useLicense';
 // The window (in days) of mentions immediately before vs. after a checkpoint
 // that the "impact score" is computed over, matching the default window the
 // classic UI's CheckpointImpactView uses.
+// Minutes -> "2h 15m"; "—" when the movie has no runtime.
+function formatRuntime(minutes) {
+  if (!minutes || minutes <= 0) return '—';
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return h > 0 ? `${h}h${m ? ` ${m}m` : ''}` : `${m}m`;
+}
+
 export const CHECKPOINT_IMPACT_WINDOW_DAYS = 7;
 
 // Reduces a checkpoint's before/after mention counts to a single skimmable
@@ -228,8 +236,10 @@ export default function useCommandCenterData(selectedMovie, movieSwitchNonce = 0
 
     const aiSummary =
       aiSummaryRaw?.summary
-        ? { text: aiSummaryRaw.summary, updatedLabel: timeAgoLabel(aiSummaryRaw.generatedAt) ?? base.aiSummary.updatedLabel }
-        : base.aiSummary;
+        ? { text: aiSummaryRaw.summary, updatedLabel: timeAgoLabel(aiSummaryRaw.generatedAt) ?? '' }
+        : aiSummaryRaw
+          ? { text: 'Not enough conversation yet to summarize this movie.', updatedLabel: '' }
+          : base.aiSummary;
 
     const realHighlights = highlightsRaw?.highlights ?? [];
     const highlights =
@@ -238,7 +248,11 @@ export default function useCommandCenterData(selectedMovie, movieSwitchNonce = 0
             const tone = HIGHLIGHT_TYPE_TO_TONE[h.type] ?? 'warning';
             return { tone, kind: TONE_TO_KIND[tone], text: h.text };
           })
-        : base.highlights;
+        : // Once the backend has answered for a real movie, an empty answer is shown as empty -
+          // the sample highlights read like real findings about this movie.
+          highlightsRaw
+          ? []
+          : base.highlights;
 
     // Falls back to the dummy plan when this entity's candidate generation
     // produced nothing yet (no real backing data) or the query hasn't resolved.
@@ -264,7 +278,9 @@ export default function useCommandCenterData(selectedMovie, movieSwitchNonce = 0
               relatedUsers: (a.relevantUsers ?? []).slice(0, 20),
             };
           })
-        : base.recommendedActions;
+        : recommendedActionsRaw
+          ? []
+          : base.recommendedActions;
 
     // First entry of the snapshot array is the primary entity's own stats
     // (same [mainEntity, competitor1, ...] shape PRCommandCenter.api.jsx
@@ -385,13 +401,15 @@ export default function useCommandCenterData(selectedMovie, movieSwitchNonce = 0
       poster: {
         imageUrl: selectedMovie?.imageUrl ?? null,
       },
+      // Every snapshot field comes from the movie itself ("—" when unknown); the sample
+      // runtime/distributor/"last updated" used to show for every movie.
       snapshot: {
-        ...base.snapshot,
         releaseInDays,
-        genre: Array.isArray(selectedMovie?.genre)
-          ? selectedMovie.genre.join(', ')
-          : selectedMovie?.genre || base.snapshot.genre,
-        language: selectedMovie?.language || base.snapshot.language,
+        genre: (Array.isArray(selectedMovie?.genre) ? selectedMovie.genre.join(', ') : selectedMovie?.genre) || '—',
+        language: selectedMovie?.language || '—',
+        runtime: formatRuntime(selectedMovie?.runtime),
+        distributor: selectedMovie?.productionCompany || '—',
+        lastUpdatedLabel: timeAgoLabel(aiSummaryRaw?.generatedAt) ?? '—',
       },
       audiencePulse: {
         topRegions,

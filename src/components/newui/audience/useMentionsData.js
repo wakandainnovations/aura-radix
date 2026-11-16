@@ -243,7 +243,7 @@ export default function useMentionsData(selectedMovie, volumePeriod = 'DAY90') {
         postsPerDay: aspect.postsPerDay ?? 0,
         sentiment: (aspect.majoritySentiment ?? 'neutral').toLowerCase(),
       }));
-    const drivers = realDrivers.length > 0 ? realDrivers : base.drivers;
+    const drivers = realDrivers.length > 0 || reviewAspectRaw ? realDrivers : base.drivers;
 
     return {
       ...base,

@@ -60,6 +60,7 @@ export default function TodaysHighlights({ highlights, updatedLabel, isLoading =
         </div>
       ) : (
         <div className="space-y-3.5 flex-1 mt-2">
+          {highlights.length === 0 && <p className="text-sm text-white/35">No highlights yet</p>}
           {highlights.map((h, i) => (
             <HighlightRow key={i} highlight={h} />
           ))}

@@ -244,7 +244,7 @@ export default function useInfluencersData(selectedMovie, platform = 'all') {
     // resolved post content returns summary: "" / actions: [], which falls
     // back to the dummy insight rather than rendering an empty bar/modal.
     const realActions = insightsRaw?.actions ?? [];
-    const aiInsight = insightsRaw?.summary || base.aiInsight;
+    const aiInsight = insightsRaw?.summary || (insightsRaw ? 'Not enough influencer activity yet for recommendations.' : base.aiInsight);
     const rankedActions = insightsRaw?.summary
       ? [...realActions]
           .sort((a, b) => (IMPACT_RANK[a.impact] ?? 99) - (IMPACT_RANK[b.impact] ?? 99))
@@ -252,7 +252,9 @@ export default function useInfluencersData(selectedMovie, platform = 'all') {
             text: a.action,
             impact: SPREADER_IMPACT_TO_LABEL[a.impact] ?? 'Medium',
           }))
-      : base.actions;
+      : insightsRaw
+        ? []
+        : base.actions;
     const actions = rankedActions.slice(0, 3);
 
     // The "Influencer Content Performance" panel and its "View all influencer
